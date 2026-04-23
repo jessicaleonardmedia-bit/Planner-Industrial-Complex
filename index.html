@@ -2710,33 +2710,89 @@ const PALETTE = [
 
 const PALETTE_IDS = PALETTE.map(p => p.id);
 
-// Look up the three CSS var names for a given swatch id.
+// Look up the three CSS var/value triples for a given swatch id.
+// Now handles both plain palette ids and computed tint/shade markers.
 function swatchVars(id) {
-  if (!id || !PALETTE_IDS.includes(id)) id = 'pink';
+  if (!id) id = 'pink';
   return {
-    base: `var(--pal-${id})`,
-    soft: `var(--pal-${id}-soft)`,
-    deep: `var(--pal-${id}-deep)`
+    base: colourCssValue(id),
+    soft: colourCssSoft(id),
+    deep: colourCssDeep(id)
   };
 }
 
-// Auto-vary a sub-entity's colour from its parent. Stays within a
-// tight neighbourhood of the parent's palette position so siblings
-// feel related rather than randomly different. Deterministic from
-// the child's id so colours stay stable across reloads.
+// Auto-vary a sub-entity's colour from its parent. Members/children
+// get a tint or shade of the PARENT's underlying palette colour, not a
+// different hue. This keeps the family obviously related. Returns a
+// marker like "tint:20:pink" that swatchVars() knows how to handle.
+// Deterministic from the child's id so colours stay stable.
 function autoVaryFromParent(parentColourId, subId) {
-  const baseIdx = PALETTE_IDS.indexOf(parentColourId);
-  if (baseIdx === -1) return 'pink';
-  // Hash the id to a small deterministic number
+  // If the parent is already a computed tint/shade marker, unwrap it
+  // to get the underlying palette id. Grandchildren vary from the
+  // ORIGINAL palette colour, not from a tint of a tint.
+  let paletteId = parentColourId;
+  if (isComputedColour(paletteId)) {
+    const parts = paletteId.split(':');
+    paletteId = parts[2];
+  }
+  if (!paletteId || !PALETTE_IDS.includes(paletteId)) paletteId = 'pink';
+
+  // Hash the id to a deterministic integer
   let h = 0;
   for (let i = 0; i < (subId || '').length; i++) {
     h = (h * 31 + subId.charCodeAt(i)) | 0;
   }
-  // Pick from neighbours: -2, -1, +1, +2 (skip 0 = parent itself)
-  const offsets = [-2, -1, 1, 2];
-  const offset = offsets[Math.abs(h) % offsets.length];
-  const idx = (baseIdx + offset + PALETTE.length) % PALETTE.length;
-  return PALETTE_IDS[idx];
+  // Sibling slots: tints (lighter) and shades (darker) of the parent.
+  // We exclude the parent's own base so siblings aren't identical to parent.
+  const slots = [
+    'tint:35',   // very light
+    'tint:20',   // light
+    'tint:10',   // slightly light
+    'shade:10',  // slightly dark
+    'shade:20',  // dark
+    'shade:35'   // very dark
+  ];
+  const slot = slots[Math.abs(h) % slots.length];
+  return `${slot}:${paletteId}`;
+}
+
+// Is this a computed auto-varied colour (tint/shade marker) or a plain palette id?
+function isComputedColour(colourId) {
+  return typeof colourId === 'string' && (colourId.startsWith('tint:') || colourId.startsWith('shade:'));
+}
+
+// Turn any colour id (plain palette or tint/shade marker) into a CSS colour value.
+function colourCssValue(colourId) {
+  if (!colourId) return `var(--pal-pink)`;
+  if (isComputedColour(colourId)) {
+    // Format: "tint:35:pink" or "shade:20:cornflower"
+    const [mode, pctStr, paletteId] = colourId.split(':');
+    const pct = parseInt(pctStr, 10);
+    const target = mode === 'tint' ? 'var(--cream)' : 'var(--ink)';
+    return `color-mix(in srgb, var(--pal-${paletteId}) ${100 - pct}%, ${target})`;
+  }
+  return `var(--pal-${colourId})`;
+}
+
+// Same idea for the -soft and -deep variants used by mastheads.
+function colourCssSoft(colourId) {
+  if (!colourId) return `var(--pal-pink-soft)`;
+  if (isComputedColour(colourId)) {
+    const [, , paletteId] = colourId.split(':');
+    return `var(--pal-${paletteId}-soft)`;
+  }
+  return `var(--pal-${colourId}-soft)`;
+}
+
+function colourCssDeep(colourId) {
+  if (!colourId) return `var(--pal-pink-deep)`;
+  if (isComputedColour(colourId)) {
+    const [mode, pctStr, paletteId] = colourId.split(':');
+    // For deep, we want a darker version: lean toward ink more.
+    // Use shade:30 against the parent's base.
+    return `color-mix(in srgb, var(--pal-${paletteId}) 60%, var(--ink))`;
+  }
+  return `var(--pal-${colourId}-deep)`;
 }
 
 const DEFAULT_MODES = [
@@ -3687,7 +3743,7 @@ function buildModesOverviewCard() {
     const queued = open - nowC;
     const row = document.createElement('div');
     row.className = 'mode-mini-row';
-    row.style.setProperty('--mini-colour', `var(--pal-${modeColour(id)})`);
+    row.style.setProperty('--mini-colour', colourCssValue(modeColour(id)));
     row.innerHTML = `
       <span class="mode-mini-dot">${m.glyph}</span>
       <div class="mode-mini-text">
@@ -3718,7 +3774,7 @@ function buildWeekendModesCard() {
     const queued = open - nowC;
     const row = document.createElement('div');
     row.className = 'mode-mini-row';
-    row.style.setProperty('--mini-colour', `var(--pal-${modeColour(id)})`);
+    row.style.setProperty('--mini-colour', colourCssValue(modeColour(id)));
     // Dim work on weekends
     if (id === 'work') row.style.opacity = '0.55';
     row.innerHTML = `
@@ -4367,7 +4423,7 @@ function buildSubBar(modeId, subs, subId) {
   // "All" button - uses mode colour
   const allBtn = document.createElement('button');
   allBtn.className = 'sub-btn' + (!subId ? ' active' : '');
-  allBtn.setAttribute('style', `--sub-colour: var(--pal-${modeColour(modeId)});`);
+  allBtn.setAttribute('style', `--sub-colour: ${colourCssValue(modeColour(modeId))};`);
   allBtn.textContent = 'All';
   allBtn.onclick = () => setSubEntity(null);
   subBar.appendChild(allBtn);
@@ -4375,7 +4431,7 @@ function buildSubBar(modeId, subs, subId) {
   subs.forEach(s => {
     const b = document.createElement('button');
     b.className = 'sub-btn' + (subId === s.id ? ' active' : '');
-    b.setAttribute('style', `--sub-colour: var(--pal-${subColour(modeId, s.id)});`);
+    b.setAttribute('style', `--sub-colour: ${colourCssValue(subColour(modeId, s.id))};`);
     b.textContent = s.name;
     b.onclick = () => setSubEntity(s.id);
 
@@ -4458,7 +4514,7 @@ function buildMemberBar(household, memberId) {
   // "Everyone" = all tasks in this household, unfiltered by member
   const allBtn = document.createElement('button');
   allBtn.className = 'sub-btn' + (!memberId ? ' active' : '');
-  allBtn.setAttribute('style', `--sub-colour: var(--pal-${subColour('family', household.id)});`);
+  allBtn.setAttribute('style', `--sub-colour: ${colourCssValue(subColour('family', household.id))};`);
   allBtn.textContent = 'Everyone';
   allBtn.onclick = () => setMember(null);
   bar.appendChild(allBtn);
@@ -4466,7 +4522,7 @@ function buildMemberBar(household, memberId) {
   (household.members || []).forEach(m => {
     const b = document.createElement('button');
     b.className = 'sub-btn' + (memberId === m.id ? ' active' : '');
-    b.setAttribute('style', `--sub-colour: var(--pal-${memberColour(household.id, m.id)});`);
+    b.setAttribute('style', `--sub-colour: ${colourCssValue(memberColour(household.id, m.id))};`);
     b.textContent = m.name;
     b.onclick = () => setMember(m.id);
 
@@ -4911,7 +4967,7 @@ function renderTaskRow(task) {
   li.className = 'task-row' + (task.done ? ' done' : '');
   // 4a: cascade task > sub > mode > pink. Live on the row as --task-colour.
   const colour = taskColour(task);
-  li.style.setProperty('--task-colour', `var(--pal-${colour})`);
+  li.style.setProperty('--task-colour', colourCssValue(colour));
 
   // Build chip strip
   const chipsHTML = (task.chips || []).map(c => {
@@ -5439,8 +5495,17 @@ function openTaskPanel(taskId) {
       const m = DEFAULT_MODES.find(x => x.id === staged.mode);
       inheritLabel = 'inherits from ' + (m ? m.name : 'mode');
     }
-    swatch.setAttribute('style', `--swatch: var(--pal-${effective});`);
-    const paletteName = PALETTE.find(p => p.id === effective)?.name || '';
+    swatch.setAttribute('style', `--swatch: ${colourCssValue(effective)};`);
+    // For computed sibling colours ("tint:20:pink"), display the parent's
+    // palette name with a hint about it being a sibling tint.
+    let paletteName;
+    if (isComputedColour(effective)) {
+      const [, , parentId] = effective.split(':');
+      const parent = PALETTE.find(p => p.id === parentId);
+      paletteName = (parent ? parent.name : '') + ' tint';
+    } else {
+      paletteName = PALETTE.find(p => p.id === effective)?.name || '';
+    }
     hint.textContent = staged.colour
       ? paletteName + ' · picked'
       : paletteName + ' · ' + inheritLabel;
