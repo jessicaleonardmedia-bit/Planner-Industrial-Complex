@@ -2023,6 +2023,29 @@ body.calm-mode {
 
 .sub-btn.add:hover { box-shadow: none; color: var(--ink); }
 
+/* 4b: Outlined sub-btn - for "All" and "Everyone" filter-off states.
+   Transparent fill with coloured border, so they don't duplicate the
+   appearance of the parent household/mode pill above. */
+.sub-btn.outline {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--sub-colour, var(--ink));
+}
+
+.sub-btn.outline:hover {
+  box-shadow: inset 0 0 0 2px var(--sub-colour, var(--ink)), 2px 2px 0 var(--ink);
+}
+
+.sub-btn.outline.active {
+  background: transparent;
+  color: var(--sub-colour, var(--ink));
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 2px var(--sub-colour, var(--ink)),
+    0 0 0 1.5px var(--ink),
+    2px 2px 0 var(--ink);
+}
+
 /* 4b: Nested sub-bar for Family's level-2 members.
    Sits directly under the households row, clearly belongs to it. */
 .sub-bar-nested {
@@ -4429,9 +4452,10 @@ function buildSubBar(modeId, subs, subId) {
   lbl.textContent = subEntityGroupLabel(modeId);
   subBar.appendChild(lbl);
 
-  // "All" button - uses mode colour
+  // "All" button - outlined pill. Reads as "filter off" rather than a
+  // solid sub-entity matching the mode colour.
   const allBtn = document.createElement('button');
-  allBtn.className = 'sub-btn' + (!subId ? ' active' : '');
+  allBtn.className = 'sub-btn outline' + (!subId ? ' active' : '');
   allBtn.setAttribute('style', `--sub-colour: ${colourCssValue(modeColour(modeId))};`);
   allBtn.textContent = 'All';
   allBtn.onclick = () => setSubEntity(null);
@@ -4520,9 +4544,10 @@ function buildMemberBar(household, memberId) {
   lbl.textContent = 'In ' + household.name;
   bar.appendChild(lbl);
 
-  // "Everyone" = all tasks in this household, unfiltered by member
+  // "Everyone" = all tasks in this household, unfiltered by member.
+  // Outlined pill style so it doesn't duplicate the household colour above.
   const allBtn = document.createElement('button');
-  allBtn.className = 'sub-btn' + (!memberId ? ' active' : '');
+  allBtn.className = 'sub-btn outline' + (!memberId ? ' active' : '');
   allBtn.setAttribute('style', `--sub-colour: ${colourCssValue(subColour('family', household.id))};`);
   allBtn.textContent = 'Everyone';
   allBtn.onclick = () => setMember(null);
