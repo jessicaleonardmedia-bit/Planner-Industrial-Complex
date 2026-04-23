@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ff4d93">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Planner">
+<link rel="manifest" href='data:application/manifest+json,{"name":"My Planner","short_name":"Planner","start_url":".","display":"standalone","background_color":"%23fff3e8","theme_color":"%23ff4d93","icons":[{"src":"data:image/svg%2Bxml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22%3E%3Crect width=%22192%22 height=%22192%22 rx=%2240%22 fill=%22%23ff4d93%22/%3E%3Ctext x=%2250%25%22 y=%2258%25%22 font-size=%22110%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22Georgia%22 fill=%22%23fff3e8%22 font-style=%22italic%22 font-weight=%22900%22%3EP%3C/text%3E%3C/svg%3E","sizes":"192x192","type":"image/svg+xml"}]}'>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23ff4d93"/><text x="50%" y="58%" font-size="56" text-anchor="middle" dominant-baseline="middle" font-family="Georgia" fill="%23fff3e8" font-style="italic" font-weight="900">P</text></svg>'>
+<title>My Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600;1,9..144,700;1,9..144,900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================
+   CONFECTIONARY STYLE SYSTEM
+   Bubblegum brutalism, rounded cards, offset shadows.
+   ========================================================== */
+:root {
+  /* Palette */
+  --cream:       #fff3e8;
+  --cream-2:     #ffe9d7;
+  --cream-3:     #ffd9b8;
+  --pink:        #ff4d93;
+  --pink-soft:   #ffc6dc;
+  --pink-deep:   #d62876;
+  --pink-cream:  #ffdcea;
+  --ink:         #1a0e1a;
+  --ink-soft:    #3a2534;
+  --mute:        #7a5a70;
+  --sage:        #9bb580;
+  --sage-deep:   #6b8e4e;
+  --butter:      #ffdc5e;
+  --butter-deep: #e8b82e;
+  --sky:         #9fd8e0;
+  --peach:       #ffb894;
+  --rule:        rgba(26, 14, 26, 0.14);
+  --shadow:      rgba(26, 14, 26, 0.1);
+
+  /* Radii */
+  --r-lg: 28px;
+  --r-md: 20px;
+  --r-sm: 14px;
+  --r-xs: 10px;
+
+  /* Motion */
+  --dur-fast: 140ms;
+  --dur:      220ms;
+  --ease:     cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+  position: relative;
+}
+
+/* Subtle paper grain */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: multiply;
+}
+
+/* Atmospheric glow */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 18% 20%, rgba(255, 77, 147, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 82% 78%, rgba(255, 220, 94, 0.08) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Reduced motion */
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Calm mode: tones down the pink */
+body.calm-mode {
+  --pink: #e070a0;
+  --pink-deep: #b05478;
+}
+
+/* ==========================================================
+   APP SHELL
+   ========================================================== */
+.app {
+  position: relative;
+  z-index: 2;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 20px 140px;
+}
+
+@media (max-width: 680px) {
+  .app { padding: 16px 12px 120px; }
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  background: var(--pink);
+  color: var(--cream);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px var(--ink), 3px 3px 0 var(--ink);
+  display: grid;
+  place-items: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1;
+  transition: transform var(--dur) var(--ease);
+}
+
+.brand:hover .brand-mark { transform: translate(-1px, -1px); }
+
+.brand-text {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.brand-text em {
+  font-style: italic;
+  font-weight: 900;
+  color: var(--pink);
+}
+
+.clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-top: 4px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- Pill button ---------- */
+.pill-btn {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.pill-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.pill-btn:active {
+  transform: translate(0, 0);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.pill-btn.primary {
+  background: var(--pink);
+  color: var(--cream);
+}
+
+.pill-btn.butter {
+  background: var(--butter);
+}
+
+.pill-btn.ink {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.pill-btn.small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.pill-btn.icon-only {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+/* ---------- Mode nav ---------- */
+.modes {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  margin-bottom: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.modes::-webkit-scrollbar { height: 4px; }
+.modes::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+
+.mode-btn {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 10px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mode-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.mode-btn.active {
+  background: var(--pink);
+  color: var(--cream);
+  box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink);
+}
+
+.mode-btn.add {
+  background: transparent;
+  border: 2px dashed var(--ink);
+  box-shadow: none;
+  color: var(--mute);
+}
+
+.mode-btn.add:hover {
+  box-shadow: none;
+  transform: translate(-2px, -2px);
+  color: var(--ink);
+}
+
+.mode-btn .glyph {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.mode-btn .count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  background: var(--ink);
+  color: var(--butter);
+  padding: 1px 6px;
+  border-radius: 100px;
+  margin-left: 2px;
+}
+
+.mode-btn.active .count {
+  background: var(--cream);
+  color: var(--pink);
+}
+
+/* ==========================================================
+   CARD SYSTEM
+   ========================================================== */
+.candy {
+  background: var(--cream);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--ink);
+  padding: 22px 24px;
+  position: relative;
+}
+
+.candy-pink       { background: var(--pink); color: var(--cream); }
+.candy-pink-cream { background: var(--pink-cream); }
+.candy-butter     { background: var(--butter); }
+.candy-sage       { background: var(--sage); color: var(--cream); }
+.candy-sky        { background: var(--sky); }
+.candy-ink        { background: var(--ink); color: var(--cream); }
+.candy-cream2     { background: var(--cream-2); }
+.candy-peach      { background: var(--peach); }
+
+.candy-shadow-pink   { box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--pink); }
+.candy-shadow-butter { box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--butter-deep); }
+.candy-shadow-sage   { box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--sage); }
+
+.card-label {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--butter);
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.candy-pink .card-label { background: var(--cream); color: var(--pink); }
+.candy-ink .card-label  { background: var(--pink); color: var(--cream); }
+.candy-sage .card-label { background: var(--ink); color: var(--sage); }
+.candy-butter .card-label { background: var(--ink); color: var(--butter); }
+
+/* ==========================================================
+   HERO / GREETING
+   ========================================================== */
+.greeting {
+  background: var(--cream);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 2.5px var(--ink), 7px 7px 0 var(--ink);
+  padding: 32px 34px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.greeting::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  background: var(--pink-cream);
+  border-radius: 50%;
+  opacity: 0.65;
+  z-index: 0;
+}
+
+.greeting-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 30px;
+  align-items: end;
+}
+
+@media (max-width: 700px) {
+  .greeting { padding: 24px 22px; }
+  .greeting-inner { grid-template-columns: 1fr; gap: 18px; }
+}
+
+.greeting-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 10px;
+}
+
+.greeting h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.greeting h1 em {
+  font-style: italic;
+  color: var(--pink);
+  font-weight: 900;
+}
+
+.greeting-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--r-sm);
+  padding: 12px 18px;
+  text-align: center;
+  box-shadow: 3px 3px 0 var(--butter);
+  min-width: 76px;
+}
+
+.stat-pill:nth-child(2) { background: var(--pink); box-shadow: 3px 3px 0 var(--sage); }
+.stat-pill:nth-child(3) { background: var(--sky); color: var(--ink); box-shadow: 3px 3px 0 var(--pink); }
+
+.stat-pill .num {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.stat-pill .label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
+/* ==========================================================
+   QUICK CAPTURE
+   ========================================================== */
+.quick-capture {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--r-lg);
+  padding: 22px 26px;
+  box-shadow: 0 0 0 2.5px var(--ink), 7px 7px 0 var(--pink);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 600px) {
+  .quick-capture {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px 20px;
+  }
+  .qc-label { text-align: center; }
+}
+
+.qc-label {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 26px;
+  color: var(--butter);
+  line-height: 1;
+}
+
+.qc-input {
+  background: var(--cream);
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  padding: 12px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  outline: none;
+  width: 100%;
+  transition: box-shadow var(--dur) var(--ease);
+}
+
+.qc-input:focus {
+  box-shadow: 0 0 0 2.5px var(--pink);
+}
+
+.qc-input::placeholder { color: var(--mute); }
+
+.qc-btn {
+  background: var(--pink);
+  color: var(--cream);
+  border: none;
+  border-radius: 100px;
+  padding: 12px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--cream);
+  transition: transform var(--dur) var(--ease);
+}
+
+.qc-btn:hover { transform: translateY(-2px); }
+.qc-btn:active { transform: translateY(0); }
+
+/* ==========================================================
+   DASHBOARD GRID
+   ========================================================== */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 18px;
+}
+
+.span-12 { grid-column: span 12; }
+.span-8  { grid-column: span 8; }
+.span-6  { grid-column: span 6; }
+.span-4  { grid-column: span 4; }
+
+@media (max-width: 1000px) {
+  .span-8, .span-6 { grid-column: span 12; }
+  .span-4 { grid-column: span 6; }
+}
+
+@media (max-width: 640px) {
+  .span-4 { grid-column: span 12; }
+}
+
+/* ==========================================================
+   EMPTY STATE
+   ========================================================== */
+.empty {
+  padding: 20px 0;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+
+.empty .sparkle {
+  color: var(--pink);
+  margin: 0 4px;
+}
+
+/* ==========================================================
+   ONBOARDING WIZARD
+   ========================================================== */
+.wizard-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 14, 26, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  animation: fade-in var(--dur) var(--ease);
+}
+
+.wizard {
+  background: var(--cream);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 3px var(--ink), 10px 10px 0 var(--ink);
+  max-width: 620px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 40px 38px;
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  .wizard { padding: 28px 22px; }
+}
+
+.wizard-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.wizard-dot {
+  flex: 1;
+  height: 6px;
+  background: var(--cream-3);
+  border-radius: 100px;
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+.wizard-dot.done { background: var(--pink); }
+.wizard-dot.current { background: var(--butter); box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+
+.wizard-step {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 8px;
+}
+
+.wizard h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+
+.wizard h2 em {
+  font-style: italic;
+  color: var(--pink);
+  font-weight: 900;
+}
+
+.wizard-intro {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+}
+
+.wizard-body {
+  margin-bottom: 26px;
+}
+
+.wizard-input {
+  width: 100%;
+  background: var(--cream);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 14px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+  outline: none;
+  margin-bottom: 10px;
+  transition: box-shadow var(--dur) var(--ease);
+}
+
+.wizard-input:focus {
+  box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--pink);
+}
+
+.wizard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.wizard-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pink-cream);
+  border-radius: 100px;
+  padding: 8px 14px;
+  font-size: 14px;
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.wizard-tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--pink-deep);
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.wizard-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.wizard-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+  margin-top: 14px;
+  font-style: normal;
+}
+
+/* ==========================================================
+   SETTINGS DRAWER
+   ========================================================== */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 14, 26, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 90;
+  animation: fade-in var(--dur) var(--ease);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 400px;
+  background: var(--cream);
+  z-index: 91;
+  box-shadow: -10px 0 0 var(--ink);
+  padding: 40px 30px 30px;
+  overflow-y: auto;
+  animation: slide-in var(--dur) var(--ease);
+}
+
+@media (max-width: 600px) {
+  .drawer { padding: 30px 20px 20px; }
+}
+
+.drawer-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--ink);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.drawer h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+
+.drawer h2 em {
+  font-style: italic;
+  color: var(--pink);
+  font-weight: 900;
+}
+
+.drawer-section {
+  padding: 18px 0;
+  border-bottom: 2px dashed var(--rule);
+}
+
+.drawer-section:last-child { border-bottom: none; }
+
+.drawer-section h3 {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  gap: 12px;
+}
+
+.toggle-row .info {
+  flex: 1;
+}
+
+.toggle-row .info .name {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.toggle-row .info .desc {
+  font-size: 13px;
+  color: var(--mute);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: var(--cream-3);
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink);
+  flex-shrink: 0;
+  transition: background var(--dur) var(--ease);
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: var(--cream);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transition: left var(--dur) var(--ease);
+}
+
+.toggle.on { background: var(--pink); }
+.toggle.on::after { left: 24px; }
+
+/* ==========================================================
+   TOAST
+   ========================================================== */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: var(--ink);
+  color: var(--butter);
+  padding: 12px 22px;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 0 0 2px var(--ink), 4px 4px 0 var(--pink);
+  z-index: 200;
+  transition: transform var(--dur) cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast .sparkle {
+  color: var(--pink);
+  margin-right: 6px;
+}
+
+/* ==========================================================
+   BOTTOM BAR (mobile quick-capture sticky)
+   ========================================================== */
+.mobile-bar {
+  display: none;
+}
+
+@media (max-width: 680px) {
+  .mobile-bar {
+    display: flex;
+    position: fixed;
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    background: var(--ink);
+    border-radius: 100px;
+    padding: 8px;
+    box-shadow: 0 0 0 2.5px var(--ink), 4px 4px 0 var(--pink);
+    gap: 6px;
+    z-index: 50;
+  }
+
+  .mobile-bar-item {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cream);
+    opacity: 0.7;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: opacity var(--dur) var(--ease);
+    border: none;
+    background: transparent;
+  }
+
+  .mobile-bar-item .icon {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 14px;
+    margin-bottom: 2px;
+    color: var(--butter);
+    font-style: italic;
+  }
+
+  .mobile-bar-item.active {
+    background: var(--pink);
+    color: var(--cream);
+    opacity: 1;
+  }
+
+  .mobile-bar-item.centre .icon {
+    background: var(--butter);
+    color: var(--pink);
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    margin: -4px auto 0;
+    font-size: 16px;
+    box-shadow: 0 0 0 2px var(--cream);
+    font-style: normal;
+  }
+}
+
+/* ==========================================================
+   ANIMATIONS
+   ========================================================== */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.candy, .greeting, .quick-capture {
+  animation: fade-up var(--dur) var(--ease) backwards;
+}
+
+/* Stagger */
+.candy:nth-child(1) { animation-delay: 40ms; }
+.candy:nth-child(2) { animation-delay: 80ms; }
+.candy:nth-child(3) { animation-delay: 120ms; }
+.candy:nth-child(4) { animation-delay: 160ms; }
+.candy:nth-child(5) { animation-delay: 200ms; }
+.candy:nth-child(6) { animation-delay: 240ms; }
+
+/* ==========================================================
+   INSTALL HINT
+   ========================================================== */
+.install-hint {
+  margin-top: 40px;
+  padding: 16px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+  text-align: center;
+  border-top: 2px dashed var(--rule);
+  line-height: 1.6;
+}
+
+.install-hint strong {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DATA MODEL
+   ============================================================
+   Unified task model (Phase 1b Chunk 1 - skeleton only):
+   - state.tasks: single array, each task has mode + tier + done
+   - state.modes: list of mode objects (stable: 6 default)
+   - state.clients, state.orgs: sub-entities nested under Work / Community
+   - state.settings: reduced motion, calm mode, focus mode, name
+   ============================================================ */
+const STORAGE_KEY = 'my-planner-v1b';
+
+const DEFAULT_MODES = [
+  { id: 'dashboard',   name: 'Dashboard',       glyph: '●', order: 0 },
+  { id: 'work',        name: 'Work',            glyph: '✦', order: 1 },
+  { id: 'family',      name: 'Family',          glyph: '♥', order: 2 },
+  { id: 'personal',    name: 'Personal',        glyph: '✿', order: 3 },
+  { id: 'mortal-coil', name: 'The Mortal Coil', glyph: '♦', order: 4 },
+  { id: 'community',   name: 'Community',       glyph: '☆', order: 5 }
+];
+
+function defaultState() {
+  return {
+    version: 1,
+    currentMode: 'dashboard',
+    currentClientId: null,
+    currentOrgId: null,
+    onboarded: false,
+    tasks: [], // { id, text, mode, subId, tier, done, waitingOn, createdAt }
+    clients: [], // { id, name, rate }
+    orgs: [],    // { id, name }
+    pinnedSubs: [],
+    settings: {
+      name: '',
+      reducedMotion: false,
+      calmMode: false,
+      focusMode: false
+    }
+  };
+}
+
+let state = defaultState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = { ...defaultState(), ...parsed };
+      // merge settings properly in case new keys added
+      state.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
+    }
+  } catch (e) {
+    console.warn('Load failed, starting fresh', e);
+  }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('Save failed', e);
+  }
+}
+
+function resetState() {
+  state = defaultState();
+  saveState();
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function toast(msg, sparkle = true) {
+  const el = document.getElementById('toast');
+  el.innerHTML = (sparkle ? '<span class="sparkle">✦</span>' : '') + escapeHtml(msg);
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+/* ---------- Time-of-day awareness ---------- */
+function timeOfDay() {
+  const h = new Date().getHours();
+  const day = new Date().getDay();
+  if (day === 0 || day === 6) return 'weekend';
+  if (h < 5) return 'late';
+  if (h < 11) return 'morning';
+  if (h < 17) return 'midday';
+  if (h < 21) return 'evening';
+  return 'late';
+}
+
+function greetingCopy() {
+  const tod = timeOfDay();
+  const name = state.settings.name || 'you';
+  const map = {
+    morning: { kicker: 'Morning',   verb: 'plan the day' },
+    midday:  { kicker: 'Afternoon', verb: 'do the work' },
+    evening: { kicker: 'Evening',   verb: 'review the day' },
+    weekend: { kicker: 'Weekend',   verb: 'do as you please' },
+    late:    { kicker: 'Up late',   verb: 'tread lightly' }
+  };
+  return map[tod] || map.midday;
+}
+
+function formatClock() {
+  const d = new Date();
+  const date = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
+  const time = d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  return `${date} · ${time}`;
+}
+
+/* ============================================================
+   APPLY SETTINGS
+   ============================================================ */
+function applySettings() {
+  document.body.classList.toggle('reduced-motion', state.settings.reducedMotion);
+  document.body.classList.toggle('calm-mode', state.settings.calmMode);
+  document.body.classList.toggle('focus-mode', state.settings.focusMode);
+}
+
+/* ============================================================
+   RENDER: MODE NAV
+   ============================================================ */
+function renderModeBar() {
+  const bar = document.createElement('div');
+  bar.className = 'modes';
+
+  const modes = DEFAULT_MODES;
+
+  for (const m of modes) {
+    const btn = document.createElement('button');
+    btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '');
+    btn.innerHTML = `<span class="glyph">${m.glyph}</span>${escapeHtml(m.name)}`;
+
+    // Add counts for modes with tasks (not dashboard itself)
+    if (m.id !== 'dashboard') {
+      const count = state.tasks.filter(t => t.mode === m.id && !t.done).length;
+      if (count > 0) {
+        btn.insertAdjacentHTML('beforeend', `<span class="count">${count}</span>`);
+      }
+    }
+
+    btn.onclick = () => setMode(m.id);
+    bar.appendChild(btn);
+  }
+
+  return bar;
+}
+
+function setMode(id) {
+  state.currentMode = id;
+  state.currentClientId = null;
+  state.currentOrgId = null;
+  saveState();
+  render();
+  window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
+}
+
+/* ============================================================
+   RENDER: TOP BAR
+   ============================================================ */
+function renderTopbar() {
+  const bar = document.createElement('div');
+  bar.className = 'topbar';
+  bar.innerHTML = `
+    <div class="brand" id="brandBtn">
+      <div class="brand-mark">P</div>
+      <div>
+        <div class="brand-text">my <em>planner</em></div>
+        <div class="clock" id="clock">${formatClock()}</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="pill-btn" id="settingsBtn" title="Settings">⚙ Settings</button>
+    </div>
+  `;
+  return bar;
+}
+
+/* ============================================================
+   RENDER: GREETING
+   ============================================================ */
+function renderGreeting() {
+  const g = greetingCopy();
+  const name = state.settings.name;
+  const headline = name
+    ? `${g.kicker}, <em>${escapeHtml(name)}</em>.`
+    : `${g.kicker}. <em>Let's ${g.verb}.</em>`;
+
+  // Stats: open tasks, done today, inbox (all zero in chunk 1, placeholder)
+  const openCount = state.tasks.filter(t => !t.done && t.tier !== 'inbox').length;
+  const doneToday = state.tasks.filter(t => {
+    if (!t.done || !t.doneAt) return false;
+    const d = new Date(t.doneAt);
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+  }).length;
+  const inboxCount = state.tasks.filter(t => t.tier === 'inbox').length;
+
+  const today = new Date().toLocaleDateString('en-AU', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  });
+
+  const el = document.createElement('div');
+  el.className = 'greeting';
+  el.innerHTML = `
+    <div class="greeting-inner">
+      <div>
+        <div class="greeting-meta">★ ${escapeHtml(today)} · ${g.kicker.toLowerCase()} ★</div>
+        <h1>${headline}</h1>
+      </div>
+      <div class="greeting-stats">
+        <div class="stat-pill">
+          <div class="num">${openCount}</div>
+          <div class="label">Open</div>
+        </div>
+        <div class="stat-pill">
+          <div class="num">${doneToday}</div>
+          <div class="label">Done</div>
+        </div>
+        <div class="stat-pill">
+          <div class="num">${inboxCount}</div>
+          <div class="label">Inbox</div>
+        </div>
+      </div>
+    </div>
+  `;
+  return el;
+}
+
+/* ============================================================
+   RENDER: QUICK CAPTURE
+   ============================================================ */
+function renderQuickCapture() {
+  const el = document.createElement('div');
+  el.className = 'quick-capture';
+  el.innerHTML = `
+    <div class="qc-label">Capture →</div>
+    <input class="qc-input" id="qcInput" placeholder="jot something. sort it later." autocomplete="off">
+    <button class="qc-btn" id="qcBtn">Add ✦</button>
+  `;
+
+  const handleAdd = () => {
+    const input = el.querySelector('#qcInput');
+    const text = input.value.trim();
+    if (!text) return;
+    state.tasks.push({
+      id: uid(),
+      text,
+      mode: null,       // unsorted
+      subId: null,
+      tier: 'inbox',    // everything starts in inbox
+      done: false,
+      waitingOn: null,
+      createdAt: Date.now()
+    });
+    input.value = '';
+    saveState();
+    toast('captured. sort it later.');
+    // Update inbox count in greeting and mode nav
+    render();
+  };
+
+  el.querySelector('#qcBtn').onclick = handleAdd;
+  el.querySelector('#qcInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleAdd();
+  });
+
+  return el;
+}
+
+/* ============================================================
+   RENDER: DASHBOARD
+   ============================================================ */
+function renderDashboard() {
+  const root = document.createElement('div');
+  root.className = 'dash-grid';
+
+  // Inbox card - always shown
+  const inboxCount = state.tasks.filter(t => t.tier === 'inbox').length;
+  const inbox = document.createElement('div');
+  inbox.className = 'candy candy-pink-cream span-6';
+  inbox.innerHTML = `
+    <span class="card-label">Inbox</span>
+    ${inboxCount === 0
+      ? `<div class="empty">Inbox: empty. <span class="sparkle">✦</span> Suspicious, but we'll take it.</div>`
+      : `<div style="font-family:'Fraunces',serif;font-weight:700;font-size:24px;line-height:1.2;">
+           ${inboxCount} thing${inboxCount === 1 ? '' : 's'} <em style="color:var(--pink-deep);">unsorted.</em>
+         </div>
+         <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);margin-top:6px;text-transform:uppercase;">
+           sort flow coming in chunk 2
+         </div>`
+    }
+  `;
+  root.appendChild(inbox);
+
+  // Modes overview card
+  const modesCard = document.createElement('div');
+  modesCard.className = 'candy span-6';
+  modesCard.innerHTML = `
+    <span class="card-label">The six modes</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:8px;">
+      ${DEFAULT_MODES.filter(m => m.id !== 'dashboard').map(m => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:2px dashed var(--rule);">
+          <span style="width:28px;height:28px;background:var(--pink);color:var(--cream);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 1.5px var(--ink);font-family:'Fraunces',serif;font-weight:900;font-size:14px;">${m.glyph}</span>
+          <span style="font-family:'Fraunces',serif;font-weight:600;font-size:15px;">${escapeHtml(m.name)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="empty" style="text-align:left;padding:12px 0 0;">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);text-transform:uppercase;font-style:normal;">
+        Per-mode views, task tiers, waiting-on: chunk 2
+      </span>
+    </div>
+  `;
+  root.appendChild(modesCard);
+
+  // Placeholder: one thing
+  const oneThing = document.createElement('div');
+  oneThing.className = 'candy candy-ink candy-shadow-pink span-6';
+  oneThing.innerHTML = `
+    <span class="card-label">★ One thing</span>
+    <div style="font-family:'Fraunces',serif;font-weight:700;font-style:italic;font-size:28px;line-height:1;color:var(--cream);margin-top:6px;">
+      The task system arrives next chunk.
+    </div>
+    <div style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--cream);opacity:0.85;margin-top:16px;padding-top:14px;border-top:2px dashed rgba(255,243,232,0.3);line-height:1.5;">
+      For now, quick-capture drops straight into the inbox. You can add things, they'll stay. Sorting comes when the tiers do.
+    </div>
+  `;
+  root.appendChild(oneThing);
+
+  // Placeholder: nothing coming up yet
+  const placeholder = document.createElement('div');
+  placeholder.className = 'candy candy-butter span-6';
+  placeholder.innerHTML = `
+    <span class="card-label">Coming up</span>
+    <div class="empty" style="text-align:left;padding:10px 0;">
+      Nothing coming up. <span class="sparkle">★</span> Time stretches flat and uneventful.
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--ink-soft);text-transform:uppercase;margin-top:8px;opacity:0.7;">
+      Events + countdowns: chunk 3
+    </div>
+  `;
+  root.appendChild(placeholder);
+
+  return root;
+}
+
+/* ============================================================
+   RENDER: MODE VIEW (placeholder)
+   ============================================================ */
+function renderModeView(modeId) {
+  const mode = DEFAULT_MODES.find(m => m.id === modeId);
+  if (!mode) return renderDashboard();
+
+  const root = document.createElement('div');
+
+  const mastheadHTML = `
+    <div class="candy span-12" style="background:var(--cream);padding:40px 40px;box-shadow:0 0 0 2.5px var(--ink), 7px 7px 0 var(--pink);margin-bottom:22px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-80px;left:-40px;width:200px;height:200px;background:var(--pink-cream);border-radius:50%;opacity:0.6;z-index:0;"></div>
+      <div style="position:relative;z-index:1;">
+        <div class="card-label" style="margin-bottom:14px;">${escapeHtml(mode.glyph)} ${escapeHtml(mode.name)}</div>
+        <h1 style="font-family:'Fraunces',serif;font-weight:700;font-size:clamp(40px,6vw,72px);line-height:0.95;letter-spacing:-0.02em;">
+          ${escapeHtml(mode.name.split(' ')[0])} <em style="font-style:italic;color:var(--pink);font-weight:900;">${escapeHtml(mode.name.split(' ').slice(1).join(' ') || 'mode')}</em>.
+        </h1>
+        <div style="font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink-soft);margin-top:12px;max-width:480px;line-height:1.5;">
+          ${modeDescription(mode.id)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const placeholderHTML = `
+    <div class="dash-grid">
+      <div class="candy span-12" style="text-align:center;padding:50px 30px;">
+        <div style="font-family:'Fraunces',serif;font-weight:900;font-style:italic;font-size:38px;color:var(--pink);margin-bottom:14px;">
+          Mode view, coming soon.
+        </div>
+        <div style="font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--mute);line-height:1.5;max-width:500px;margin:0 auto;">
+          Tasks (Now, Soon, Someday), waiting-on, notes, events, and per-client sub-views all arrive in chunk 2 and 3. For now, the shell is here so you can walk through the bones.
+        </div>
+        <div style="margin-top:24px;">
+          <button class="pill-btn primary" id="backToDash">← Back to dashboard</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  root.innerHTML = mastheadHTML + placeholderHTML;
+  setTimeout(() => {
+    const back = root.querySelector('#backToDash');
+    if (back) back.onclick = () => setMode('dashboard');
+  }, 0);
+  return root;
+}
+
+function modeDescription(id) {
+  const map = {
+    'work':        "Client work, timers, unbilled hours. The paid part.",
+    'family':      "The people who make the tea.",
+    'personal':    "This one's just for you. No admin, no invoicing.",
+    'mortal-coil': "Life admin. The tax on being a person.",
+    'community':   "Volunteer work, org sub-views, the village."
+  };
+  return map[id] || '';
+}
+
+/* ============================================================
+   SETTINGS DRAWER
+   ============================================================ */
+function openSettingsDrawer() {
+  closeDrawers();
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'drawer-backdrop';
+  backdrop.onclick = closeDrawers;
+
+  const drawer = document.createElement('div');
+  drawer.className = 'drawer';
+  drawer.innerHTML = `
+    <button class="drawer-close" id="drawerClose">✕</button>
+    <h2><em>Settings</em></h2>
+
+    <div class="drawer-section">
+      <h3>Your name</h3>
+      <input class="wizard-input" id="nameInput" placeholder="What shall I call you?" value="${escapeHtml(state.settings.name)}" style="font-size:15px;padding:12px 16px;">
+      <div class="wizard-note">Used in the greeting. Optional.</div>
+    </div>
+
+    <div class="drawer-section">
+      <h3>AuDHD-aware options</h3>
+
+      <div class="toggle-row">
+        <div class="info">
+          <div class="name">Reduced motion</div>
+          <div class="desc">Turns off transitions and animations. Nothing moves unless you move it.</div>
+        </div>
+        <div class="toggle ${state.settings.reducedMotion ? 'on' : ''}" data-setting="reducedMotion"></div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="info">
+          <div class="name">Calm mode</div>
+          <div class="desc">Softens the pink intensity for low-capacity days.</div>
+        </div>
+        <div class="toggle ${state.settings.calmMode ? 'on' : ''}" data-setting="calmMode"></div>
+      </div>
+
+      <div class="toggle-row">
+        <div class="info">
+          <div class="name">Focus mode</div>
+          <div class="desc">Hides everything except what you're currently doing. (Lights up in later chunks.)</div>
+        </div>
+        <div class="toggle ${state.settings.focusMode ? 'on' : ''}" data-setting="focusMode"></div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <h3>The nuclear option</h3>
+      <div class="toggle-row">
+        <div class="info">
+          <div class="name">Restart onboarding</div>
+          <div class="desc">Re-runs the welcome wizard. Keeps your data.</div>
+        </div>
+        <button class="pill-btn small" id="restartOnboarding">Restart</button>
+      </div>
+      <div class="toggle-row">
+        <div class="info">
+          <div class="name">Wipe everything</div>
+          <div class="desc">Clears all tasks, settings, the lot. Can't be undone.</div>
+        </div>
+        <button class="pill-btn small ink" id="wipeAll">Wipe</button>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="wizard-note" style="margin-top:0;line-height:1.6;">
+        <strong style="font-family:'Fraunces',serif;font-weight:700;color:var(--ink);font-style:normal;">Phase 1b · Chunk 1 of 4</strong><br>
+        Shell, nav, onboarding, dashboard skeleton. Task tiers and per-mode views coming next.
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(drawer);
+
+  drawer.querySelector('#drawerClose').onclick = closeDrawers;
+  drawer.querySelector('#nameInput').oninput = (e) => {
+    state.settings.name = e.target.value.trim();
+    saveState();
+  };
+  drawer.querySelector('#nameInput').onblur = () => render();
+
+  drawer.querySelectorAll('.toggle').forEach(t => {
+    t.onclick = () => {
+      const key = t.dataset.setting;
+      state.settings[key] = !state.settings[key];
+      t.classList.toggle('on', state.settings[key]);
+      applySettings();
+      saveState();
+    };
+  });
+
+  drawer.querySelector('#restartOnboarding').onclick = () => {
+    closeDrawers();
+    state.onboarded = false;
+    saveState();
+    render();
+  };
+
+  drawer.querySelector('#wipeAll').onclick = () => {
+    if (!confirm('This will wipe all data. Continue?')) return;
+    resetState();
+    render();
+    toast('cleared.');
+  };
+}
+
+function closeDrawers() {
+  document.querySelectorAll('.drawer, .drawer-backdrop').forEach(el => el.remove());
+}
+
+/* ============================================================
+   ONBOARDING WIZARD
+   ============================================================ */
+let wizStep = 0;
+let wizData = {};
+
+function openWizard() {
+  wizStep = 0;
+  wizData = {
+    name: state.settings.name || '',
+    clients: state.clients.slice(),
+    orgs: state.orgs.slice()
+  };
+  renderWizard();
+}
+
+function renderWizard() {
+  document.querySelectorAll('.wizard-backdrop').forEach(el => el.remove());
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'wizard-backdrop';
+
+  const wiz = document.createElement('div');
+  wiz.className = 'wizard';
+
+  const totalSteps = 4;
+  const progress = Array.from({ length: totalSteps }, (_, i) => {
+    if (i < wizStep) return '<div class="wizard-dot done"></div>';
+    if (i === wizStep) return '<div class="wizard-dot current"></div>';
+    return '<div class="wizard-dot"></div>';
+  }).join('');
+
+  let body = '';
+  let primary = 'Next →';
+  let secondary = wizStep > 0 ? '← Back' : null;
+  let canSkip = wizStep > 0 && wizStep < totalSteps - 1;
+
+  if (wizStep === 0) {
+    body = `
+      <div class="wizard-step">Step 1 of ${totalSteps}</div>
+      <h2>Welcome <em>in.</em></h2>
+      <p class="wizard-intro">
+        This is your planner. Pink, sharp, dry. Built around your actual life: client work, family, community, personal, and all the mortal paperwork in between.
+      </p>
+      <div class="wizard-body">
+        <p style="font-family:'Fraunces',serif;font-size:15px;line-height:1.6;margin-bottom:12px;">
+          Quick setup, takes about two minutes. You can skip any step and fill it in later.
+        </p>
+        <p style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--mute);line-height:1.5;">
+          What would you like me to call you?
+        </p>
+        <input class="wizard-input" id="wizName" placeholder="Your name (optional)" value="${escapeHtml(wizData.name)}" style="margin-top:10px;">
+      </div>
+    `;
+    primary = 'Next →';
+  }
+
+  else if (wizStep === 1) {
+    body = `
+      <div class="wizard-step">Step 2 of ${totalSteps} · Work</div>
+      <h2>Your <em>clients.</em></h2>
+      <p class="wizard-intro">
+        Work is divided by client, so each one gets its own timer, unbilled tracker, and notes. Add the clients you've got right now. You can add more later.
+      </p>
+      <div class="wizard-body">
+        <div style="display:flex;gap:8px;">
+          <input class="wizard-input" id="wizClient" placeholder="Client name (e.g. Slater)" style="margin:0;">
+          <button class="pill-btn butter" id="wizAddClient" style="flex-shrink:0;">Add</button>
+        </div>
+        <div class="wizard-tags" id="wizClientTags">
+          ${wizData.clients.map(c => `
+            <span class="wizard-tag">${escapeHtml(c.name)}<button data-id="${c.id}">✕</button></span>
+          `).join('')}
+          ${wizData.clients.length === 0 ? '<span class="wizard-note" style="margin:0;">No clients added yet.</span>' : ''}
+        </div>
+      </div>
+    `;
+    canSkip = true;
+  }
+
+  else if (wizStep === 2) {
+    body = `
+      <div class="wizard-step">Step 3 of ${totalSteps} · Community</div>
+      <h2>Your <em>orgs.</em></h2>
+      <p class="wizard-intro">
+        Community work is divided by organisation. C31, a volunteer group, a board you sit on. Add what you remember. You can add more as they come to you.
+      </p>
+      <div class="wizard-body">
+        <div style="display:flex;gap:8px;">
+          <input class="wizard-input" id="wizOrg" placeholder="Org name (e.g. C31)" style="margin:0;">
+          <button class="pill-btn butter" id="wizAddOrg" style="flex-shrink:0;">Add</button>
+        </div>
+        <div class="wizard-tags" id="wizOrgTags">
+          ${wizData.orgs.map(o => `
+            <span class="wizard-tag">${escapeHtml(o.name)}<button data-id="${o.id}">✕</button></span>
+          `).join('')}
+          ${wizData.orgs.length === 0 ? '<span class="wizard-note" style="margin:0;">No orgs added yet.</span>' : ''}
+        </div>
+      </div>
+    `;
+    canSkip = true;
+  }
+
+  else if (wizStep === 3) {
+    const name = wizData.name || 'you';
+    body = `
+      <div class="wizard-step">Step 4 of ${totalSteps}</div>
+      <h2>All <em>set.</em></h2>
+      <p class="wizard-intro">
+        Welcome in${wizData.name ? ', ' + escapeHtml(wizData.name) : ''}. The planner's ready.
+      </p>
+      <div class="wizard-body">
+        <p style="font-family:'Fraunces',serif;font-size:15px;line-height:1.7;margin-bottom:10px;">
+          <strong>What works right now:</strong> quick capture, the six modes, settings (reduced motion, calm mode), basic dashboard.
+        </p>
+        <p style="font-family:'Fraunces',serif;font-size:15px;line-height:1.7;margin-bottom:10px;">
+          <strong>What's coming in the next chunks:</strong> task tiers (Now / Soon / Someday), waiting-on, per-mode views, calendars, notes, timers, invoicing.
+        </p>
+        <p style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--mute);margin-top:16px;line-height:1.5;">
+          Anything you capture now will carry forward. This is a scaffolding build, not a throwaway.
+        </p>
+      </div>
+    `;
+    primary = 'Let me in ✦';
+    secondary = '← Back';
+    canSkip = false;
+  }
+
+  const actionsHTML = `
+    <div class="wizard-actions">
+      <div style="display:flex;gap:8px;">
+        ${secondary ? `<button class="pill-btn" id="wizBack">${secondary}</button>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;">
+        ${canSkip ? `<button class="pill-btn" id="wizSkip">Skip</button>` : ''}
+        <button class="pill-btn primary" id="wizNext">${primary}</button>
+      </div>
+    </div>
+  `;
+
+  wiz.innerHTML = `
+    <div class="wizard-progress">${progress}</div>
+    ${body}
+    ${actionsHTML}
+  `;
+
+  backdrop.appendChild(wiz);
+  document.body.appendChild(backdrop);
+
+  attachWizardHandlers();
+}
+
+function attachWizardHandlers() {
+  const wiz = document.querySelector('.wizard');
+  if (!wiz) return;
+
+  // Step 0: name
+  const nameInput = wiz.querySelector('#wizName');
+  if (nameInput) {
+    nameInput.focus();
+    nameInput.oninput = (e) => { wizData.name = e.target.value.trim(); };
+    nameInput.onkeydown = (e) => { if (e.key === 'Enter') advanceWizard(); };
+  }
+
+  // Step 1: clients
+  const clientInput = wiz.querySelector('#wizClient');
+  const addClient = wiz.querySelector('#wizAddClient');
+  if (clientInput && addClient) {
+    const doAdd = () => {
+      const v = clientInput.value.trim();
+      if (!v) return;
+      wizData.clients.push({ id: uid(), name: v, rate: '' });
+      clientInput.value = '';
+      renderWizard();
+    };
+    addClient.onclick = doAdd;
+    clientInput.onkeydown = (e) => { if (e.key === 'Enter') doAdd(); };
+    wiz.querySelectorAll('#wizClientTags button').forEach(b => {
+      b.onclick = () => {
+        wizData.clients = wizData.clients.filter(c => c.id !== b.dataset.id);
+        renderWizard();
+      };
+    });
+  }
+
+  // Step 2: orgs
+  const orgInput = wiz.querySelector('#wizOrg');
+  const addOrg = wiz.querySelector('#wizAddOrg');
+  if (orgInput && addOrg) {
+    const doAdd = () => {
+      const v = orgInput.value.trim();
+      if (!v) return;
+      wizData.orgs.push({ id: uid(), name: v });
+      orgInput.value = '';
+      renderWizard();
+    };
+    addOrg.onclick = doAdd;
+    orgInput.onkeydown = (e) => { if (e.key === 'Enter') doAdd(); };
+    wiz.querySelectorAll('#wizOrgTags button').forEach(b => {
+      b.onclick = () => {
+        wizData.orgs = wizData.orgs.filter(o => o.id !== b.dataset.id);
+        renderWizard();
+      };
+    });
+  }
+
+  // Nav
+  const nextBtn = wiz.querySelector('#wizNext');
+  const backBtn = wiz.querySelector('#wizBack');
+  const skipBtn = wiz.querySelector('#wizSkip');
+
+  if (nextBtn) nextBtn.onclick = advanceWizard;
+  if (backBtn) backBtn.onclick = () => {
+    wizStep = Math.max(0, wizStep - 1);
+    renderWizard();
+  };
+  if (skipBtn) skipBtn.onclick = advanceWizard;
+}
+
+function advanceWizard() {
+  if (wizStep < 3) {
+    wizStep++;
+    renderWizard();
+  } else {
+    // Finish
+    state.settings.name = wizData.name;
+    state.clients = wizData.clients;
+    state.orgs = wizData.orgs;
+    state.onboarded = true;
+    saveState();
+    document.querySelectorAll('.wizard-backdrop').forEach(el => el.remove());
+    render();
+    toast('welcome in.');
+  }
+}
+
+/* ============================================================
+   MASTER RENDER
+   ============================================================ */
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  app.appendChild(renderTopbar());
+  app.appendChild(renderModeBar());
+  app.appendChild(renderGreeting());
+  app.appendChild(renderQuickCapture());
+
+  if (state.currentMode === 'dashboard') {
+    app.appendChild(renderDashboard());
+  } else {
+    app.appendChild(renderModeView(state.currentMode));
+  }
+
+  // Install hint
+  const hint = document.createElement('div');
+  hint.className = 'install-hint';
+  hint.innerHTML = `
+    <strong>Installable as an app</strong>
+    iPhone: Share → Add to Home Screen. Android/Desktop Chrome: install icon in the URL bar. Chromecast: Chrome menu → Cast.
+  `;
+  app.appendChild(hint);
+
+  // Wire top-bar buttons
+  document.getElementById('brandBtn').onclick = () => setMode('dashboard');
+  document.getElementById('settingsBtn').onclick = openSettingsDrawer;
+
+  applySettings();
+}
+
+/* ============================================================
+   CLOCK TICK
+   ============================================================ */
+setInterval(() => {
+  const clock = document.getElementById('clock');
+  if (clock) clock.textContent = formatClock();
+}, 30000);
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+loadState();
+applySettings();
+
+if (!state.onboarded) {
+  render();
+  openWizard();
+} else {
+  render();
+}
+
+// PWA install prompt capture (silent)
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window._installPrompt = e;
+});
+</script>
+</body>
+</html>
