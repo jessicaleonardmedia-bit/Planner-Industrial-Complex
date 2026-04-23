@@ -2344,6 +2344,86 @@ body.calm-mode {
 }
 
 /* ==========================================================
+   ONE THING CARD (3d)
+   ========================================================== */
+.one-thing-card {
+  background: var(--butter);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 2.5px var(--ink), 6px 6px 0 var(--pink);
+  padding: 28px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.one-thing-card::before {
+  content: '✦';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-size: 140px;
+  color: var(--butter-deep);
+  opacity: 0.4;
+  line-height: 1;
+  font-family: 'Fraunces', serif;
+}
+
+.one-thing-inner { position: relative; z-index: 1; }
+
+.one-thing-card .card-label { background: var(--ink); color: var(--butter); }
+
+.one-thing-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.one-thing-text {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: clamp(22px, 3.2vw, 32px);
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+
+.one-thing-mode {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
+
+.one-thing-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* Time-of-day accent for the dashboard */
+.tod-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin: -6px 0 16px;
+  padding: 0 4px;
+}
+
+.tod-hint .tod-verb {
+  color: var(--pink-deep);
+  font-weight: 600;
+}
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -2950,18 +3030,109 @@ function renderQuickCapture() {
    ============================================================ */
 function renderDashboard() {
   const root = document.createElement('div');
-  root.className = 'dash-grid';
 
+  // Time-of-day hint line above the grid
+  const tod = timeOfDay();
+  const todVerb = {
+    morning: 'plan the day',
+    midday:  'do the work',
+    evening: 'review the day',
+    weekend: 'do as you please',
+    late:    'tread lightly'
+  }[tod] || 'keep going';
+  const hint = document.createElement('div');
+  hint.className = 'tod-hint';
+  hint.innerHTML = `✦ ${escapeHtml(tod === 'late' ? 'late' : tod)} view · <span class="tod-verb">${escapeHtml(todVerb)}</span>`;
+  root.appendChild(hint);
+
+  const grid = document.createElement('div');
+  grid.className = 'dash-grid';
+
+  // Dispatch to the variation builder
+  const cards = buildDashboardCards(tod);
+  cards.forEach(c => { if (c) grid.appendChild(c); });
+  root.appendChild(grid);
+
+  return root;
+}
+
+function buildDashboardCards(tod) {
+  // Each builder returns a card element (or null to skip).
+  // Ordering here is the variation.
+
+  if (tod === 'morning') {
+    // Plan the day: inbox first, then one-thing, today+tomorrow events, waiting, modes
+    return [
+      buildInboxCard(),
+      buildOneThingCard(),
+      buildEventsTodayCard(),
+      buildNowCard(),
+      buildWaitingCard(),
+      buildModesOverviewCard(),
+      buildDoneTodayCard()
+    ];
+  }
+
+  if (tod === 'midday') {
+    // Do the work: Now tier hero, one-thing, waiting, events, inbox, modes
+    return [
+      buildNowCard(),
+      buildOneThingCard(),
+      buildInboxCard(),
+      buildWaitingCard(),
+      buildEventsComingUpCard(),
+      buildModesOverviewCard(),
+      buildDoneTodayCard()
+    ];
+  }
+
+  if (tod === 'evening') {
+    // Review the day: Done today hero, tomorrow preview, unfinished Now, waiting, inbox, modes
+    return [
+      buildDoneTodayHeroCard(),
+      buildTomorrowPreviewCard(),
+      buildNowCard(),
+      buildWaitingCard(),
+      buildInboxCard(),
+      buildEventsComingUpCard(),
+      buildModesOverviewCard()
+    ];
+  }
+
+  if (tod === 'weekend') {
+    // Demote work: Personal + Community up, one-thing optional, events, inbox
+    return [
+      buildWeekendModesCard(),
+      buildOneThingCard(),
+      buildEventsComingUpCard(),
+      buildInboxCard(),
+      buildNowCard(),
+      buildWaitingCard(),
+      buildDoneTodayCard()
+    ];
+  }
+
+  // late (after 9pm): quiet layout, done today first if there's anything, then gentle overview
+  return [
+    buildDoneTodayHeroCard(),
+    buildTomorrowPreviewCard(),
+    buildInboxCard(),
+    buildNowCard(),
+    buildWaitingCard(),
+    buildEventsComingUpCard()
+  ];
+}
+
+/* ============================================================
+   DASHBOARD CARD BUILDERS (3d)
+   ============================================================ */
+
+function buildInboxCard() {
   const inbox = inboxTasks();
-  const now = state.tasks.filter(t => !t.done && t.tier === 'now');
-  const waiting = waitingTasks();
-  const todayDone = doneToday();
-
-  /* Inbox card */
   const inboxCount = inbox.length;
-  const inboxCard = document.createElement('div');
-  inboxCard.className = 'candy candy-pink-cream span-6';
-  inboxCard.innerHTML = `
+  const card = document.createElement('div');
+  card.className = 'candy candy-pink-cream span-6';
+  card.innerHTML = `
     <span class="card-label">Inbox</span>
     ${inboxCount === 0
       ? `<div class="empty">Inbox: empty. <span class="sparkle">✦</span> Suspicious, but we'll take it.</div>`
@@ -2974,82 +3145,87 @@ function renderDashboard() {
          <button class="pill-btn primary" data-act="triage">Triage now →</button>`
     }
   `;
-  const triageBtn = inboxCard.querySelector('[data-act="triage"]');
+  const triageBtn = card.querySelector('[data-act="triage"]');
   if (triageBtn) triageBtn.onclick = () => setMode('inbox');
-  root.appendChild(inboxCard);
+  return card;
+}
 
-  /* Now this week (cross-mode) */
-  const nowCard = document.createElement('div');
-  nowCard.className = 'candy candy-ink candy-shadow-pink span-6';
+function buildNowCard() {
+  const now = state.tasks.filter(t => !t.done && t.tier === 'now');
+  const card = document.createElement('div');
+  card.className = 'candy candy-ink candy-shadow-pink span-6';
   if (now.length === 0) {
-    nowCard.innerHTML = `
+    card.innerHTML = `
       <span class="card-label">★ Now · this week</span>
       <div class="empty" style="color:var(--cream);opacity:0.85;">
         Nothing active. <span class="sparkle">✦</span> The calm before whatever.
       </div>
     `;
-  } else {
-    nowCard.innerHTML = `<span class="card-label">★ Now · this week</span>`;
-    const list = document.createElement('ul');
-    list.className = 'task-list';
-    now.slice(0, 6).forEach(t => list.appendChild(renderTaskRow(t)));
-    nowCard.appendChild(list);
-    if (now.length > 6) {
-      nowCard.insertAdjacentHTML('beforeend', `
-        <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--cream);opacity:0.7;text-transform:uppercase;">
-          + ${now.length - 6} more in Now across modes
-        </div>
-      `);
-    }
+    return card;
   }
-  root.appendChild(nowCard);
+  card.innerHTML = `<span class="card-label">★ Now · this week</span>`;
+  const list = document.createElement('ul');
+  list.className = 'task-list';
+  now.slice(0, 6).forEach(t => list.appendChild(renderTaskRow(t)));
+  card.appendChild(list);
+  if (now.length > 6) {
+    card.insertAdjacentHTML('beforeend', `
+      <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--cream);opacity:0.7;text-transform:uppercase;">
+        + ${now.length - 6} more in Now across modes
+      </div>
+    `);
+  }
+  return card;
+}
 
-  /* Waiting on */
-  const waitingCard = document.createElement('div');
-  waitingCard.className = 'candy span-6';
+function buildWaitingCard() {
+  const waiting = waitingTasks();
+  const card = document.createElement('div');
+  card.className = 'candy span-6';
   if (waiting.length === 0) {
-    waitingCard.innerHTML = `
+    card.innerHTML = `
       <span class="card-label">Waiting on others</span>
       <div class="empty">Nothing's waiting on you. <span class="sparkle">★</span> Go outside.</div>
     `;
-  } else {
-    const staleCount = waiting.filter(t => {
-      const d = daysSince(t.waitingSince);
-      return d != null && d >= STALE_DAYS;
-    }).length;
-    const staleNote = staleCount > 0
-      ? ` · <span style="color:var(--pink-deep);font-weight:600;">${staleCount} stale</span>`
-      : '';
-    waitingCard.innerHTML = `
-      <span class="card-label">Waiting on others</span>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px;">
-        ${waiting.length} total${staleNote}
-      </div>
-    `;
-    const list = document.createElement('ul');
-    list.className = 'task-list';
-    const sorted = waiting.slice().sort((a, b) => (a.waitingSince || 0) - (b.waitingSince || 0));
-    sorted.slice(0, 5).forEach(t => list.appendChild(renderTaskRow(t)));
-    waitingCard.appendChild(list);
-    if (sorted.length > 5) {
-      const more = document.createElement('button');
-      more.className = 'pill-btn small';
-      more.style.marginTop = '12px';
-      more.textContent = `See all ${sorted.length} →`;
-      more.onclick = () => setMode('waiting');
-      waitingCard.appendChild(more);
-    }
+    return card;
   }
-  root.appendChild(waitingCard);
-
-  /* Mode overview with live counts */
-  const modesCard = document.createElement('div');
-  modesCard.className = 'candy candy-cream2 span-6';
-  modesCard.innerHTML = `
-    <span class="card-label">Your modes</span>
-    <div id="modesOverview" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;"></div>
+  const staleCount = waiting.filter(t => {
+    const d = daysSince(t.waitingSince);
+    return d != null && d >= STALE_DAYS;
+  }).length;
+  const staleNote = staleCount > 0
+    ? ` · <span style="color:var(--pink-deep);font-weight:600;">${staleCount} stale</span>`
+    : '';
+  card.innerHTML = `
+    <span class="card-label">Waiting on others</span>
+    <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px;">
+      ${waiting.length} total${staleNote}
+    </div>
   `;
-  const overview = modesCard.querySelector('#modesOverview');
+  const list = document.createElement('ul');
+  list.className = 'task-list';
+  const sorted = waiting.slice().sort((a, b) => (a.waitingSince || 0) - (b.waitingSince || 0));
+  sorted.slice(0, 5).forEach(t => list.appendChild(renderTaskRow(t)));
+  card.appendChild(list);
+  if (sorted.length > 5) {
+    const more = document.createElement('button');
+    more.className = 'pill-btn small';
+    more.style.marginTop = '12px';
+    more.textContent = `See all ${sorted.length} →`;
+    more.onclick = () => setMode('waiting');
+    card.appendChild(more);
+  }
+  return card;
+}
+
+function buildModesOverviewCard() {
+  const card = document.createElement('div');
+  card.className = 'candy candy-cream2 span-6';
+  card.innerHTML = `
+    <span class="card-label">Your modes</span>
+    <div class="modes-overview" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;"></div>
+  `;
+  const overview = card.querySelector('.modes-overview');
   TASKABLE_MODES.forEach(id => {
     const m = DEFAULT_MODES.find(x => x.id === id);
     const open = state.tasks.filter(t => t.mode === id && !t.done).length;
@@ -3067,66 +3243,248 @@ function renderDashboard() {
     row.onclick = () => setMode(id);
     overview.appendChild(row);
   });
-  root.appendChild(modesCard);
+  return card;
+}
 
-  /* Coming up - events + countdowns across all modes */
-  const upcoming = upcomingEvents(8);
-  if (upcoming.length > 0) {
-    const upCard = document.createElement('div');
-    upCard.className = 'candy candy-sky span-12';
-    upCard.innerHTML = `<span class="card-label">Coming up · ${upcoming.length}</span>`;
-    const list = document.createElement('div');
-    list.className = 'coming-up-list';
-    upcoming.slice(0, 6).forEach(e => {
-      const days = daysUntil(e.date);
-      const item = document.createElement('div');
-      item.className = 'coming-up-item';
-      const modeCrumb = e.mode ? (DEFAULT_MODES.find(m => m.id === e.mode) || {}) : null;
-      const modeLabel = modeCrumb ? `${modeCrumb.glyph} ${modeCrumb.name}` : '';
-      const countdownMark = e.isCountdown ? `<span class="coming-up-countdown-marker" title="Countdown">✦</span>` : '';
-      item.innerHTML = `
-        <div class="coming-up-days">
-          ${days === 0 ? 'today' : days}
-          ${days !== 0 ? `<small>${days === 1 ? 'day' : 'days'}</small>` : ''}
-        </div>
-        <div>
-          <div class="coming-up-title">${escapeHtml(e.title)}${countdownMark}</div>
-          ${modeLabel ? `<div class="coming-up-mode">${escapeHtml(modeLabel)} · ${escapeHtml(formatEventDate(e.date))}</div>` : `<div class="coming-up-mode">${escapeHtml(formatEventDate(e.date))}</div>`}
-        </div>
-        <button class="event-delete-btn" data-id="${e.id}" title="Delete">✕</button>
-      `;
-      item.querySelector('[data-id]').onclick = (ev) => {
-        ev.stopPropagation();
-        deleteEvent(e.id);
-        render();
-      };
-      list.appendChild(item);
-    });
-    upCard.appendChild(list);
-    if (upcoming.length > 6) {
-      upCard.insertAdjacentHTML('beforeend', `
-        <div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);text-transform:uppercase;">
-          + ${upcoming.length - 6} more scheduled
-        </div>
-      `);
-    }
-    root.appendChild(upCard);
-  }
-
-  /* Done today (only when there's something to show) */
-  if (todayDone.length > 0) {
-    const doneCard = document.createElement('div');
-    doneCard.className = 'candy candy-butter span-12';
-    doneCard.innerHTML = `
-      <span class="card-label">Done today · ${todayDone.length}</span>
-      <div style="font-family:'Fraunces',serif;font-weight:500;font-size:15px;line-height:1.7;color:var(--ink);margin-top:6px;">
-        ${todayDone.map(t => `<span style="display:inline-block;margin-right:16px;">✓ ${escapeHtml(t.text)}</span>`).join('')}
+function buildWeekendModesCard() {
+  // Weekend layout leads with Personal + Community, others available below
+  const card = document.createElement('div');
+  card.className = 'candy candy-cream2 span-6';
+  card.innerHTML = `
+    <span class="card-label">Modes · weekend order</span>
+    <div class="modes-overview" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;"></div>
+  `;
+  const overview = card.querySelector('.modes-overview');
+  const weekendOrder = ['personal', 'family', 'community', 'mortal-coil', 'work'];
+  weekendOrder.forEach(id => {
+    const m = DEFAULT_MODES.find(x => x.id === id);
+    const open = state.tasks.filter(t => t.mode === id && !t.done).length;
+    const nowC = state.tasks.filter(t => t.mode === id && !t.done && t.tier === 'now').length;
+    const queued = open - nowC;
+    const row = document.createElement('div');
+    row.className = 'mode-mini-row';
+    // Dim work on weekends
+    if (id === 'work') row.style.opacity = '0.55';
+    row.innerHTML = `
+      <span class="mode-mini-dot">${m.glyph}</span>
+      <div class="mode-mini-text">
+        <div class="mode-mini-name">${escapeHtml(m.name)}</div>
+        <div class="mode-mini-sub">${nowC > 0 ? nowC + ' now' : 'all clear'}${queued > 0 ? ' · ' + queued + ' queued' : ''}</div>
       </div>
     `;
-    root.appendChild(doneCard);
+    row.onclick = () => setMode(id);
+    overview.appendChild(row);
+  });
+  return card;
+}
+
+function buildEventsComingUpCard() {
+  const upcoming = upcomingEvents(8);
+  if (upcoming.length === 0) return null;
+  const card = document.createElement('div');
+  card.className = 'candy candy-sky span-12';
+  card.innerHTML = `<span class="card-label">Coming up · ${upcoming.length}</span>`;
+  const list = document.createElement('div');
+  list.className = 'coming-up-list';
+  upcoming.slice(0, 6).forEach(e => {
+    list.appendChild(buildComingUpItem(e));
+  });
+  card.appendChild(list);
+  if (upcoming.length > 6) {
+    card.insertAdjacentHTML('beforeend', `
+      <div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);text-transform:uppercase;">
+        + ${upcoming.length - 6} more scheduled
+      </div>
+    `);
+  }
+  return card;
+}
+
+function buildEventsTodayCard() {
+  // Morning view: today + tomorrow only
+  const upcoming = upcomingEvents()
+    .filter(e => {
+      const d = daysUntil(e.date);
+      return d === 0 || d === 1;
+    });
+  if (upcoming.length === 0) return null;
+  const card = document.createElement('div');
+  card.className = 'candy candy-sky span-12';
+  card.innerHTML = `<span class="card-label">Today &amp; tomorrow · ${upcoming.length}</span>`;
+  const list = document.createElement('div');
+  list.className = 'coming-up-list';
+  upcoming.forEach(e => list.appendChild(buildComingUpItem(e)));
+  card.appendChild(list);
+  return card;
+}
+
+function buildTomorrowPreviewCard() {
+  // Evening view: gentle look at what's on tomorrow
+  const tomorrow = upcomingEvents().filter(e => daysUntil(e.date) === 1);
+  const tomorrowTasks = state.tasks.filter(t => !t.done && t.tier === 'now').slice(0, 3);
+  if (tomorrow.length === 0 && tomorrowTasks.length === 0) return null;
+  const card = document.createElement('div');
+  card.className = 'candy candy-cream2 span-6';
+  card.innerHTML = `
+    <span class="card-label">Tomorrow, briefly</span>
+    <div style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-soft);margin-bottom:10px;line-height:1.5;">
+      A quiet preview. Nothing to do with it tonight.
+    </div>
+  `;
+  if (tomorrow.length > 0) {
+    card.insertAdjacentHTML('beforeend', `
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--mute);margin-bottom:6px;font-weight:500;">
+        Events tomorrow
+      </div>
+    `);
+    const list = document.createElement('div');
+    list.className = 'coming-up-list';
+    tomorrow.forEach(e => list.appendChild(buildComingUpItem(e)));
+    card.appendChild(list);
+  }
+  if (tomorrowTasks.length > 0) {
+    card.insertAdjacentHTML('beforeend', `
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--mute);margin:12px 0 6px;font-weight:500;">
+        Likely on your plate
+      </div>
+    `);
+    const list = document.createElement('ul');
+    list.className = 'task-list';
+    tomorrowTasks.forEach(t => list.appendChild(renderTaskRow(t)));
+    card.appendChild(list);
+  }
+  return card;
+}
+
+function buildComingUpItem(e) {
+  const days = daysUntil(e.date);
+  const item = document.createElement('div');
+  item.className = 'coming-up-item';
+  const modeCrumb = e.mode ? (DEFAULT_MODES.find(m => m.id === e.mode) || {}) : null;
+  const modeLabel = modeCrumb && modeCrumb.glyph ? `${modeCrumb.glyph} ${modeCrumb.name}` : '';
+  const countdownMark = e.isCountdown ? `<span class="coming-up-countdown-marker" title="Countdown">✦</span>` : '';
+  item.innerHTML = `
+    <div class="coming-up-days">
+      ${days === 0 ? 'today' : days}
+      ${days !== 0 ? `<small>${days === 1 ? 'day' : 'days'}</small>` : ''}
+    </div>
+    <div>
+      <div class="coming-up-title">${escapeHtml(e.title)}${countdownMark}</div>
+      ${modeLabel
+        ? `<div class="coming-up-mode">${escapeHtml(modeLabel)} · ${escapeHtml(formatEventDate(e.date))}</div>`
+        : `<div class="coming-up-mode">${escapeHtml(formatEventDate(e.date))}</div>`}
+    </div>
+    <button class="event-delete-btn" title="Delete">✕</button>
+  `;
+  item.querySelector('.event-delete-btn').onclick = (ev) => {
+    ev.stopPropagation();
+    deleteEvent(e.id);
+    render();
+  };
+  return item;
+}
+
+function buildDoneTodayCard() {
+  const todayDone = doneToday();
+  if (todayDone.length === 0) return null;
+  const card = document.createElement('div');
+  card.className = 'candy candy-butter span-12';
+  card.innerHTML = `
+    <span class="card-label">Done today · ${todayDone.length}</span>
+    <div style="font-family:'Fraunces',serif;font-weight:500;font-size:15px;line-height:1.7;color:var(--ink);margin-top:6px;">
+      ${todayDone.map(t => `<span style="display:inline-block;margin-right:16px;">✓ ${escapeHtml(t.text)}</span>`).join('')}
+    </div>
+  `;
+  return card;
+}
+
+function buildDoneTodayHeroCard() {
+  // Evening / late treatment: more generous, more presence
+  const todayDone = doneToday();
+  const card = document.createElement('div');
+  card.className = 'candy candy-butter span-12';
+  if (todayDone.length === 0) {
+    card.innerHTML = `
+      <span class="card-label">Done today</span>
+      <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:20px;line-height:1.4;color:var(--ink);margin-top:6px;max-width:560px;">
+        Nothing ticked off today. <span style="color:var(--pink-deep);">There is still time. Or there isn't.</span> Who's to say.
+      </div>
+    `;
+    return card;
+  }
+  card.innerHTML = `
+    <span class="card-label">Done today · ${todayDone.length}</span>
+    <div style="font-family:'Fraunces',serif;font-weight:700;font-style:italic;font-size:26px;line-height:1.15;color:var(--ink);margin-top:6px;margin-bottom:14px;">
+      ${todayDone.length} thing${todayDone.length === 1 ? '' : 's'}, <em style="color:var(--pink-deep);">handled.</em>
+    </div>
+    <div style="font-family:'Fraunces',serif;font-weight:500;font-size:15px;line-height:1.7;color:var(--ink);">
+      ${todayDone.map(t => `<span style="display:inline-block;margin-right:16px;">✓ ${escapeHtml(t.text)}</span>`).join('')}
+    </div>
+  `;
+  return card;
+}
+
+function buildOneThingCard() {
+  // Pick a stable "one thing" from Now tier for today
+  // Seed by date so it stays the same all day
+  const nowTasks = state.tasks.filter(t => !t.done && t.tier === 'now');
+  if (nowTasks.length === 0) return null;
+
+  const seed = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const seedNum = seed.split('-').join('').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const idx = seedNum % nowTasks.length;
+  const pick = nowTasks[idx];
+
+  const card = document.createElement('div');
+  card.className = 'one-thing-card span-6';
+  const modeCrumb = pick.mode ? (DEFAULT_MODES.find(m => m.id === pick.mode) || {}) : null;
+  const modeLabel = modeCrumb && modeCrumb.glyph ? `${modeCrumb.glyph} ${modeCrumb.name}` : 'unassigned';
+
+  card.innerHTML = `
+    <div class="one-thing-inner">
+      <span class="card-label">★ The one thing</span>
+      <div class="one-thing-label">If you only do one</div>
+      <div class="one-thing-text">${escapeHtml(pick.text)}</div>
+      <div class="one-thing-mode">${escapeHtml(modeLabel)}</div>
+      <div class="one-thing-actions">
+        <button class="pill-btn ink" data-act="done">Mark done</button>
+        <button class="pill-btn" data-act="another">Pick another</button>
+      </div>
+    </div>
+  `;
+
+  card.querySelector('[data-act="done"]').onclick = () => {
+    toggleDone(pick.id);
+    toast('done.');
+    render();
+  };
+  card.querySelector('[data-act="another"]').onclick = () => {
+    // Shuffle the seed so a different task is picked, stored just in memory
+    window._oneThingSalt = (window._oneThingSalt || 0) + 1;
+    pickAnotherOneThing();
+  };
+
+  // Respect one-time salt if user has pressed "Pick another"
+  if (window._oneThingSalt) {
+    const saltedIdx = (seedNum + window._oneThingSalt) % nowTasks.length;
+    const newPick = nowTasks[saltedIdx];
+    card.querySelector('.one-thing-text').textContent = newPick.text;
+    const newModeCrumb = newPick.mode ? (DEFAULT_MODES.find(m => m.id === newPick.mode) || {}) : null;
+    const newModeLabel = newModeCrumb && newModeCrumb.glyph ? `${newModeCrumb.glyph} ${newModeCrumb.name}` : 'unassigned';
+    card.querySelector('.one-thing-mode').textContent = newModeLabel;
+    card.querySelector('[data-act="done"]').onclick = () => {
+      toggleDone(newPick.id);
+      toast('done.');
+      render();
+    };
   }
 
-  return root;
+  return card;
+}
+
+function pickAnotherOneThing() {
+  // Trigger re-render; the salt counter is respected in buildOneThingCard
+  render();
 }
 
 /* ============================================================
