@@ -314,6 +314,11 @@ body.calm-mode {
   box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink);
 }
 
+/* 4c: Community (butter) and any light mode colours need ink text. */
+.mode-btn.active.dark-text {
+  color: var(--ink);
+}
+
 .mode-btn.add {
   background: transparent;
   border: 2px dashed var(--ink);
@@ -355,6 +360,7 @@ body.calm-mode {
   border-radius: var(--r-md);
   box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--ink);
   padding: 22px 24px;
+  margin-bottom: 22px;
   position: relative;
 }
 
@@ -2029,6 +2035,12 @@ body.calm-mode {
   box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
 }
 
+/* 4c: When the sub-colour is a pale tint (e.g. deeply nested members),
+   the active pill's cream text disappears. Switch to ink text. */
+.sub-btn.active.dark-text {
+  color: var(--ink);
+}
+
 .sub-btn.add {
   background: transparent;
   border: 1.5px dashed var(--ink);
@@ -2845,6 +2857,26 @@ function colourCssDeep(colourId) {
   return `var(--pal-${colourId}-deep)`;
 }
 
+// 4c: Does this colour id need DARK text when used as a pill background?
+// Rule of thumb: computed tint >= 25% is pale enough that cream text vanishes.
+// Butter (and its tints) also need dark text because butter is a very light
+// yellow even at full saturation.
+function needsDarkText(colourId) {
+  if (!colourId) return false;
+  if (isComputedColour(colourId)) {
+    const parts = colourId.split(':');
+    if (parts[0] === 'tint') {
+      const pct = parseInt(parts[1], 10);
+      if (pct >= 25) return true;
+      // Butter tinted at any level: dark text.
+      if (parts[2] === 'butter') return true;
+    }
+    return false;
+  }
+  // Plain palette ids: butter and lime are light enough to need dark text at full strength.
+  return colourId === 'butter' || colourId === 'lime';
+}
+
 const DEFAULT_MODES = [
   { id: 'dashboard',   name: 'Dashboard',       glyph: '●', order: 0, colour: 'pink'       },
   { id: 'work',        name: 'Work',            glyph: '✦', order: 1, colour: 'cornflower' },
@@ -3410,8 +3442,9 @@ function renderModeBar() {
   for (const m of DEFAULT_MODES) {
     if (m.id === 'dashboard') continue;
     const btn = document.createElement('button');
-    btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '');
-    btn.setAttribute('style', colourStyle(modeColour(m.id)));
+    const mC = modeColour(m.id);
+    btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '') + (needsDarkText(mC) ? ' dark-text' : '');
+    btn.setAttribute('style', colourStyle(mC));
     btn.innerHTML = `<span class="glyph">${m.glyph}</span>${escapeHtml(m.name)}`;
 
     // Count = open Now-tier tasks (the "this week" view)
@@ -4485,8 +4518,9 @@ function buildSubBar(modeId, subs, subId) {
 
   subs.forEach(s => {
     const b = document.createElement('button');
-    b.className = 'sub-btn' + (subId === s.id ? ' active' : '');
-    b.setAttribute('style', `--sub-colour: ${colourCssValue(subColour(modeId, s.id))};`);
+    const sColour = subColour(modeId, s.id);
+    b.className = 'sub-btn' + (subId === s.id ? ' active' : '') + (needsDarkText(sColour) ? ' dark-text' : '');
+    b.setAttribute('style', `--sub-colour: ${colourCssValue(sColour)};`);
     b.textContent = s.name;
     b.onclick = () => setSubEntity(s.id);
 
@@ -4577,8 +4611,9 @@ function buildMemberBar(household, memberId) {
 
   (household.members || []).forEach(m => {
     const b = document.createElement('button');
-    b.className = 'sub-btn' + (memberId === m.id ? ' active' : '');
-    b.setAttribute('style', `--sub-colour: ${colourCssValue(memberColour(household.id, m.id))};`);
+    const mColour = memberColour(household.id, m.id);
+    b.className = 'sub-btn' + (memberId === m.id ? ' active' : '') + (needsDarkText(mColour) ? ' dark-text' : '');
+    b.setAttribute('style', `--sub-colour: ${colourCssValue(mColour)};`);
     b.textContent = m.name;
     b.onclick = () => setMember(m.id);
 
