@@ -1834,6 +1834,270 @@ body.calm-mode {
 .sub-btn.add:hover { box-shadow: none; color: var(--ink); }
 
 /* ==========================================================
+   EVENTS + COUNTDOWNS (3b)
+   ========================================================== */
+.events-card {
+  background: var(--cream);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--sky);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+}
+
+.countdowns-card {
+  background: var(--peach);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--ink);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+}
+
+.event-list { list-style: none; padding: 0; margin: 0; }
+
+.event-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 10px;
+  border-bottom: 2px dashed var(--rule);
+  border-radius: var(--r-xs);
+  transition: background var(--dur) var(--ease);
+  cursor: pointer;
+}
+
+.event-row:last-child { border-bottom: none; }
+.event-row:hover { background: rgba(159, 216, 224, 0.15); }
+
+.event-date-badge {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--r-xs);
+  padding: 8px 10px;
+  text-align: center;
+  min-width: 56px;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  flex-shrink: 0;
+}
+
+.event-date-badge .day {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.event-date-badge .month {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--butter);
+  margin-top: 2px;
+}
+
+.event-row.countdown .event-date-badge {
+  background: var(--pink);
+}
+
+.event-row.countdown .event-date-badge .month { color: var(--cream); }
+
+.event-row.past .event-date-badge {
+  background: var(--mute);
+  opacity: 0.6;
+}
+
+.event-body { min-width: 0; }
+
+.event-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--ink);
+  word-wrap: break-word;
+}
+
+.event-row.past .event-title { color: var(--mute); text-decoration: line-through; }
+
+.event-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-top: 3px;
+}
+
+.event-days-left {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-style: italic;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.event-days-left .num {
+  font-size: 28px;
+  line-height: 0.9;
+  color: var(--pink-deep);
+}
+
+.event-row.past .event-days-left .num { color: var(--mute); }
+
+.event-days-left .lbl {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-top: 2px;
+}
+
+.event-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--mute);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 100px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.event-row:hover .event-delete-btn { opacity: 0.6; }
+.event-delete-btn:hover { opacity: 1 !important; color: var(--pink-deep); }
+
+/* Add event form */
+.event-add-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--rule);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .event-add-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.event-add-form input[type="text"],
+.event-add-form input[type="date"] {
+  background: var(--cream);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+  outline: none;
+  min-width: 0;
+  font-family: inherit;
+}
+
+.event-add-form input:focus { box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--pink); }
+.event-add-form input::placeholder { color: var(--mute); }
+
+.event-add-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.event-add-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--mute);
+  cursor: pointer;
+  user-select: none;
+}
+
+.event-add-toggle input {
+  accent-color: var(--pink);
+  width: 16px;
+  height: 16px;
+}
+
+.event-add-toggle.active { color: var(--ink); font-weight: 600; }
+
+/* Dashboard coming-up card stacks events nicely */
+.coming-up-list { display: flex; flex-direction: column; gap: 2px; }
+
+.coming-up-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 6px;
+  border-bottom: 1.5px dashed rgba(26, 14, 26, 0.12);
+}
+
+.coming-up-item:last-child { border-bottom: none; }
+
+.coming-up-days {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--pink-deep);
+  min-width: 44px;
+  text-align: center;
+}
+
+.coming-up-days small {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--mute);
+  margin-top: 1px;
+  text-transform: uppercase;
+}
+
+.coming-up-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.3;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.coming-up-mode {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+
+.coming-up-countdown-marker {
+  font-size: 12px;
+  color: var(--pink);
+  margin-left: 4px;
+}
+
+.coming-up-item { position: relative; }
+.coming-up-item .event-delete-btn { opacity: 0.3; }
+.coming-up-item:hover .event-delete-btn { opacity: 0.8; }
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -1895,8 +2159,10 @@ function defaultState() {
     currentOrgId: null,
     onboarded: false,
     tasks: [], // { id, text, mode, subId, tier, done, waitingOn, createdAt }
+    events: [], // { id, title, date, mode?, subId?, isCountdown, createdAt }
     clients: [], // { id, name, rate }
     orgs: [],    // { id, name }
+    households: [], // { id, name }
     notes: {}, // keyed by 'mode' or 'mode:subId', value is text
     pinnedSubs: [],
     triageStyle: 'focused', // 'focused' or 'list'
@@ -2138,13 +2404,94 @@ function setNote(modeId, subId, text) {
 function getSubEntities(modeId) {
   if (modeId === 'work') return state.clients || [];
   if (modeId === 'community') return state.orgs || [];
+  if (modeId === 'family') return state.households || [];
   return [];
 }
 
 function subEntityLabel(modeId) {
   if (modeId === 'work') return 'client';
   if (modeId === 'community') return 'org';
+  if (modeId === 'family') return 'household';
   return '';
+}
+
+/* ============================================================
+   EVENTS + COUNTDOWNS (3b)
+   ============================================================ */
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function daysUntil(iso) {
+  if (!iso) return null;
+  const target = new Date(iso + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.round((target - now) / 86400000);
+}
+
+function formatEventDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function allEvents() {
+  return state.events || [];
+}
+
+function upcomingEvents(limit) {
+  const all = allEvents()
+    .filter(e => daysUntil(e.date) != null && daysUntil(e.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  return limit ? all.slice(0, limit) : all;
+}
+
+function eventsInMode(modeId, subId) {
+  if (!modeId) return allEvents();
+  const base = allEvents().filter(e => e.mode === modeId);
+  if (subId) return base.filter(e => e.subId === subId);
+  return base;
+}
+
+function upcomingCountdowns(limit) {
+  const all = allEvents()
+    .filter(e => e.isCountdown && daysUntil(e.date) != null && daysUntil(e.date) >= 0)
+    .sort((a, b) => daysUntil(a.date) - daysUntil(b.date));
+  return limit ? all.slice(0, limit) : all;
+}
+
+function addEvent(opts) {
+  opts = opts || {};
+  if (!state.events) state.events = [];
+  const event = {
+    id: uid(),
+    title: (opts.title || '').trim(),
+    date: opts.date || todayISO(),
+    mode: opts.mode || null,
+    subId: opts.subId || null,
+    isCountdown: !!opts.isCountdown,
+    createdAt: Date.now()
+  };
+  state.events.push(event);
+  saveState();
+  return event;
+}
+
+function updateEvent(id, patch) {
+  if (!state.events) return null;
+  const i = state.events.findIndex(e => e.id === id);
+  if (i === -1) return null;
+  state.events[i] = Object.assign({}, state.events[i], patch);
+  saveState();
+  return state.events[i];
+}
+
+function deleteEvent(id) {
+  if (!state.events) return;
+  state.events = state.events.filter(e => e.id !== id);
+  saveState();
 }
 
 /* ============================================================
@@ -2472,6 +2819,50 @@ function renderDashboard() {
   });
   root.appendChild(modesCard);
 
+  /* Coming up - events + countdowns across all modes */
+  const upcoming = upcomingEvents(8);
+  if (upcoming.length > 0) {
+    const upCard = document.createElement('div');
+    upCard.className = 'candy candy-sky span-12';
+    upCard.innerHTML = `<span class="card-label">Coming up · ${upcoming.length}</span>`;
+    const list = document.createElement('div');
+    list.className = 'coming-up-list';
+    upcoming.slice(0, 6).forEach(e => {
+      const days = daysUntil(e.date);
+      const item = document.createElement('div');
+      item.className = 'coming-up-item';
+      const modeCrumb = e.mode ? (DEFAULT_MODES.find(m => m.id === e.mode) || {}) : null;
+      const modeLabel = modeCrumb ? `${modeCrumb.glyph} ${modeCrumb.name}` : '';
+      const countdownMark = e.isCountdown ? `<span class="coming-up-countdown-marker" title="Countdown">✦</span>` : '';
+      item.innerHTML = `
+        <div class="coming-up-days">
+          ${days === 0 ? 'today' : days}
+          ${days !== 0 ? `<small>${days === 1 ? 'day' : 'days'}</small>` : ''}
+        </div>
+        <div>
+          <div class="coming-up-title">${escapeHtml(e.title)}${countdownMark}</div>
+          ${modeLabel ? `<div class="coming-up-mode">${escapeHtml(modeLabel)} · ${escapeHtml(formatEventDate(e.date))}</div>` : `<div class="coming-up-mode">${escapeHtml(formatEventDate(e.date))}</div>`}
+        </div>
+        <button class="event-delete-btn" data-id="${e.id}" title="Delete">✕</button>
+      `;
+      item.querySelector('[data-id]').onclick = (ev) => {
+        ev.stopPropagation();
+        deleteEvent(e.id);
+        render();
+      };
+      list.appendChild(item);
+    });
+    upCard.appendChild(list);
+    if (upcoming.length > 6) {
+      upCard.insertAdjacentHTML('beforeend', `
+        <div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);text-transform:uppercase;">
+          + ${upcoming.length - 6} more scheduled
+        </div>
+      `);
+    }
+    root.appendChild(upCard);
+  }
+
   /* Done today (only when there's something to show) */
   if (todayDone.length > 0) {
     const doneCard = document.createElement('div');
@@ -2763,13 +3154,13 @@ function renderModeView(modeId) {
   `;
   root.appendChild(masthead);
 
-  // Sub-entity selector (only Work + Community)
-  if (modeId === 'work' || modeId === 'community') {
+  // Sub-entity selector (Work, Community, Family)
+  if (modeId === 'work' || modeId === 'community' || modeId === 'family') {
     const subBar = document.createElement('div');
     subBar.className = 'sub-bar';
     const lbl = document.createElement('span');
     lbl.className = 'sub-bar-label';
-    lbl.textContent = modeId === 'work' ? 'Clients' : 'Orgs';
+    lbl.textContent = modeId === 'work' ? 'Clients' : (modeId === 'community' ? 'Orgs' : 'Households');
     subBar.appendChild(lbl);
 
     // "All" button
@@ -2790,17 +3181,21 @@ function renderModeView(modeId) {
     // Add sub button
     const addBtn = document.createElement('button');
     addBtn.className = 'sub-btn add';
-    addBtn.textContent = '+ ' + (modeId === 'work' ? 'client' : 'org');
+    addBtn.textContent = '+ ' + subEntityLabel(modeId);
     addBtn.onclick = () => {
-      const name = prompt((modeId === 'work' ? 'New client' : 'New org') + ' name:');
+      const label = subEntityLabel(modeId);
+      const name = prompt(`New ${label} name:`);
       if (!name || !name.trim()) return;
       const entity = { id: uid(), name: name.trim() };
       if (modeId === 'work') {
         if (!state.clients) state.clients = [];
         state.clients.push(entity);
-      } else {
+      } else if (modeId === 'community') {
         if (!state.orgs) state.orgs = [];
         state.orgs.push(entity);
+      } else if (modeId === 'family') {
+        if (!state.households) state.households = [];
+        state.households.push(entity);
       }
       saveState();
       toast('added.');
@@ -2892,6 +3287,9 @@ function renderModeView(modeId) {
 
   root.appendChild(card);
 
+  // Events card (scoped to mode, or mode + sub-entity if active)
+  root.appendChild(renderEventsCard(modeId, activeSub));
+
   // Notes card (scoped to mode, or mode + sub-entity if active)
   root.appendChild(renderNotesCard(modeId, activeSub));
 
@@ -2915,6 +3313,7 @@ function tasksInModeTierSub(modeId, tier, subId) {
 function subEntityDescription(modeId) {
   if (modeId === 'work') return "Client-specific tasks, notes and scope.";
   if (modeId === 'community') return "Org-specific work, coordination and notes.";
+  if (modeId === 'family') return "Household-specific tasks and notes.";
   return '';
 }
 
@@ -2959,6 +3358,138 @@ function renderNotesCard(modeId, activeSub) {
   });
 
   return card;
+}
+
+/* ============================================================
+   EVENTS + COUNTDOWNS CARDS (3b)
+   ============================================================ */
+function renderEventsCard(modeId, activeSub) {
+  const card = document.createElement('div');
+  card.className = 'events-card';
+
+  const subId = activeSub ? activeSub.id : null;
+  const scope = activeSub ? activeSub.name : (modeId ? DEFAULT_MODES.find(m => m.id === modeId).name : 'All');
+
+  // Events in this scope, future first
+  const all = eventsInMode(modeId, subId);
+  const future = all.filter(e => daysUntil(e.date) != null && daysUntil(e.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const past = all.filter(e => daysUntil(e.date) != null && daysUntil(e.date) < 0)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 3); // only show a few past events
+
+  card.innerHTML = `<span class="card-label">Events · ${escapeHtml(scope)}</span>`;
+
+  if (future.length === 0 && past.length === 0) {
+    card.insertAdjacentHTML('beforeend', `
+      <div class="empty">Nothing scheduled. <span class="sparkle">✦</span> Time stretches flat and uneventful.</div>
+    `);
+  } else {
+    const list = document.createElement('ul');
+    list.className = 'event-list';
+    future.forEach(e => list.appendChild(renderEventRow(e, false)));
+    past.forEach(e => list.appendChild(renderEventRow(e, true)));
+    card.appendChild(list);
+  }
+
+  // Add event form
+  const form = document.createElement('div');
+  form.className = 'event-add-form';
+  form.innerHTML = `
+    <input type="text" id="eventTitle" placeholder="Event title..." autocomplete="off">
+    <input type="date" id="eventDate" value="${todayISO()}">
+    <button class="pill-btn primary" id="eventAddBtn">+ Add</button>
+  `;
+  const toggleRow = document.createElement('div');
+  toggleRow.className = 'event-add-toggle-row';
+  toggleRow.innerHTML = `
+    <label class="event-add-toggle" id="cdToggleWrap">
+      <input type="checkbox" id="eventCountdown">
+      <span>Count down on dashboard</span>
+    </label>
+  `;
+
+  card.appendChild(form);
+  card.appendChild(toggleRow);
+
+  const titleInput = form.querySelector('#eventTitle');
+  const dateInput = form.querySelector('#eventDate');
+  const cdInput = toggleRow.querySelector('#eventCountdown');
+  const cdWrap = toggleRow.querySelector('#cdToggleWrap');
+  cdInput.addEventListener('change', () => {
+    cdWrap.classList.toggle('active', cdInput.checked);
+  });
+
+  const doAdd = () => {
+    const title = titleInput.value.trim();
+    if (!title) return;
+    addEvent({
+      title,
+      date: dateInput.value || todayISO(),
+      mode: modeId || null,
+      subId: subId,
+      isCountdown: cdInput.checked
+    });
+    titleInput.value = '';
+    cdInput.checked = false;
+    cdWrap.classList.remove('active');
+    toast('scheduled.');
+    render();
+  };
+
+  form.querySelector('#eventAddBtn').onclick = doAdd;
+  titleInput.onkeydown = (e) => { if (e.key === 'Enter') doAdd(); };
+
+  return card;
+}
+
+function renderEventRow(event, isPast) {
+  const li = document.createElement('li');
+  li.className = 'event-row' + (isPast ? ' past' : '') + (event.isCountdown ? ' countdown' : '');
+
+  const dObj = new Date(event.date + 'T00:00:00');
+  const day = dObj.getDate();
+  const month = dObj.toLocaleDateString('en-AU', { month: 'short' }).toUpperCase();
+
+  const daysLeft = daysUntil(event.date);
+  const daysRight = isPast
+    ? `<div class="event-days-left"><span class="num" style="font-size:16px;">past</span></div>`
+    : (daysLeft === 0
+      ? `<div class="event-days-left"><span class="num">today</span><span class="lbl"></span></div>`
+      : `<div class="event-days-left"><span class="num">${daysLeft}</span><span class="lbl">${daysLeft === 1 ? 'day' : 'days'}</span></div>`);
+
+  // Meta: countdown label + mode crumb if not in mode view
+  let meta = '';
+  const crumbs = [];
+  if (event.isCountdown) crumbs.push('✦ countdown');
+  if (event.mode && !isPast) {
+    const m = DEFAULT_MODES.find(x => x.id === event.mode);
+    if (m) crumbs.push(`${m.glyph} ${m.name}`);
+  }
+  if (crumbs.length) meta = `<div class="event-meta">${crumbs.map(escapeHtml).join(' · ')}</div>`;
+
+  li.innerHTML = `
+    <div class="event-date-badge">
+      <div class="day">${day}</div>
+      <div class="month">${month}</div>
+    </div>
+    <div class="event-body">
+      <div class="event-title">${escapeHtml(event.title)}</div>
+      ${meta}
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      ${daysRight}
+      <button class="event-delete-btn" title="Delete">✕</button>
+    </div>
+  `;
+
+  li.querySelector('.event-delete-btn').onclick = (e) => {
+    e.stopPropagation();
+    deleteEvent(event.id);
+    render();
+  };
+
+  return li;
 }
 
 function renderTaskRow(task) {
