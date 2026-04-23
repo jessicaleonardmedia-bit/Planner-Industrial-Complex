@@ -2742,15 +2742,15 @@ function autoVaryFromParent(parentColourId, subId) {
   for (let i = 0; i < (subId || '').length; i++) {
     h = (h * 31 + subId.charCodeAt(i)) | 0;
   }
-  // Sibling slots: tints (lighter) and shades (darker) of the parent.
-  // We exclude the parent's own base so siblings aren't identical to parent.
+  // Sibling slots: always tints (lighter) of the parent. Varies only in
+  // how much lighter, never darker. Children consistently read as pale
+  // "belonging to" the parent, rather than randomly bolder or paler.
   const slots = [
-    'tint:35',   // very light
-    'tint:20',   // light
-    'tint:10',   // slightly light
-    'shade:10',  // slightly dark
-    'shade:20',  // dark
-    'shade:35'   // very dark
+    'tint:15',
+    'tint:25',
+    'tint:35',
+    'tint:45',
+    'tint:55'
   ];
   const slot = slots[Math.abs(h) % slots.length];
   return `${slot}:${paletteId}`;
