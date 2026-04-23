@@ -2721,18 +2721,22 @@ function swatchVars(id) {
   };
 }
 
-// Auto-vary a sub-entity's colour from its parent. Members/children
-// get a tint or shade of the PARENT's underlying palette colour, not a
-// different hue. This keeps the family obviously related. Returns a
-// marker like "tint:20:pink" that swatchVars() knows how to handle.
+// Auto-vary a sub-entity's colour from its parent. The child is
+// ALWAYS lighter than the parent (consistent "paler belonging to"
+// visual), and if the parent is itself a tint (e.g. cheese is a
+// tint of coral), the child's tint will be MORE diluted than its
+// parent's - so Family > cheese > crackers is a real cascade, not
+// a coincidence match.
 // Deterministic from the child's id so colours stay stable.
 function autoVaryFromParent(parentColourId, subId) {
-  // If the parent is already a computed tint/shade marker, unwrap it
-  // to get the underlying palette id. Grandchildren vary from the
-  // ORIGINAL palette colour, not from a tint of a tint.
+  // Work out the underlying palette id and how tinted the parent
+  // already is. A plain palette id means parent tint level = 0.
   let paletteId = parentColourId;
+  let parentTintPct = 0;
   if (isComputedColour(paletteId)) {
     const parts = paletteId.split(':');
+    // tint:25:coral -> mode=tint, pct=25, paletteId=coral
+    parentTintPct = parts[0] === 'tint' ? parseInt(parts[1], 10) : 0;
     paletteId = parts[2];
   }
   if (!paletteId || !PALETTE_IDS.includes(paletteId)) paletteId = 'pink';
@@ -2742,18 +2746,23 @@ function autoVaryFromParent(parentColourId, subId) {
   for (let i = 0; i < (subId || '').length; i++) {
     h = (h * 31 + subId.charCodeAt(i)) | 0;
   }
-  // Sibling slots: always tints (lighter) of the parent. Varies only in
-  // how much lighter, never darker. Children consistently read as pale
-  // "belonging to" the parent, rather than randomly bolder or paler.
-  const slots = [
-    'tint:15',
-    'tint:25',
-    'tint:35',
-    'tint:45',
-    'tint:55'
-  ];
-  const slot = slots[Math.abs(h) % slots.length];
-  return `${slot}:${paletteId}`;
+
+  // Child's tint must be strictly more diluted than parent's.
+  // Minimum gap of 20 pts so the step between levels is clearly visible.
+  // Cap at 80 so we don't disappear into the cream background.
+  const minTint = Math.min(parentTintPct + 20, 65);
+  const maxTint = 80;
+  // Pick one of a few spots within the allowed range
+  const range = maxTint - minTint;
+  if (range <= 0) {
+    // Already too tinted to cascade further. Stay close to parent level.
+    return `tint:${Math.min(parentTintPct + 15, 85)}:${paletteId}`;
+  }
+  // 4 slots within the allowed range, chosen by hash
+  const step = range / 4;
+  const slotIdx = Math.abs(h) % 4;
+  const pct = Math.round(minTint + slotIdx * step);
+  return `tint:${pct}:${paletteId}`;
 }
 
 // Is this a computed auto-varied colour (tint/shade marker) or a plain palette id?
