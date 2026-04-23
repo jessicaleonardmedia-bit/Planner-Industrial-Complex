@@ -40,6 +40,32 @@
   --rule:        rgba(26, 14, 26, 0.14);
   --shadow:      rgba(26, 14, 26, 0.1);
 
+  /* =========================================================
+     PALETTE (4a) — 14 curated bubblegum-brutalist swatches.
+     Each swatch exists as -deep (saturated), base, -soft (tint).
+     Used for mode, sub-entity, and task colour assignment.
+     --mode-colour is set per element at render time.
+     ========================================================= */
+  --pal-pink:      #ff4d93;   --pal-pink-soft:      #ffd4e4;   --pal-pink-deep:      #c8306e;
+  --pal-bubblegum: #ff85c0;   --pal-bubblegum-soft: #ffdcec;   --pal-bubblegum-deep: #c94b8d;
+  --pal-coral:     #ff7a6b;   --pal-coral-soft:     #ffd7cf;   --pal-coral-deep:     #c94a3d;
+  --pal-peach:     #ffb894;   --pal-peach-soft:     #ffe4d0;   --pal-peach-deep:     #c4845a;
+  --pal-butter:    #ffdc5e;   --pal-butter-soft:    #fff1b5;   --pal-butter-deep:    #b08d1e;
+  --pal-lime:      #c8e05a;   --pal-lime-soft:      #edf5bf;   --pal-lime-deep:      #7f9a2d;
+  --pal-sage:      #9bb580;   --pal-sage-soft:      #d6e1c2;   --pal-sage-deep:      #5d7a42;
+  --pal-mint:      #8fd9b4;   --pal-mint-soft:      #d1eedf;   --pal-mint-deep:      #478362;
+  --pal-sky:       #9fd8e0;   --pal-sky-soft:       #d5ecef;   --pal-sky-deep:       #4a858f;
+  --pal-cornflower:#8fa7e0;   --pal-cornflower-soft:#cfd9ef;   --pal-cornflower-deep:#4a5f99;
+  --pal-lavender:  #c7a9e0;   --pal-lavender-soft: #e8d9f0;    --pal-lavender-deep:  #7a4fa3;
+  --pal-mauve:     #b886a0;   --pal-mauve-soft:    #e6cfd9;    --pal-mauve-deep:     #7d4c63;
+  --pal-rose:      #d48a8a;   --pal-rose-soft:     #ead3d3;    --pal-rose-deep:      #944a4a;
+  --pal-terracotta:#c87a5a;   --pal-terracotta-soft:#e8ccbc;   --pal-terracotta-deep:#854229;
+
+  /* Active entity colour, set on render. Defaults to pink. */
+  --mode-colour:      var(--pal-pink);
+  --mode-colour-soft: var(--pal-pink-soft);
+  --mode-colour-deep: var(--pal-pink-deep);
+
   /* Radii */
   --r-lg: 28px;
   --r-md: 20px;
@@ -283,7 +309,7 @@ body.calm-mode {
 }
 
 .mode-btn.active {
-  background: var(--pink);
+  background: var(--mode-colour, var(--pink));
   color: var(--cream);
   box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink);
 }
@@ -318,7 +344,7 @@ body.calm-mode {
 
 .mode-btn.active .count {
   background: var(--cream);
-  color: var(--pink);
+  color: var(--mode-colour-deep, var(--pink-deep));
 }
 
 /* ==========================================================
@@ -1052,16 +1078,31 @@ body.calm-mode {
   display: grid;
   grid-template-columns: 24px 1fr auto;
   gap: 12px;
-  padding: 12px 10px;
+  padding: 12px 10px 12px 14px;
   border-bottom: 2px dashed var(--rule);
   align-items: center;
   transition: background var(--dur) var(--ease);
   cursor: pointer;
   border-radius: var(--r-xs);
+  position: relative;
+}
+
+.task-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--task-colour, transparent);
+  transition: background var(--dur) var(--ease);
 }
 
 .task-row:last-child { border-bottom: none; }
-.task-row:hover { background: rgba(255, 77, 147, 0.06); }
+.task-row:hover {
+  background: color-mix(in srgb, var(--task-colour, var(--pink)) 10%, transparent);
+}
 
 .task-check {
   width: 22px;
@@ -1075,8 +1116,8 @@ body.calm-mode {
   transition: background var(--dur) var(--ease);
 }
 
-.task-check:hover { background: var(--pink-cream); }
-.task-row.done .task-check { background: var(--pink); }
+.task-check:hover { background: color-mix(in srgb, var(--task-colour, var(--pink)) 30%, var(--cream)); }
+.task-row.done .task-check { background: var(--task-colour, var(--pink)); }
 
 .task-row.done .task-check::after {
   content: '';
@@ -1149,11 +1190,12 @@ body.calm-mode {
 .mode-masthead {
   background: var(--cream);
   border-radius: var(--r-lg);
-  box-shadow: 0 0 0 2.5px var(--ink), 7px 7px 0 var(--pink);
+  box-shadow: 0 0 0 2.5px var(--ink), 7px 7px 0 var(--mode-colour, var(--pink));
   padding: 36px 36px;
   margin-bottom: 22px;
   position: relative;
   overflow: hidden;
+  transition: box-shadow var(--dur) var(--ease);
 }
 
 .mode-masthead::before {
@@ -1163,10 +1205,11 @@ body.calm-mode {
   left: -40px;
   width: 220px;
   height: 220px;
-  background: var(--pink-cream);
+  background: var(--mode-colour-soft, var(--pink-cream));
   border-radius: 50%;
-  opacity: 0.55;
+  opacity: 0.75;
   z-index: 0;
+  transition: background var(--dur) var(--ease);
 }
 
 .mode-masthead-inner { position: relative; z-index: 1; }
@@ -1180,7 +1223,12 @@ body.calm-mode {
   margin-bottom: 6px;
 }
 
-.mode-masthead h1 em { font-style: italic; color: var(--pink); font-weight: 900; }
+.mode-masthead h1 em {
+  font-style: italic;
+  color: var(--mode-colour-deep, var(--pink));
+  font-weight: 900;
+  transition: color var(--dur) var(--ease);
+}
 
 .mode-masthead p {
   font-family: 'Fraunces', serif;
@@ -1673,6 +1721,148 @@ body.calm-mode {
 .task-edit-btn:hover { opacity: 1 !important; color: var(--pink); }
 
 /* ==========================================================
+   COLOUR PICKER (4a)
+   Reused in settings (mode colours), sub-entity edit,
+   and task-edit panel. Swatch grid + "inherit" option.
+   ========================================================== */
+.colour-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  background: var(--cream-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1.5px var(--rule);
+}
+
+.swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--swatch, var(--pink));
+  cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+  position: relative;
+  border: none;
+  padding: 0;
+}
+
+.swatch:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.swatch.selected {
+  box-shadow: 0 0 0 1.5px var(--ink), 0 0 0 4px var(--cream), 0 0 0 6px var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.swatch.inherit {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--cream),
+    var(--cream) 4px,
+    var(--cream-3) 4px,
+    var(--cream-3) 8px
+  );
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+}
+
+.swatch.inherit::after {
+  content: '↓';
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.colour-picker-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.colour-picker-note {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--mute);
+  margin-top: 6px;
+}
+
+/* Mode colour row in settings: label + current swatch + dropdown trigger */
+.mode-colour-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 2px dashed var(--rule);
+}
+
+.mode-colour-row:last-child { border-bottom: none; }
+
+.mode-colour-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--swatch, var(--pink));
+  box-shadow: 0 0 0 1.5px var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease);
+  border: none;
+  padding: 0;
+  justify-self: center;
+}
+
+.mode-colour-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.mode-colour-label {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.mode-colour-label .glyph {
+  font-size: 13px;
+  margin-right: 6px;
+}
+
+.mode-colour-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--mute);
+  letter-spacing: 0.08em;
+}
+
+/* Popover for picking a colour on a specific entity */
+.colour-popover {
+  position: absolute;
+  z-index: 80;
+  background: var(--cream);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2px var(--ink), 5px 5px 0 var(--ink);
+  padding: 14px;
+  width: 260px;
+}
+
+.colour-popover h5 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+/* ==========================================================
    DASHBOARD MODE OVERVIEW (2d)
    ========================================================== */
 .mode-mini-row {
@@ -1685,12 +1875,12 @@ body.calm-mode {
   transition: background var(--dur) var(--ease);
 }
 
-.mode-mini-row:hover { background: rgba(255, 77, 147, 0.1); }
+.mode-mini-row:hover { background: color-mix(in srgb, var(--mini-colour, var(--pink)) 12%, transparent); }
 
 .mode-mini-dot {
   width: 32px;
   height: 32px;
-  background: var(--pink);
+  background: var(--mini-colour, var(--pink));
   color: var(--cream);
   border-radius: 50%;
   display: grid;
@@ -1819,7 +2009,7 @@ body.calm-mode {
 }
 
 .sub-btn.active {
-  background: var(--pink);
+  background: var(--sub-colour, var(--mode-colour, var(--pink)));
   color: var(--cream);
   box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
 }
@@ -2467,28 +2657,78 @@ body.calm-mode {
    ============================================================ */
 const STORAGE_KEY = 'my-planner-v1b';
 
+/* ------------------------------------------------------------
+   PALETTE (4a)
+   14 named swatches. Each id maps to a triple of CSS vars
+   (base / soft / deep). The 'pink' id is the canonical default.
+   Order here is the order shown in pickers.
+   ------------------------------------------------------------ */
+const PALETTE = [
+  { id: 'pink',       name: 'Pink' },
+  { id: 'bubblegum',  name: 'Bubblegum' },
+  { id: 'coral',      name: 'Coral' },
+  { id: 'peach',      name: 'Peach' },
+  { id: 'butter',     name: 'Butter' },
+  { id: 'lime',       name: 'Lime' },
+  { id: 'sage',       name: 'Sage' },
+  { id: 'mint',       name: 'Mint' },
+  { id: 'sky',        name: 'Sky' },
+  { id: 'cornflower', name: 'Cornflower' },
+  { id: 'lavender',   name: 'Lavender' },
+  { id: 'mauve',      name: 'Mauve' },
+  { id: 'rose',       name: 'Rose' },
+  { id: 'terracotta', name: 'Terracotta' }
+];
+
+const PALETTE_IDS = PALETTE.map(p => p.id);
+
+// Look up the three CSS var names for a given swatch id.
+function swatchVars(id) {
+  if (!id || !PALETTE_IDS.includes(id)) id = 'pink';
+  return {
+    base: `var(--pal-${id})`,
+    soft: `var(--pal-${id}-soft)`,
+    deep: `var(--pal-${id}-deep)`
+  };
+}
+
+// Auto-vary a sub-entity's colour from its parent mode: rotate
+// N steps through the palette. Deterministic from the sub's id
+// so colours stay stable across reloads.
+function autoVaryFromParent(parentColourId, subId) {
+  const baseIdx = PALETTE_IDS.indexOf(parentColourId);
+  if (baseIdx === -1) return 'pink';
+  // Hash the sub's id to a number, mod palette length - 1 (skip 0)
+  let h = 0;
+  for (let i = 0; i < (subId || '').length; i++) {
+    h = (h * 31 + subId.charCodeAt(i)) | 0;
+  }
+  const offset = (Math.abs(h) % (PALETTE.length - 1)) + 1;
+  return PALETTE_IDS[(baseIdx + offset) % PALETTE.length];
+}
+
 const DEFAULT_MODES = [
-  { id: 'dashboard',   name: 'Dashboard',       glyph: '●', order: 0 },
-  { id: 'work',        name: 'Work',            glyph: '✦', order: 1 },
-  { id: 'family',      name: 'Family',          glyph: '♥', order: 2 },
-  { id: 'personal',    name: 'Personal',        glyph: '✿', order: 3 },
-  { id: 'mortal-coil', name: 'The Mortal Coil', glyph: '♦', order: 4 },
-  { id: 'community',   name: 'Community',       glyph: '☆', order: 5 }
+  { id: 'dashboard',   name: 'Dashboard',       glyph: '●', order: 0, colour: 'pink'       },
+  { id: 'work',        name: 'Work',            glyph: '✦', order: 1, colour: 'cornflower' },
+  { id: 'family',      name: 'Family',          glyph: '♥', order: 2, colour: 'coral'      },
+  { id: 'personal',    name: 'Personal',        glyph: '✿', order: 3, colour: 'pink'       },
+  { id: 'mortal-coil', name: 'The Mortal Coil', glyph: '♦', order: 4, colour: 'mauve'      },
+  { id: 'community',   name: 'Community',       glyph: '☆', order: 5, colour: 'butter'     }
 ];
 
 function defaultState() {
   return {
-    version: 1,
+    version: 2, // bumped for 4a colour fields
     currentMode: 'dashboard',
     currentTier: 'now',
     currentClientId: null,
     currentOrgId: null,
     onboarded: false,
-    tasks: [], // { id, text, mode, subId, tier, done, waitingOn, createdAt }
+    tasks: [], // { id, text, mode, subId, tier, done, waitingOn, createdAt, colour }
     events: [], // { id, title, date, mode?, subId?, isCountdown, createdAt }
-    clients: [], // { id, name, rate }
-    orgs: [],    // { id, name }
-    households: [], // { id, name }
+    clients: [], // { id, name, rate, colour? }
+    orgs: [],    // { id, name, colour? }
+    households: [], // { id, name, colour? }
     notes: {}, // keyed by 'mode' or 'mode:subId', value is text
     pinnedSubs: [],
     triageStyle: 'focused', // 'focused' or 'list'
@@ -2496,6 +2736,8 @@ function defaultState() {
     eventView: 'list', // 'list' or 'calendar'
     calMonthOffset: 0, // current month + offset
     calSelectedDate: null, // ISO date string when a cell is focused
+    // Per-mode colour override map: { modeId: paletteId }. Empty = use DEFAULT_MODES.
+    modeColours: {},
     settings: {
       name: '',
       reducedMotion: false,
@@ -2515,6 +2757,8 @@ function loadState() {
       state = { ...defaultState(), ...parsed };
       // merge settings properly in case new keys added
       state.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
+      // Ensure modeColours object exists (added in 4a)
+      state.modeColours = { ...(parsed.modeColours || {}) };
       // ensure task records have all fields (for older captures)
       state.tasks = (state.tasks || []).map(t => ({
         id: t.id || uid(),
@@ -2527,8 +2771,16 @@ function loadState() {
         waitingOn: t.waitingOn || null,
         waitingSince: t.waitingSince || null,
         chips: t.chips || [],
+        colour: t.colour || null, // 4a: null = inherit from sub/mode
         createdAt: t.createdAt || Date.now()
       }));
+      // Ensure sub-entities have colour field (nullable = auto-vary)
+      ['clients', 'orgs', 'households'].forEach(key => {
+        state[key] = (state[key] || []).map(s => ({
+          ...s,
+          colour: s.colour || null
+        }));
+      });
     }
   } catch (e) {
     console.warn('Load failed, starting fresh', e);
@@ -2744,6 +2996,45 @@ function subEntityLabel(modeId) {
   return '';
 }
 
+/* ------------------------------------------------------------
+   COLOUR RESOLUTION (4a)
+   modeColour(modeId)          -> palette id, user override or default
+   subColour(modeId, subId)    -> palette id, user pick or auto-varied
+   taskColour(task)            -> palette id, task > sub > mode cascade
+   colourVars(paletteId)       -> { '--mode-colour': 'var(--pal-x)', ... }
+   ------------------------------------------------------------ */
+function modeColour(modeId) {
+  if (state.modeColours && state.modeColours[modeId]) {
+    return state.modeColours[modeId];
+  }
+  const m = DEFAULT_MODES.find(x => x.id === modeId);
+  return m && m.colour ? m.colour : 'pink';
+}
+
+function subColour(modeId, subId) {
+  if (!subId) return modeColour(modeId);
+  const subs = getSubEntities(modeId);
+  const sub = subs.find(s => s.id === subId);
+  if (sub && sub.colour) return sub.colour;
+  // Auto-vary from parent mode
+  return autoVaryFromParent(modeColour(modeId), subId);
+}
+
+function taskColour(task) {
+  if (!task) return 'pink';
+  if (task.colour) return task.colour;
+  if (task.mode && task.subId) return subColour(task.mode, task.subId);
+  if (task.mode) return modeColour(task.mode);
+  return 'pink';
+}
+
+// Build inline style string that sets --mode-colour trio from a palette id.
+function colourStyle(paletteId, varPrefix) {
+  const prefix = varPrefix || '--mode-colour';
+  const v = swatchVars(paletteId);
+  return `${prefix}: ${v.base}; ${prefix}-soft: ${v.soft}; ${prefix}-deep: ${v.deep};`;
+}
+
 /* ============================================================
    EVENTS + COUNTDOWNS (3b)
    ============================================================ */
@@ -2863,6 +3154,7 @@ function renderModeBar() {
     if (m.id === 'dashboard') continue;
     const btn = document.createElement('button');
     btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '');
+    btn.setAttribute('style', colourStyle(modeColour(m.id)));
     btn.innerHTML = `<span class="glyph">${m.glyph}</span>${escapeHtml(m.name)}`;
 
     // Count = open Now-tier tasks (the "this week" view)
@@ -3233,6 +3525,7 @@ function buildModesOverviewCard() {
     const queued = open - nowC;
     const row = document.createElement('div');
     row.className = 'mode-mini-row';
+    row.style.setProperty('--mini-colour', `var(--pal-${modeColour(id)})`);
     row.innerHTML = `
       <span class="mode-mini-dot">${m.glyph}</span>
       <div class="mode-mini-text">
@@ -3263,6 +3556,7 @@ function buildWeekendModesCard() {
     const queued = open - nowC;
     const row = document.createElement('div');
     row.className = 'mode-mini-row';
+    row.style.setProperty('--mini-colour', `var(--pal-${modeColour(id)})`);
     // Dim work on weekends
     if (id === 'work') row.style.opacity = '0.55';
     row.innerHTML = `
@@ -3745,6 +4039,11 @@ function renderModeView(modeId) {
   // Masthead - if a sub is selected, show its name
   const masthead = document.createElement('div');
   masthead.className = 'mode-masthead';
+  // 4a: masthead picks up sub colour when sub is active, else mode colour
+  const activeColourId = activeSub
+    ? subColour(modeId, activeSub.id)
+    : modeColour(modeId);
+  masthead.setAttribute('style', colourStyle(activeColourId));
   const firstWord = mode.name.split(' ')[0];
   const rest = mode.name.split(' ').slice(1).join(' ');
   const crumb = activeSub
@@ -3771,9 +4070,10 @@ function renderModeView(modeId) {
     lbl.textContent = modeId === 'work' ? 'Clients' : (modeId === 'community' ? 'Orgs' : 'Households');
     subBar.appendChild(lbl);
 
-    // "All" button
+    // "All" button - uses mode colour
     const allBtn = document.createElement('button');
     allBtn.className = 'sub-btn' + (!subId ? ' active' : '');
+    allBtn.setAttribute('style', `--sub-colour: var(--pal-${modeColour(modeId)});`);
     allBtn.textContent = 'All';
     allBtn.onclick = () => setSubEntity(null);
     subBar.appendChild(allBtn);
@@ -3781,8 +4081,43 @@ function renderModeView(modeId) {
     subs.forEach(s => {
       const b = document.createElement('button');
       b.className = 'sub-btn' + (subId === s.id ? ' active' : '');
+      b.setAttribute('style', `--sub-colour: var(--pal-${subColour(modeId, s.id)});`);
       b.textContent = s.name;
       b.onclick = () => setSubEntity(s.id);
+      // 4a: context menu / long-press for colour + rename
+      const openSubMenu = (anchor) => {
+        const currentColour = s.colour || null; // null = auto-vary
+        openColourPopover(anchor, {
+          title: escapeHtml(s.name) + ' colour',
+          currentColour: currentColour,
+          allowInherit: true,
+          inheritLabel: 'Auto-vary from ' + DEFAULT_MODES.find(x => x.id === modeId).name,
+          onPick: (newId) => {
+            s.colour = newId;
+            saveState();
+            render();
+          },
+          onReset: currentColour ? () => {
+            s.colour = null;
+            saveState();
+            render();
+          } : null
+        });
+      };
+      b.oncontextmenu = (ev) => {
+        ev.preventDefault();
+        openSubMenu(b);
+      };
+      // Long press on touch
+      let pressTimer = null;
+      b.addEventListener('touchstart', () => {
+        pressTimer = setTimeout(() => {
+          pressTimer = null;
+          openSubMenu(b);
+        }, 600);
+      }, { passive: true });
+      b.addEventListener('touchend', () => { if (pressTimer) clearTimeout(pressTimer); });
+      b.addEventListener('touchmove', () => { if (pressTimer) clearTimeout(pressTimer); });
       subBar.appendChild(b);
     });
 
@@ -4283,6 +4618,9 @@ function renderEventRow(event, isPast) {
 function renderTaskRow(task) {
   const li = document.createElement('li');
   li.className = 'task-row' + (task.done ? ' done' : '');
+  // 4a: cascade task > sub > mode > pink. Live on the row as --task-colour.
+  const colour = taskColour(task);
+  li.style.setProperty('--task-colour', `var(--pal-${colour})`);
 
   // Build chip strip
   const chipsHTML = (task.chips || []).map(c => {
@@ -4391,6 +4729,12 @@ function openSettingsDrawer() {
     </div>
 
     <div class="drawer-section">
+      <h3>Mode colours</h3>
+      <div class="wizard-note" style="margin-bottom:10px;">Pick a palette colour for each mode. Sub-entities (clients, households, orgs) will auto-vary from their parent, unless you pick their own.</div>
+      <div id="modeColourList"></div>
+    </div>
+
+    <div class="drawer-section">
       <h3>The nuclear option</h3>
       <div class="toggle-row">
         <div class="info">
@@ -4436,6 +4780,9 @@ function openSettingsDrawer() {
     };
   });
 
+  // 4a: Render the mode colours list
+  renderModeColoursList(drawer.querySelector('#modeColourList'));
+
   drawer.querySelector('#restartOnboarding').onclick = () => {
     closeDrawers();
     state.onboarded = false;
@@ -4449,6 +4796,122 @@ function openSettingsDrawer() {
     render();
     toast('cleared.');
   };
+}
+
+/* ------------------------------------------------------------
+   4a: MODE COLOUR LIST + PICKER POPOVER
+   ------------------------------------------------------------ */
+function renderModeColoursList(host) {
+  if (!host) return;
+  host.innerHTML = '';
+  const modes = DEFAULT_MODES.filter(m => m.id !== 'dashboard');
+  modes.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'mode-colour-row';
+    const colour = modeColour(m.id);
+    const isDefault = !state.modeColours[m.id];
+    row.innerHTML = `
+      <button class="mode-colour-swatch" data-mode="${m.id}" style="--swatch: var(--pal-${colour});" title="Change colour"></button>
+      <div class="mode-colour-label"><span class="glyph">${m.glyph}</span>${escapeHtml(m.name)}</div>
+      <div class="mode-colour-hint">${isDefault ? 'default' : PALETTE.find(p => p.id === colour)?.name || ''}</div>
+    `;
+    row.querySelector('.mode-colour-swatch').onclick = (e) => {
+      openColourPopover(e.currentTarget, {
+        currentColour: colour,
+        allowInherit: false,
+        onPick: (newId) => {
+          state.modeColours[m.id] = newId;
+          saveState();
+          renderModeColoursList(host);
+          render();
+        },
+        onReset: isDefault ? null : () => {
+          delete state.modeColours[m.id];
+          saveState();
+          renderModeColoursList(host);
+          render();
+        }
+      });
+    };
+    host.appendChild(row);
+  });
+}
+
+// Opens a floating colour picker next to `anchorEl`.
+// opts: { currentColour, allowInherit, inheritLabel, onPick(id), onReset? }
+function openColourPopover(anchorEl, opts) {
+  // Remove any existing popover
+  document.querySelectorAll('.colour-popover').forEach(el => el.remove());
+
+  const pop = document.createElement('div');
+  pop.className = 'colour-popover';
+  const title = opts.title || 'Pick a colour';
+  pop.innerHTML = `
+    <h5>${escapeHtml(title)}</h5>
+    <div class="colour-picker" id="popPicker"></div>
+    ${opts.onReset ? `<button class="pill-btn small" id="popReset" style="margin-top:10px;">Reset to default</button>` : ''}
+  `;
+
+  const picker = pop.querySelector('#popPicker');
+
+  // Inherit swatch (first, when allowed)
+  if (opts.allowInherit) {
+    const inh = document.createElement('button');
+    inh.className = 'swatch inherit' + (!opts.currentColour ? ' selected' : '');
+    inh.title = opts.inheritLabel || 'Inherit';
+    inh.onclick = () => {
+      opts.onPick(null);
+      pop.remove();
+    };
+    picker.appendChild(inh);
+  }
+
+  PALETTE.forEach(p => {
+    const sw = document.createElement('button');
+    sw.className = 'swatch' + (opts.currentColour === p.id ? ' selected' : '');
+    sw.setAttribute('style', `--swatch: var(--pal-${p.id});`);
+    sw.title = p.name;
+    sw.onclick = () => {
+      opts.onPick(p.id);
+      pop.remove();
+    };
+    picker.appendChild(sw);
+  });
+
+  if (opts.onReset) {
+    pop.querySelector('#popReset').onclick = () => {
+      opts.onReset();
+      pop.remove();
+    };
+  }
+
+  // Position: place below the anchor, constrained to viewport
+  document.body.appendChild(pop);
+  const rect = anchorEl.getBoundingClientRect();
+  const popRect = pop.getBoundingClientRect();
+  let left = rect.left + window.scrollX;
+  let top = rect.bottom + window.scrollY + 8;
+  // Keep on-screen horizontally
+  const maxLeft = window.scrollX + window.innerWidth - popRect.width - 12;
+  if (left > maxLeft) left = maxLeft;
+  if (left < window.scrollX + 12) left = window.scrollX + 12;
+  // If it would go below viewport, put it above instead
+  if (rect.bottom + popRect.height + 20 > window.innerHeight) {
+    top = rect.top + window.scrollY - popRect.height - 8;
+  }
+  pop.style.left = left + 'px';
+  pop.style.top = top + 'px';
+
+  // Dismiss on click outside
+  setTimeout(() => {
+    const onDocClick = (ev) => {
+      if (!pop.contains(ev.target) && ev.target !== anchorEl) {
+        pop.remove();
+        document.removeEventListener('click', onDocClick, true);
+      }
+    };
+    document.addEventListener('click', onDocClick, true);
+  }, 0);
 }
 
 function closeDrawers() {
@@ -4527,6 +4990,15 @@ function openTaskPanel(taskId) {
     </div>
 
     <div class="task-panel-section">
+      <h4>Colour</h4>
+      <div id="tpColourRow" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="mode-colour-swatch" id="tpColourSwatch" title="Change colour"></button>
+        <div class="mode-colour-hint" id="tpColourHint"></div>
+      </div>
+      <div class="colour-picker-note">Leave as inherit to follow the mode (or client, org, household) this task belongs to.</div>
+    </div>
+
+    <div class="task-panel-section">
       <h4>Waiting on someone?</h4>
       <div class="waiting-input-row">
         <input class="waiting-input" id="tpWaiting" placeholder="e.g. Amelia, Gaffoor, hosting provider" value="${escapeHtml(task.waitingOn || '')}">
@@ -4553,7 +5025,47 @@ function openTaskPanel(taskId) {
     tier: task.tier,
     mode: task.mode,
     chips: (task.chips || []).slice(),
-    waitingOn: task.waitingOn
+    waitingOn: task.waitingOn,
+    colour: task.colour || null
+  };
+
+  // 4a: render the task colour control (reflects staged state)
+  function renderTaskColourControl() {
+    const swatch = panel.querySelector('#tpColourSwatch');
+    const hint = panel.querySelector('#tpColourHint');
+    if (!swatch || !hint) return;
+    // Work out what colour this task would show with current staged values
+    const effective = staged.colour
+      ? staged.colour
+      : (staged.mode
+          ? (task.subId ? subColour(staged.mode, task.subId) : modeColour(staged.mode))
+          : 'pink');
+    swatch.setAttribute('style', `--swatch: var(--pal-${effective});`);
+    const paletteName = PALETTE.find(p => p.id === effective)?.name || '';
+    if (staged.colour) {
+      hint.textContent = paletteName + ' · picked';
+    } else if (staged.mode) {
+      const m = DEFAULT_MODES.find(x => x.id === staged.mode);
+      const inheritFrom = task.subId ? 'sub-entity' : (m ? m.name : 'mode');
+      hint.textContent = paletteName + ' · inherits from ' + inheritFrom;
+    } else {
+      hint.textContent = paletteName + ' · default';
+    }
+  }
+  renderTaskColourControl();
+
+  panel.querySelector('#tpColourSwatch').onclick = (e) => {
+    e.stopPropagation();
+    openColourPopover(e.currentTarget, {
+      title: 'Task colour',
+      currentColour: staged.colour,
+      allowInherit: true,
+      inheritLabel: 'Inherit from mode',
+      onPick: (id) => {
+        staged.colour = id; // null for inherit
+        renderTaskColourControl();
+      }
+    });
   };
 
   const textInput = panel.querySelector('#tpText');
@@ -4572,6 +5084,7 @@ function openTaskPanel(taskId) {
       staged.mode = b.dataset.mode || null;
       panel.querySelectorAll('[data-mode]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
+      renderTaskColourControl(); // colour preview updates if inheriting
     };
   });
 
@@ -4616,7 +5129,8 @@ function openTaskPanel(taskId) {
       tier: staged.tier,
       mode: staged.mode,
       chips: staged.chips,
-      waitingOn: staged.waitingOn
+      waitingOn: staged.waitingOn,
+      colour: staged.colour
     });
     closeDrawers();
     toast('saved.');
