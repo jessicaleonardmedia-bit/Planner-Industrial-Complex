@@ -30,7 +30,7 @@
   --pink-cream:  #ffdcea;
   --ink:         #1a0e1a;
   --ink-soft:    #3a2534;
-  --mute:        #7a5a70;
+  --mute:        #5a3e50;
   --sage:        #9bb580;
   --sage-deep:   #6b8e4e;
   --butter:      #ffdc5e;
@@ -120,6 +120,28 @@ body::after {
   z-index: 1;
 }
 
+/* 4c: Skip link for keyboard users. Visually hidden until focused. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 12px;
+  background: var(--ink);
+  color: var(--butter);
+  padding: 10px 18px;
+  border-radius: var(--r-sm);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  z-index: 1000;
+  transition: top 120ms var(--ease);
+}
+.skip-link:focus {
+  top: 12px;
+  outline: 3px solid var(--pink);
+  outline-offset: 2px;
+}
+
 /* Reduced motion */
 body.reduced-motion *,
 body.reduced-motion *::before,
@@ -127,6 +149,16 @@ body.reduced-motion *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
+}
+
+/* 4c: Respect the OS-level reduced motion preference as a baseline,
+   even when the user hasn't hit the in-app toggle. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* Calm mode: tones down the pink */
@@ -364,10 +396,10 @@ body.calm-mode {
   position: relative;
 }
 
-.candy-pink       { background: var(--pink); color: var(--cream); }
+.candy-pink       { background: var(--pink); color: var(--ink); }
 .candy-pink-cream { background: var(--pink-cream); }
 .candy-butter     { background: var(--butter); }
-.candy-sage       { background: var(--sage); color: var(--cream); }
+.candy-sage       { background: var(--sage); color: var(--ink); }
 .candy-sky        { background: var(--sky); }
 .candy-ink        { background: var(--ink); color: var(--cream); }
 .candy-cream2     { background: var(--cream-2); }
@@ -403,8 +435,10 @@ body.calm-mode {
   font-weight: 500;
 }
 
-.candy-pink .card-label { background: var(--cream); color: var(--pink); }
-.candy-ink .card-label  { background: var(--pink); color: var(--cream); }
+/* 4c readability: cream-bg label with pink text was 2.86:1 (fail).
+   Using ink text instead (17.15:1). Similar for pink-bg label on candy-ink. */
+.candy-pink .card-label { background: var(--cream); color: var(--ink); }
+.candy-ink .card-label  { background: var(--pink); color: var(--ink); }
 .candy-sage .card-label { background: var(--ink); color: var(--sage); }
 .candy-butter .card-label { background: var(--ink); color: var(--butter); }
 
@@ -499,7 +533,7 @@ body.calm-mode {
 
 .stat-pill .label {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   margin-top: 4px;
@@ -890,6 +924,16 @@ body.calm-mode {
   box-shadow: 0 0 0 2px var(--ink);
   flex-shrink: 0;
   transition: background var(--dur) var(--ease);
+  /* 4c: Switched from div to button for a11y - reset button defaults. */
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.toggle:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: 4px;
 }
 
 .toggle::after {
@@ -965,7 +1009,7 @@ body.calm-mode {
     padding: 8px 4px;
     text-align: center;
     font-family: 'DM Mono', monospace;
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--cream);
@@ -2162,7 +2206,7 @@ body.calm-mode {
 
 .event-date-badge .month {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--butter);
@@ -2171,9 +2215,10 @@ body.calm-mode {
 
 .event-row.countdown .event-date-badge {
   background: var(--pink);
+  color: var(--ink);
 }
 
-.event-row.countdown .event-date-badge .month { color: var(--cream); }
+.event-row.countdown .event-date-badge .month { color: var(--ink); }
 
 .event-row.past .event-date-badge {
   background: var(--mute);
@@ -2223,7 +2268,7 @@ body.calm-mode {
   font-family: 'DM Mono', monospace;
   font-style: normal;
   font-weight: 500;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--mute);
@@ -2354,7 +2399,7 @@ body.calm-mode {
 
 .coming-up-mode {
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--mute);
   text-transform: uppercase;
@@ -2540,7 +2585,7 @@ body.calm-mode {
 
 .cal-cell-event {
   font-family: 'DM Sans', sans-serif;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.25;
   color: var(--ink);
@@ -2724,9 +2769,10 @@ body.calm-mode {
 </head>
 <body>
 
+<a href="#main-content" class="skip-link">Skip to main content</a>
 <div class="app" id="app"></div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /* ============================================================
@@ -3418,8 +3464,9 @@ function applySettings() {
    RENDER: MODE NAV
    ============================================================ */
 function renderModeBar() {
-  const bar = document.createElement('div');
+  const bar = document.createElement('nav');
   bar.className = 'modes';
+  bar.setAttribute('aria-label', 'Modes');
 
   // Dashboard first
   const dashBtn = document.createElement('button');
@@ -3509,7 +3556,7 @@ function setMember(memberId) {
    RENDER: TOP BAR
    ============================================================ */
 function renderTopbar() {
-  const bar = document.createElement('div');
+  const bar = document.createElement('header');
   bar.className = 'topbar';
   bar.innerHTML = `
     <div class="brand" id="brandBtn">
@@ -5145,26 +5192,26 @@ function openSettingsDrawer() {
 
       <div class="toggle-row">
         <div class="info">
-          <div class="name">Reduced motion</div>
+          <div class="name" id="tgl-rm-label">Reduced motion</div>
           <div class="desc">Turns off transitions and animations. Nothing moves unless you move it.</div>
         </div>
-        <div class="toggle ${state.settings.reducedMotion ? 'on' : ''}" data-setting="reducedMotion"></div>
+        <button type="button" class="toggle ${state.settings.reducedMotion ? 'on' : ''}" data-setting="reducedMotion" role="switch" aria-checked="${state.settings.reducedMotion}" aria-labelledby="tgl-rm-label"></button>
       </div>
 
       <div class="toggle-row">
         <div class="info">
-          <div class="name">Calm mode</div>
+          <div class="name" id="tgl-cm-label">Calm mode</div>
           <div class="desc">Softens the pink intensity for low-capacity days.</div>
         </div>
-        <div class="toggle ${state.settings.calmMode ? 'on' : ''}" data-setting="calmMode"></div>
+        <button type="button" class="toggle ${state.settings.calmMode ? 'on' : ''}" data-setting="calmMode" role="switch" aria-checked="${state.settings.calmMode}" aria-labelledby="tgl-cm-label"></button>
       </div>
 
       <div class="toggle-row">
         <div class="info">
-          <div class="name">Focus mode</div>
+          <div class="name" id="tgl-fm-label">Focus mode</div>
           <div class="desc">Hides everything except what you're currently doing. (Lights up in later chunks.)</div>
         </div>
-        <div class="toggle ${state.settings.focusMode ? 'on' : ''}" data-setting="focusMode"></div>
+        <button type="button" class="toggle ${state.settings.focusMode ? 'on' : ''}" data-setting="focusMode" role="switch" aria-checked="${state.settings.focusMode}" aria-labelledby="tgl-fm-label"></button>
       </div>
     </div>
 
@@ -5215,6 +5262,7 @@ function openSettingsDrawer() {
       const key = t.dataset.setting;
       state.settings[key] = !state.settings[key];
       t.classList.toggle('on', state.settings[key]);
+      t.setAttribute('aria-checked', String(state.settings[key]));
       applySettings();
       saveState();
     };
@@ -6004,18 +6052,26 @@ function render() {
 
   app.appendChild(renderTopbar());
   app.appendChild(renderModeBar());
-  app.appendChild(renderGreeting());
-  app.appendChild(renderQuickCapture());
+
+  // 4c: Main content area is a landmark so assistive tech can jump to it.
+  const main = document.createElement('main');
+  main.className = 'app-main';
+  main.id = 'main-content';
+  main.setAttribute('tabindex', '-1');
+  main.appendChild(renderGreeting());
+  main.appendChild(renderQuickCapture());
 
   if (state.currentMode === 'dashboard') {
-    app.appendChild(renderDashboard());
+    main.appendChild(renderDashboard());
   } else if (state.currentMode === 'inbox') {
-    app.appendChild(renderInboxView());
+    main.appendChild(renderInboxView());
   } else if (state.currentMode === 'waiting') {
-    app.appendChild(renderWaitingView());
+    main.appendChild(renderWaitingView());
   } else {
-    app.appendChild(renderModeView(state.currentMode));
+    main.appendChild(renderModeView(state.currentMode));
   }
+
+  app.appendChild(main);
 
   // Install hint
   const hint = document.createElement('div');
