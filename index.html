@@ -371,6 +371,18 @@ body.calm-mode {
 .candy-shadow-butter { box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--butter-deep); }
 .candy-shadow-sage   { box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--sage); }
 
+/* 4c: Section differentiation via pale inset borders.
+   Tasks card picks up the active mode/sub/member colour (soft tint).
+   Events and Notes have their own fixed section colours.
+   Combined with the existing offset shadow so each card has
+   outer-shadow depth + inner-colour identity. */
+.candy-tasks {
+  box-shadow:
+    inset 0 0 0 2px var(--tasks-inset, var(--pink-cream)),
+    0 0 0 2.5px var(--ink),
+    5px 5px 0 var(--ink);
+}
+
 .card-label {
   display: inline-block;
   font-family: 'DM Mono', monospace;
@@ -1916,7 +1928,10 @@ body.calm-mode {
 .notes-card {
   background: var(--cream-2);
   border-radius: var(--r-md);
-  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--butter-deep);
+  box-shadow:
+    inset 0 0 0 2px var(--pal-butter-soft),
+    0 0 0 2.5px var(--ink),
+    5px 5px 0 var(--butter-deep);
   padding: 22px 24px;
   margin-bottom: 22px;
 }
@@ -2080,7 +2095,10 @@ body.calm-mode {
 .events-card {
   background: var(--cream);
   border-radius: var(--r-md);
-  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--sky);
+  box-shadow:
+    inset 0 0 0 2px var(--pal-sky-soft),
+    0 0 0 2.5px var(--ink),
+    5px 5px 0 var(--sky);
   padding: 22px 24px;
   margin-bottom: 22px;
 }
@@ -4372,9 +4390,13 @@ function renderModeView(modeId) {
   tierBar.appendChild(doneBtn);
   root.appendChild(tierBar);
 
-  // Tasks card
+  // Tasks card — inset border picks up the active mode/sub/member colour
+  // so Tasks visually belongs to the current scope, while Events and
+  // Notes keep their fixed section colours (sky/butter).
   const card = document.createElement('div');
-  card.className = 'candy';
+  card.className = 'candy candy-tasks';
+  // Soft tint of the active colour for the inset border (pale version)
+  card.style.setProperty('--tasks-inset', colourCssSoft(activeColourId));
 
   const tierInfo = TIERS.find(t => t.id === state.currentTier);
   const isDoneView = state.currentTier === 'done';
