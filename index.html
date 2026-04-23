@@ -1411,7 +1411,7 @@ body.calm-mode {
 }
 
 .triage-big-btn.now { background: var(--pink); color: var(--cream); }
-.triage-big-btn.now .sub { color: var(--cream); opacity: 0.85; }
+.triage-big-btn.now .sub { color: var(--cream); }
 .triage-big-btn.soon { background: var(--sky); }
 .triage-big-btn.someday { background: var(--butter); }
 .triage-big-btn.bin { background: var(--ink); color: var(--cream); }
@@ -1548,13 +1548,15 @@ body.calm-mode {
   line-height: 1.3;
 }
 
-.chip.energy   { background: var(--sage); color: var(--cream); }
+/* 4c readability: sage and money pink are light enough that cream text
+   fails contrast. Flipped to ink. Stale (pink-deep) stays on cream. */
+.chip.energy   { background: var(--sage); color: var(--ink); }
 .chip.quick    { background: var(--butter); }
 .chip.call     { background: var(--pink-soft); }
 .chip.email    { background: var(--sky); }
 .chip.errand   { background: var(--peach); }
 .chip.thinking { background: var(--cream-3); }
-.chip.money    { background: var(--pink); color: var(--cream); }
+.chip.money    { background: var(--pink); color: var(--ink); }
 .chip.waiting  { background: var(--ink); color: var(--butter); font-weight: 500; }
 .chip.waiting.stale { background: var(--pink-deep); color: var(--cream); }
 
