@@ -995,6 +995,205 @@ body.calm-mode {
 .candy:nth-child(6) { animation-delay: 240ms; }
 
 /* ==========================================================
+   TIER TABS (2a)
+   ========================================================== */
+.tier-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.tier-tab {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 10px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tier-tab:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.tier-tab.active {
+  background: var(--pink);
+  color: var(--cream);
+  box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink);
+}
+
+.tier-tab .count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  background: var(--ink);
+  color: var(--butter);
+  padding: 1px 6px;
+  border-radius: 100px;
+}
+
+.tier-tab.active .count { background: var(--cream); color: var(--pink); }
+
+/* ==========================================================
+   TASK LIST (2a)
+   ========================================================== */
+.task-list { list-style: none; padding: 0; margin: 0; }
+
+.task-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 12px;
+  padding: 12px 10px;
+  border-bottom: 2px dashed var(--rule);
+  align-items: center;
+  transition: background var(--dur) var(--ease);
+  cursor: pointer;
+  border-radius: var(--r-xs);
+}
+
+.task-row:last-child { border-bottom: none; }
+.task-row:hover { background: rgba(255, 77, 147, 0.06); }
+
+.task-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px var(--ink);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--dur) var(--ease);
+}
+
+.task-check:hover { background: var(--pink-cream); }
+.task-row.done .task-check { background: var(--pink); }
+
+.task-row.done .task-check::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 7px;
+  width: 5px;
+  height: 10px;
+  border-right: 2.5px solid var(--cream);
+  border-bottom: 2.5px solid var(--cream);
+  transform: rotate(45deg);
+}
+
+.task-text {
+  font-size: 14px;
+  line-height: 1.4;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.task-row.done .task-text {
+  text-decoration: line-through;
+  color: var(--mute);
+}
+
+.task-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--mute);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 100px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.task-row:hover .task-delete-btn { opacity: 0.6; }
+.task-delete-btn:hover { opacity: 1 !important; color: var(--pink-deep); }
+
+/* Add-task bar */
+.add-task-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--rule);
+}
+
+.add-task-input {
+  flex: 1;
+  background: var(--cream);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+  outline: none;
+  transition: box-shadow var(--dur) var(--ease);
+  min-width: 0;
+}
+
+.add-task-input:focus { box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--pink); }
+.add-task-input::placeholder { color: var(--mute); }
+
+/* Mode masthead (used in mode view, replaces chunk 1 placeholder) */
+.mode-masthead {
+  background: var(--cream);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 2.5px var(--ink), 7px 7px 0 var(--pink);
+  padding: 36px 36px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: -40px;
+  width: 220px;
+  height: 220px;
+  background: var(--pink-cream);
+  border-radius: 50%;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+.mode-masthead-inner { position: relative; z-index: 1; }
+
+.mode-masthead h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.mode-masthead h1 em { font-style: italic; color: var(--pink); font-weight: 900; }
+
+.mode-masthead p {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  max-width: 520px;
+}
+
+@media (max-width: 600px) { .mode-masthead { padding: 24px 22px; } }
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -1051,6 +1250,7 @@ function defaultState() {
   return {
     version: 1,
     currentMode: 'dashboard',
+    currentTier: 'now',
     currentClientId: null,
     currentOrgId: null,
     onboarded: false,
@@ -1077,6 +1277,20 @@ function loadState() {
       state = { ...defaultState(), ...parsed };
       // merge settings properly in case new keys added
       state.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
+      // ensure task records have all fields (for older captures)
+      state.tasks = (state.tasks || []).map(t => ({
+        id: t.id || uid(),
+        text: t.text || '',
+        mode: t.mode || null,
+        subId: t.subId || null,
+        tier: t.tier || 'inbox',
+        done: !!t.done,
+        doneAt: t.doneAt || null,
+        waitingOn: t.waitingOn || null,
+        waitingSince: t.waitingSince || null,
+        chips: t.chips || [],
+        createdAt: t.createdAt || Date.now()
+      }));
     }
   } catch (e) {
     console.warn('Load failed, starting fresh', e);
@@ -1148,6 +1362,83 @@ function formatClock() {
 }
 
 /* ============================================================
+   TASK SYSTEM (2a)
+   ============================================================ */
+const TIERS = [
+  { id: 'now',     name: 'Now',     sub: 'this week' },
+  { id: 'soon',    name: 'Soon',    sub: 'on the radar' },
+  { id: 'someday', name: 'Someday', sub: 'parked, no pressure' }
+];
+
+const TASKABLE_MODES = ['work', 'family', 'personal', 'mortal-coil', 'community'];
+
+function tasksInMode(modeId) {
+  return state.tasks.filter(t => t.mode === modeId);
+}
+
+function openTasksInMode(modeId) {
+  return state.tasks.filter(t => t.mode === modeId && !t.done);
+}
+
+function tasksInModeAndTier(modeId, tier) {
+  return state.tasks.filter(t => t.mode === modeId && t.tier === tier && !t.done);
+}
+
+function inboxTasks() {
+  return state.tasks.filter(t => t.tier === 'inbox');
+}
+
+function doneToday() {
+  const today = new Date().toDateString();
+  return state.tasks.filter(t => t.done && t.doneAt && new Date(t.doneAt).toDateString() === today);
+}
+
+function totalOpen() {
+  return state.tasks.filter(t => !t.done && t.tier !== 'inbox').length;
+}
+
+function addTask(text, opts) {
+  opts = opts || {};
+  const task = {
+    id: uid(),
+    text: text.trim(),
+    mode: opts.mode || null,
+    subId: opts.subId || null,
+    tier: opts.tier || 'inbox',
+    done: false,
+    doneAt: null,
+    waitingOn: null,
+    waitingSince: null,
+    chips: [],
+    createdAt: Date.now()
+  };
+  state.tasks.push(task);
+  saveState();
+  return task;
+}
+
+function updateTask(id, patch) {
+  const i = state.tasks.findIndex(t => t.id === id);
+  if (i === -1) return null;
+  state.tasks[i] = Object.assign({}, state.tasks[i], patch);
+  saveState();
+  return state.tasks[i];
+}
+
+function toggleDone(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  t.doneAt = t.done ? Date.now() : null;
+  saveState();
+}
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveState();
+}
+
+/* ============================================================
    APPLY SETTINGS
    ============================================================ */
 function applySettings() {
@@ -1171,8 +1462,9 @@ function renderModeBar() {
     btn.innerHTML = `<span class="glyph">${m.glyph}</span>${escapeHtml(m.name)}`;
 
     // Add counts for modes with tasks (not dashboard itself)
+    // Count = open Now-tier tasks (the "this week" view)
     if (m.id !== 'dashboard') {
-      const count = state.tasks.filter(t => t.mode === m.id && !t.done).length;
+      const count = state.tasks.filter(t => t.mode === m.id && !t.done && t.tier === 'now').length;
       if (count > 0) {
         btn.insertAdjacentHTML('beforeend', `<span class="count">${count}</span>`);
       }
@@ -1189,6 +1481,7 @@ function setMode(id) {
   state.currentMode = id;
   state.currentClientId = null;
   state.currentOrgId = null;
+  state.currentTier = 'now';
   saveState();
   render();
   window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
@@ -1385,7 +1678,7 @@ function renderDashboard() {
 }
 
 /* ============================================================
-   RENDER: MODE VIEW (placeholder)
+   RENDER: MODE VIEW (2a - tier tabs + task list + add)
    ============================================================ */
 function renderModeView(modeId) {
   const mode = DEFAULT_MODES.find(m => m.id === modeId);
@@ -1393,43 +1686,122 @@ function renderModeView(modeId) {
 
   const root = document.createElement('div');
 
-  const mastheadHTML = `
-    <div class="candy span-12" style="background:var(--cream);padding:40px 40px;box-shadow:0 0 0 2.5px var(--ink), 7px 7px 0 var(--pink);margin-bottom:22px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-80px;left:-40px;width:200px;height:200px;background:var(--pink-cream);border-radius:50%;opacity:0.6;z-index:0;"></div>
-      <div style="position:relative;z-index:1;">
-        <div class="card-label" style="margin-bottom:14px;">${escapeHtml(mode.glyph)} ${escapeHtml(mode.name)}</div>
-        <h1 style="font-family:'Fraunces',serif;font-weight:700;font-size:clamp(40px,6vw,72px);line-height:0.95;letter-spacing:-0.02em;">
-          ${escapeHtml(mode.name.split(' ')[0])} <em style="font-style:italic;color:var(--pink);font-weight:900;">${escapeHtml(mode.name.split(' ').slice(1).join(' ') || 'mode')}</em>.
-        </h1>
-        <div style="font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink-soft);margin-top:12px;max-width:480px;line-height:1.5;">
-          ${modeDescription(mode.id)}
-        </div>
-      </div>
+  // Masthead
+  const masthead = document.createElement('div');
+  masthead.className = 'mode-masthead';
+  const firstWord = mode.name.split(' ')[0];
+  const rest = mode.name.split(' ').slice(1).join(' ');
+  masthead.innerHTML = `
+    <div class="mode-masthead-inner">
+      <div class="card-label" style="margin-bottom:14px;">${mode.glyph} ${escapeHtml(mode.name)}</div>
+      <h1>${escapeHtml(firstWord)}${rest ? ' <em>' + escapeHtml(rest) + '</em>' : ' <em>mode</em>'}.</h1>
+      <p>${modeDescription(mode.id)}</p>
     </div>
   `;
+  root.appendChild(masthead);
 
-  const placeholderHTML = `
-    <div class="dash-grid">
-      <div class="candy span-12" style="text-align:center;padding:50px 30px;">
-        <div style="font-family:'Fraunces',serif;font-weight:900;font-style:italic;font-size:38px;color:var(--pink);margin-bottom:14px;">
-          Mode view, coming soon.
-        </div>
-        <div style="font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--mute);line-height:1.5;max-width:500px;margin:0 auto;">
-          Tasks (Now, Soon, Someday), waiting-on, notes, events, and per-client sub-views all arrive in chunk 2 and 3. For now, the shell is here so you can walk through the bones.
-        </div>
-        <div style="margin-top:24px;">
-          <button class="pill-btn primary" id="backToDash">← Back to dashboard</button>
-        </div>
-      </div>
-    </div>
-  `;
+  // Tier bar
+  const tierBar = document.createElement('div');
+  tierBar.className = 'tier-bar';
+  TIERS.forEach(tier => {
+    const count = tasksInModeAndTier(modeId, tier.id).length;
+    const btn = document.createElement('button');
+    btn.className = 'tier-tab' + (state.currentTier === tier.id ? ' active' : '');
+    btn.innerHTML = `${escapeHtml(tier.name)}${count > 0 ? `<span class="count">${count}</span>` : ''}`;
+    btn.onclick = () => { state.currentTier = tier.id; saveState(); render(); };
+    tierBar.appendChild(btn);
+  });
+  // Done tab
+  const doneBtn = document.createElement('button');
+  const doneCount = tasksInMode(modeId).filter(t => t.done).length;
+  doneBtn.className = 'tier-tab' + (state.currentTier === 'done' ? ' active' : '');
+  doneBtn.innerHTML = `Done${doneCount > 0 ? `<span class="count">${doneCount}</span>` : ''}`;
+  doneBtn.onclick = () => { state.currentTier = 'done'; saveState(); render(); };
+  tierBar.appendChild(doneBtn);
+  root.appendChild(tierBar);
 
-  root.innerHTML = mastheadHTML + placeholderHTML;
-  setTimeout(() => {
-    const back = root.querySelector('#backToDash');
-    if (back) back.onclick = () => setMode('dashboard');
-  }, 0);
+  // Content card
+  const card = document.createElement('div');
+  card.className = 'candy';
+
+  const tierInfo = TIERS.find(t => t.id === state.currentTier);
+  const isDoneView = state.currentTier === 'done';
+  const tasks = isDoneView
+    ? tasksInMode(modeId).filter(t => t.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0))
+    : tasksInModeAndTier(modeId, state.currentTier);
+
+  const tierLabel = isDoneView ? 'Done' : (tierInfo ? tierInfo.name : 'Now');
+  const tierSub = !isDoneView && tierInfo && tierInfo.sub
+    ? ` · <span style="opacity:0.8;">${escapeHtml(tierInfo.sub)}</span>`
+    : '';
+  card.innerHTML = `<span class="card-label">${escapeHtml(tierLabel)} · ${escapeHtml(mode.name)}${tierSub}</span>`;
+
+  if (tasks.length === 0) {
+    const msg = isDoneView
+      ? `Nothing done yet in ${escapeHtml(mode.name)}. <span class="sparkle">♦</span> There is still time. Or there isn't. Who's to say.`
+      : tierEmptyCopy(state.currentTier, mode.name);
+    card.innerHTML += `<div class="empty">${msg}</div>`;
+  } else {
+    const list = document.createElement('ul');
+    list.className = 'task-list';
+    tasks.forEach(t => list.appendChild(renderTaskRow(t)));
+    card.appendChild(list);
+  }
+
+  // Add task bar (not in done view)
+  if (!isDoneView) {
+    const addBar = document.createElement('div');
+    addBar.className = 'add-task-bar';
+    addBar.innerHTML = `
+      <input class="add-task-input" placeholder="Add a task to ${escapeHtml(tierLabel)}..." autocomplete="off">
+      <button class="pill-btn primary">+ Add</button>
+    `;
+    const input = addBar.querySelector('input');
+    const btn = addBar.querySelector('button');
+    const doAdd = () => {
+      const text = input.value.trim();
+      if (!text) return;
+      addTask(text, { mode: modeId, tier: state.currentTier });
+      input.value = '';
+      toast('added.');
+      render();
+    };
+    btn.onclick = doAdd;
+    input.onkeydown = (e) => { if (e.key === 'Enter') doAdd(); };
+    card.appendChild(addBar);
+  }
+
+  root.appendChild(card);
   return root;
+}
+
+function renderTaskRow(task) {
+  const li = document.createElement('li');
+  li.className = 'task-row' + (task.done ? ' done' : '');
+  li.innerHTML = `
+    <div class="task-check" data-act="check"></div>
+    <div class="task-text">${escapeHtml(task.text)}</div>
+    <button class="task-delete-btn" data-act="delete" title="Delete">✕</button>
+  `;
+  li.querySelector('[data-act="check"]').onclick = (e) => {
+    e.stopPropagation();
+    toggleDone(task.id);
+    render();
+  };
+  li.querySelector('[data-act="delete"]').onclick = (e) => {
+    e.stopPropagation();
+    deleteTask(task.id);
+    render();
+  };
+  return li;
+}
+
+function tierEmptyCopy(tier, modeName) {
+  return {
+    now:     `Nothing active in ${escapeHtml(modeName)}. <span class="sparkle">★</span> Either you're on top of it or you've given up. Both valid.`,
+    soon:    `Nothing queued in ${escapeHtml(modeName)}. <span class="sparkle">✦</span> Either empty or blissfully so.`,
+    someday: `Someday is currently vacant. <span class="sparkle">❀</span> Leave a dream.`
+  }[tier] || 'Nothing here.';
 }
 
 function modeDescription(id) {
