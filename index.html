@@ -1673,6 +1673,54 @@ body.calm-mode {
 .task-edit-btn:hover { opacity: 1 !important; color: var(--pink); }
 
 /* ==========================================================
+   DASHBOARD MODE OVERVIEW (2d)
+   ========================================================== */
+.mode-mini-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+
+.mode-mini-row:hover { background: rgba(255, 77, 147, 0.1); }
+
+.mode-mini-dot {
+  width: 32px;
+  height: 32px;
+  background: var(--pink);
+  color: var(--cream);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.mode-mini-text { flex: 1; min-width: 0; }
+
+.mode-mini-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.mode-mini-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--mute);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -2148,11 +2196,16 @@ function renderDashboard() {
   const root = document.createElement('div');
   root.className = 'dash-grid';
 
-  // Inbox card - always shown
-  const inboxCount = state.tasks.filter(t => t.tier === 'inbox').length;
-  const inbox = document.createElement('div');
-  inbox.className = 'candy candy-pink-cream span-6';
-  inbox.innerHTML = `
+  const inbox = inboxTasks();
+  const now = state.tasks.filter(t => !t.done && t.tier === 'now');
+  const waiting = waitingTasks();
+  const todayDone = doneToday();
+
+  /* Inbox card */
+  const inboxCount = inbox.length;
+  const inboxCard = document.createElement('div');
+  inboxCard.className = 'candy candy-pink-cream span-6';
+  inboxCard.innerHTML = `
     <span class="card-label">Inbox</span>
     ${inboxCount === 0
       ? `<div class="empty">Inbox: empty. <span class="sparkle">✦</span> Suspicious, but we'll take it.</div>`
@@ -2165,58 +2218,113 @@ function renderDashboard() {
          <button class="pill-btn primary" data-act="triage">Triage now →</button>`
     }
   `;
-  const triageBtn = inbox.querySelector('[data-act="triage"]');
+  const triageBtn = inboxCard.querySelector('[data-act="triage"]');
   if (triageBtn) triageBtn.onclick = () => setMode('inbox');
-  root.appendChild(inbox);
+  root.appendChild(inboxCard);
 
-  // Modes overview card
-  const modesCard = document.createElement('div');
-  modesCard.className = 'candy span-6';
-  modesCard.innerHTML = `
-    <span class="card-label">The six modes</span>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:8px;">
-      ${DEFAULT_MODES.filter(m => m.id !== 'dashboard').map(m => `
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:2px dashed var(--rule);">
-          <span style="width:28px;height:28px;background:var(--pink);color:var(--cream);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 1.5px var(--ink);font-family:'Fraunces',serif;font-weight:900;font-size:14px;">${m.glyph}</span>
-          <span style="font-family:'Fraunces',serif;font-weight:600;font-size:15px;">${escapeHtml(m.name)}</span>
+  /* Now this week (cross-mode) */
+  const nowCard = document.createElement('div');
+  nowCard.className = 'candy candy-ink candy-shadow-pink span-6';
+  if (now.length === 0) {
+    nowCard.innerHTML = `
+      <span class="card-label">★ Now · this week</span>
+      <div class="empty" style="color:var(--cream);opacity:0.85;">
+        Nothing active. <span class="sparkle">✦</span> The calm before whatever.
+      </div>
+    `;
+  } else {
+    nowCard.innerHTML = `<span class="card-label">★ Now · this week</span>`;
+    const list = document.createElement('ul');
+    list.className = 'task-list';
+    now.slice(0, 6).forEach(t => list.appendChild(renderTaskRow(t)));
+    nowCard.appendChild(list);
+    if (now.length > 6) {
+      nowCard.insertAdjacentHTML('beforeend', `
+        <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--cream);opacity:0.7;text-transform:uppercase;">
+          + ${now.length - 6} more in Now across modes
         </div>
-      `).join('')}
-    </div>
-    <div class="empty" style="text-align:left;padding:12px 0 0;">
-      <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);text-transform:uppercase;font-style:normal;">
-        Per-mode views, task tiers, waiting-on: chunk 2
-      </span>
-    </div>
+      `);
+    }
+  }
+  root.appendChild(nowCard);
+
+  /* Waiting on */
+  const waitingCard = document.createElement('div');
+  waitingCard.className = 'candy span-6';
+  if (waiting.length === 0) {
+    waitingCard.innerHTML = `
+      <span class="card-label">Waiting on others</span>
+      <div class="empty">Nothing's waiting on you. <span class="sparkle">★</span> Go outside.</div>
+    `;
+  } else {
+    const staleCount = waiting.filter(t => {
+      const d = daysSince(t.waitingSince);
+      return d != null && d >= STALE_DAYS;
+    }).length;
+    const staleNote = staleCount > 0
+      ? ` · <span style="color:var(--pink-deep);font-weight:600;">${staleCount} stale</span>`
+      : '';
+    waitingCard.innerHTML = `
+      <span class="card-label">Waiting on others</span>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px;">
+        ${waiting.length} total${staleNote}
+      </div>
+    `;
+    const list = document.createElement('ul');
+    list.className = 'task-list';
+    const sorted = waiting.slice().sort((a, b) => (a.waitingSince || 0) - (b.waitingSince || 0));
+    sorted.slice(0, 5).forEach(t => list.appendChild(renderTaskRow(t)));
+    waitingCard.appendChild(list);
+    if (sorted.length > 5) {
+      const more = document.createElement('button');
+      more.className = 'pill-btn small';
+      more.style.marginTop = '12px';
+      more.textContent = `See all ${sorted.length} →`;
+      more.onclick = () => setMode('waiting');
+      waitingCard.appendChild(more);
+    }
+  }
+  root.appendChild(waitingCard);
+
+  /* Mode overview with live counts */
+  const modesCard = document.createElement('div');
+  modesCard.className = 'candy candy-cream2 span-6';
+  modesCard.innerHTML = `
+    <span class="card-label">Your modes</span>
+    <div id="modesOverview" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;"></div>
   `;
+  const overview = modesCard.querySelector('#modesOverview');
+  TASKABLE_MODES.forEach(id => {
+    const m = DEFAULT_MODES.find(x => x.id === id);
+    const open = state.tasks.filter(t => t.mode === id && !t.done).length;
+    const nowC = state.tasks.filter(t => t.mode === id && !t.done && t.tier === 'now').length;
+    const queued = open - nowC;
+    const row = document.createElement('div');
+    row.className = 'mode-mini-row';
+    row.innerHTML = `
+      <span class="mode-mini-dot">${m.glyph}</span>
+      <div class="mode-mini-text">
+        <div class="mode-mini-name">${escapeHtml(m.name)}</div>
+        <div class="mode-mini-sub">${nowC > 0 ? nowC + ' now' : 'all clear'}${queued > 0 ? ' · ' + queued + ' queued' : ''}</div>
+      </div>
+    `;
+    row.onclick = () => setMode(id);
+    overview.appendChild(row);
+  });
   root.appendChild(modesCard);
 
-  // Placeholder: one thing
-  const oneThing = document.createElement('div');
-  oneThing.className = 'candy candy-ink candy-shadow-pink span-6';
-  oneThing.innerHTML = `
-    <span class="card-label">★ One thing</span>
-    <div style="font-family:'Fraunces',serif;font-weight:700;font-style:italic;font-size:28px;line-height:1;color:var(--cream);margin-top:6px;">
-      The task system arrives next chunk.
-    </div>
-    <div style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--cream);opacity:0.85;margin-top:16px;padding-top:14px;border-top:2px dashed rgba(255,243,232,0.3);line-height:1.5;">
-      For now, quick-capture drops straight into the inbox. You can add things, they'll stay. Sorting comes when the tiers do.
-    </div>
-  `;
-  root.appendChild(oneThing);
-
-  // Placeholder: nothing coming up yet
-  const placeholder = document.createElement('div');
-  placeholder.className = 'candy candy-butter span-6';
-  placeholder.innerHTML = `
-    <span class="card-label">Coming up</span>
-    <div class="empty" style="text-align:left;padding:10px 0;">
-      Nothing coming up. <span class="sparkle">★</span> Time stretches flat and uneventful.
-    </div>
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--ink-soft);text-transform:uppercase;margin-top:8px;opacity:0.7;">
-      Events + countdowns: chunk 3
-    </div>
-  `;
-  root.appendChild(placeholder);
+  /* Done today (only when there's something to show) */
+  if (todayDone.length > 0) {
+    const doneCard = document.createElement('div');
+    doneCard.className = 'candy candy-butter span-12';
+    doneCard.innerHTML = `
+      <span class="card-label">Done today · ${todayDone.length}</span>
+      <div style="font-family:'Fraunces',serif;font-weight:500;font-size:15px;line-height:1.7;color:var(--ink);margin-top:6px;">
+        ${todayDone.map(t => `<span style="display:inline-block;margin-right:16px;">✓ ${escapeHtml(t.text)}</span>`).join('')}
+      </div>
+    `;
+    root.appendChild(doneCard);
+  }
 
   return root;
 }
