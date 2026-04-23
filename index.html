@@ -1721,6 +1721,119 @@ body.calm-mode {
 }
 
 /* ==========================================================
+   NOTES + SUB-ENTITIES (3a)
+   ========================================================== */
+.notes-card {
+  background: var(--cream-2);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--butter-deep);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+}
+
+.notes-area {
+  width: 100%;
+  min-height: 140px;
+  background: var(--cream);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+  outline: none;
+  resize: vertical;
+  transition: box-shadow var(--dur) var(--ease);
+}
+
+.notes-area:focus { box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--pink); }
+.notes-area::placeholder { color: var(--mute); font-style: italic; }
+
+.notes-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-top: 8px;
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notes-status .saved {
+  color: var(--sage-deep);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.notes-status .saved.show { opacity: 1; }
+
+/* Sub-entity selector */
+.sub-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+  align-items: center;
+}
+
+.sub-bar::-webkit-scrollbar { height: 4px; }
+
+.sub-bar-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.sub-btn {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transition: transform var(--dur) var(--ease);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sub-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.sub-btn.active {
+  background: var(--pink);
+  color: var(--cream);
+  box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.sub-btn.add {
+  background: transparent;
+  border: 1.5px dashed var(--ink);
+  box-shadow: none;
+  color: var(--mute);
+}
+
+.sub-btn.add:hover { box-shadow: none; color: var(--ink); }
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -1784,6 +1897,7 @@ function defaultState() {
     tasks: [], // { id, text, mode, subId, tier, done, waitingOn, createdAt }
     clients: [], // { id, name, rate }
     orgs: [],    // { id, name }
+    notes: {}, // keyed by 'mode' or 'mode:subId', value is text
     pinnedSubs: [],
     triageStyle: 'focused', // 'focused' or 'list'
     triageIndex: 0,
@@ -1998,6 +2112,42 @@ function deleteTask(id) {
 }
 
 /* ============================================================
+   NOTES (3a)
+   Keys: 'mode' (e.g. 'work') or 'mode:subId' (e.g. 'work:abc123')
+   ============================================================ */
+function noteKey(modeId, subId) {
+  return subId ? `${modeId}:${subId}` : modeId;
+}
+
+function getNote(modeId, subId) {
+  if (!state.notes) state.notes = {};
+  return state.notes[noteKey(modeId, subId)] || '';
+}
+
+function setNote(modeId, subId, text) {
+  if (!state.notes) state.notes = {};
+  const key = noteKey(modeId, subId);
+  if (!text || !text.trim()) {
+    delete state.notes[key];
+  } else {
+    state.notes[key] = text;
+  }
+  saveState();
+}
+
+function getSubEntities(modeId) {
+  if (modeId === 'work') return state.clients || [];
+  if (modeId === 'community') return state.orgs || [];
+  return [];
+}
+
+function subEntityLabel(modeId) {
+  if (modeId === 'work') return 'client';
+  if (modeId === 'community') return 'org';
+  return '';
+}
+
+/* ============================================================
    APPLY SETTINGS
    ============================================================ */
 function applySettings() {
@@ -2067,8 +2217,17 @@ function setMode(id) {
   state.currentMode = id;
   state.currentClientId = null;
   state.currentOrgId = null;
+  state.currentSubId = null;
   state.currentTier = 'now';
   if (id !== 'inbox') state.triageIndex = 0;
+  saveState();
+  render();
+  window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
+}
+
+function setSubEntity(subId) {
+  state.currentSubId = subId || null;
+  state.currentTier = 'now';
   saveState();
   render();
   window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
@@ -2579,25 +2738,84 @@ function renderModeView(modeId) {
 
   const root = document.createElement('div');
 
-  // Masthead
+  // Sub-entity context (only Work / Community)
+  const subs = getSubEntities(modeId);
+  const subId = state.currentSubId;
+  const activeSub = subId ? subs.find(s => s.id === subId) : null;
+
+  // Masthead - if a sub is selected, show its name
   const masthead = document.createElement('div');
   masthead.className = 'mode-masthead';
   const firstWord = mode.name.split(' ')[0];
   const rest = mode.name.split(' ').slice(1).join(' ');
+  const crumb = activeSub
+    ? `<div class="card-label" style="margin-bottom:14px;">${mode.glyph} ${escapeHtml(mode.name)} / ${escapeHtml(activeSub.name)}</div>`
+    : `<div class="card-label" style="margin-bottom:14px;">${mode.glyph} ${escapeHtml(mode.name)}</div>`;
+  const title = activeSub
+    ? `<h1>${escapeHtml(activeSub.name)}</h1>`
+    : `<h1>${escapeHtml(firstWord)}${rest ? ' <em>' + escapeHtml(rest) + '</em>' : ' <em>mode</em>'}.</h1>`;
   masthead.innerHTML = `
     <div class="mode-masthead-inner">
-      <div class="card-label" style="margin-bottom:14px;">${mode.glyph} ${escapeHtml(mode.name)}</div>
-      <h1>${escapeHtml(firstWord)}${rest ? ' <em>' + escapeHtml(rest) + '</em>' : ' <em>mode</em>'}.</h1>
-      <p>${modeDescription(mode.id)}</p>
+      ${crumb}
+      ${title}
+      <p>${activeSub ? subEntityDescription(modeId) : modeDescription(mode.id)}</p>
     </div>
   `;
   root.appendChild(masthead);
 
-  // Tier bar
+  // Sub-entity selector (only Work + Community)
+  if (modeId === 'work' || modeId === 'community') {
+    const subBar = document.createElement('div');
+    subBar.className = 'sub-bar';
+    const lbl = document.createElement('span');
+    lbl.className = 'sub-bar-label';
+    lbl.textContent = modeId === 'work' ? 'Clients' : 'Orgs';
+    subBar.appendChild(lbl);
+
+    // "All" button
+    const allBtn = document.createElement('button');
+    allBtn.className = 'sub-btn' + (!subId ? ' active' : '');
+    allBtn.textContent = 'All';
+    allBtn.onclick = () => setSubEntity(null);
+    subBar.appendChild(allBtn);
+
+    subs.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'sub-btn' + (subId === s.id ? ' active' : '');
+      b.textContent = s.name;
+      b.onclick = () => setSubEntity(s.id);
+      subBar.appendChild(b);
+    });
+
+    // Add sub button
+    const addBtn = document.createElement('button');
+    addBtn.className = 'sub-btn add';
+    addBtn.textContent = '+ ' + (modeId === 'work' ? 'client' : 'org');
+    addBtn.onclick = () => {
+      const name = prompt((modeId === 'work' ? 'New client' : 'New org') + ' name:');
+      if (!name || !name.trim()) return;
+      const entity = { id: uid(), name: name.trim() };
+      if (modeId === 'work') {
+        if (!state.clients) state.clients = [];
+        state.clients.push(entity);
+      } else {
+        if (!state.orgs) state.orgs = [];
+        state.orgs.push(entity);
+      }
+      saveState();
+      toast('added.');
+      setSubEntity(entity.id);
+    };
+    subBar.appendChild(addBtn);
+
+    root.appendChild(subBar);
+  }
+
+  // Tier bar (filter respects sub-entity when active)
   const tierBar = document.createElement('div');
   tierBar.className = 'tier-bar';
   TIERS.forEach(tier => {
-    const count = tasksInModeAndTier(modeId, tier.id).length;
+    const count = tasksInModeTierSub(modeId, tier.id, activeSub ? activeSub.id : null).length;
     const btn = document.createElement('button');
     btn.className = 'tier-tab' + (state.currentTier === tier.id ? ' active' : '');
     btn.innerHTML = `${escapeHtml(tier.name)}${count > 0 ? `<span class="count">${count}</span>` : ''}`;
@@ -2606,33 +2824,34 @@ function renderModeView(modeId) {
   });
   // Done tab
   const doneBtn = document.createElement('button');
-  const doneCount = tasksInMode(modeId).filter(t => t.done).length;
+  const doneCount = tasksInModeSub(modeId, activeSub ? activeSub.id : null).filter(t => t.done).length;
   doneBtn.className = 'tier-tab' + (state.currentTier === 'done' ? ' active' : '');
   doneBtn.innerHTML = `Done${doneCount > 0 ? `<span class="count">${doneCount}</span>` : ''}`;
   doneBtn.onclick = () => { state.currentTier = 'done'; saveState(); render(); };
   tierBar.appendChild(doneBtn);
   root.appendChild(tierBar);
 
-  // Content card
+  // Tasks card
   const card = document.createElement('div');
   card.className = 'candy';
 
   const tierInfo = TIERS.find(t => t.id === state.currentTier);
   const isDoneView = state.currentTier === 'done';
   const tasks = isDoneView
-    ? tasksInMode(modeId).filter(t => t.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0))
-    : tasksInModeAndTier(modeId, state.currentTier);
+    ? tasksInModeSub(modeId, activeSub ? activeSub.id : null).filter(t => t.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0))
+    : tasksInModeTierSub(modeId, state.currentTier, activeSub ? activeSub.id : null);
 
   const tierLabel = isDoneView ? 'Done' : (tierInfo ? tierInfo.name : 'Now');
   const tierSub = !isDoneView && tierInfo && tierInfo.sub
     ? ` · <span style="opacity:0.8;">${escapeHtml(tierInfo.sub)}</span>`
     : '';
-  card.innerHTML = `<span class="card-label">${escapeHtml(tierLabel)} · ${escapeHtml(mode.name)}${tierSub}</span>`;
+  const scopeName = activeSub ? activeSub.name : mode.name;
+  card.innerHTML = `<span class="card-label">${escapeHtml(tierLabel)} · ${escapeHtml(scopeName)}${tierSub}</span>`;
 
   if (tasks.length === 0) {
     const msg = isDoneView
-      ? `Nothing done yet in ${escapeHtml(mode.name)}. <span class="sparkle">♦</span> There is still time. Or there isn't. Who's to say.`
-      : tierEmptyCopy(state.currentTier, mode.name);
+      ? `Nothing done yet in ${escapeHtml(scopeName)}. <span class="sparkle">♦</span> There is still time. Or there isn't. Who's to say.`
+      : tierEmptyCopy(state.currentTier, scopeName);
     card.innerHTML += `<div class="empty">${msg}</div>`;
   } else {
     const list = document.createElement('ul');
@@ -2645,8 +2864,11 @@ function renderModeView(modeId) {
   if (!isDoneView) {
     const addBar = document.createElement('div');
     addBar.className = 'add-task-bar';
+    const placeholder = activeSub
+      ? `Add a task to ${escapeHtml(activeSub.name)} (${escapeHtml(tierLabel)})...`
+      : `Add a task to ${escapeHtml(tierLabel)}...`;
     addBar.innerHTML = `
-      <input class="add-task-input" placeholder="Add a task to ${escapeHtml(tierLabel)}..." autocomplete="off">
+      <input class="add-task-input" placeholder="${placeholder}" autocomplete="off">
       <button class="pill-btn primary">+ Add</button>
     `;
     const input = addBar.querySelector('input');
@@ -2654,7 +2876,11 @@ function renderModeView(modeId) {
     const doAdd = () => {
       const text = input.value.trim();
       if (!text) return;
-      addTask(text, { mode: modeId, tier: state.currentTier });
+      addTask(text, {
+        mode: modeId,
+        subId: activeSub ? activeSub.id : null,
+        tier: state.currentTier
+      });
       input.value = '';
       toast('added.');
       render();
@@ -2665,7 +2891,74 @@ function renderModeView(modeId) {
   }
 
   root.appendChild(card);
+
+  // Notes card (scoped to mode, or mode + sub-entity if active)
+  root.appendChild(renderNotesCard(modeId, activeSub));
+
   return root;
+}
+
+/* ============================================================
+   TASK QUERIES WITH SUB-ENTITY
+   ============================================================ */
+function tasksInModeSub(modeId, subId) {
+  if (subId) return state.tasks.filter(t => t.mode === modeId && t.subId === subId);
+  return state.tasks.filter(t => t.mode === modeId);
+}
+
+function tasksInModeTierSub(modeId, tier, subId) {
+  const base = state.tasks.filter(t => t.mode === modeId && t.tier === tier && !t.done);
+  if (subId) return base.filter(t => t.subId === subId);
+  return base;
+}
+
+function subEntityDescription(modeId) {
+  if (modeId === 'work') return "Client-specific tasks, notes and scope.";
+  if (modeId === 'community') return "Org-specific work, coordination and notes.";
+  return '';
+}
+
+/* ============================================================
+   NOTES CARD (3a)
+   ============================================================ */
+function renderNotesCard(modeId, activeSub) {
+  const card = document.createElement('div');
+  card.className = 'notes-card';
+
+  const subId = activeSub ? activeSub.id : null;
+  const scope = activeSub ? activeSub.name : DEFAULT_MODES.find(m => m.id === modeId).name;
+  const label = activeSub
+    ? `Notes · ${escapeHtml(scope)}`
+    : `Notes · ${escapeHtml(scope)}`;
+  const placeholder = activeSub
+    ? `Notes, scope, last contact, anything about ${escapeHtml(scope)}. Saves as you type.`
+    : `General notes for ${escapeHtml(scope)}. Saves as you type.`;
+
+  card.innerHTML = `
+    <span class="card-label">${label}</span>
+    <textarea class="notes-area" id="notesArea" placeholder="${placeholder}"></textarea>
+    <div class="notes-status">
+      <span>Auto-saves as you type</span>
+      <span class="saved" id="notesSaved">✓ saved</span>
+    </div>
+  `;
+
+  const textarea = card.querySelector('#notesArea');
+  textarea.value = getNote(modeId, subId);
+
+  const savedEl = card.querySelector('#notesSaved');
+  let saveTimer = null;
+
+  textarea.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      setNote(modeId, subId, textarea.value);
+      savedEl.classList.add('show');
+      setTimeout(() => savedEl.classList.remove('show'), 1200);
+    }, 400);
+  });
+
+  return card;
 }
 
 function renderTaskRow(task) {
