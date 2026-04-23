@@ -2098,6 +2098,252 @@ body.calm-mode {
 .coming-up-item:hover .event-delete-btn { opacity: 0.8; }
 
 /* ==========================================================
+   CALENDAR MONTH VIEW (3c)
+   ========================================================== */
+.event-view-toggle {
+  display: inline-flex;
+  background: var(--cream);
+  border-radius: 100px;
+  box-shadow: 0 0 0 2px var(--ink);
+  padding: 3px;
+  margin-left: auto;
+}
+
+.event-view-toggle button {
+  background: transparent;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.event-view-toggle button.active { background: var(--ink); color: var(--butter); }
+
+.events-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.events-card-header .card-label { margin-bottom: 0; }
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed var(--rule);
+}
+
+.calendar-month-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.calendar-nav {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.cal-nav-btn {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  transition: transform var(--dur) var(--ease);
+}
+
+.cal-nav-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.cal-today-btn {
+  background: var(--pink);
+  color: var(--cream);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: transform var(--dur) var(--ease);
+}
+
+.cal-today-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 12px;
+}
+
+.cal-day-header {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  padding: 6px 0;
+  font-weight: 500;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  background: var(--cream-2);
+  border-radius: var(--r-sm);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+  overflow: hidden;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  min-height: 50px;
+}
+
+.cal-cell:hover { background: var(--cream); transform: translate(-1px, -1px); box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+
+.cal-cell.other-month { background: transparent; box-shadow: none; opacity: 0.4; cursor: default; }
+.cal-cell.other-month:hover { transform: none; box-shadow: none; background: transparent; }
+
+.cal-cell.today {
+  background: var(--pink);
+  box-shadow: 0 0 0 1.5px var(--ink), 3px 3px 0 var(--ink);
+}
+
+.cal-cell.today:hover { background: var(--pink); }
+.cal-cell.today .cal-cell-num { color: var(--cream); }
+.cal-cell.today .cal-event-dot { background: var(--butter); }
+
+.cal-cell.past { opacity: 0.65; }
+
+.cal-cell-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.cal-cell-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.cal-cell-event {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink);
+  background: var(--cream);
+  padding: 2px 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.cal-cell-event.countdown { background: var(--pink); color: var(--cream); }
+.cal-cell-event.countdown { box-shadow: inset 0 0 0 1px var(--ink); }
+
+.cal-cell.today .cal-cell-event { background: var(--cream); color: var(--ink); }
+
+.cal-cell-more {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: var(--mute);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: auto;
+}
+
+.cal-cell.today .cal-cell-more { color: var(--cream); }
+
+/* Mobile: compact cells, hide event chips, just show dots */
+@media (max-width: 640px) {
+  .cal-grid { gap: 2px; }
+  .cal-cell { padding: 4px; min-height: 42px; }
+  .cal-cell-num { font-size: 11px; }
+  .cal-cell-event { display: none; }
+  .cal-cell-more { display: none; }
+  .cal-cell.has-events::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--pink);
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+  .cal-cell.today.has-events::after { background: var(--butter); }
+  .cal-cell.has-countdown::after { background: var(--pink); }
+}
+
+/* Selected day details strip below the calendar */
+.cal-selected-day {
+  padding: 14px 0 4px;
+  border-top: 2px dashed var(--rule);
+  margin-top: 10px;
+}
+
+.cal-selected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cal-selected-date {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 16px;
+}
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -2167,6 +2413,9 @@ function defaultState() {
     pinnedSubs: [],
     triageStyle: 'focused', // 'focused' or 'list'
     triageIndex: 0,
+    eventView: 'list', // 'list' or 'calendar'
+    calMonthOffset: 0, // current month + offset
+    calSelectedDate: null, // ISO date string when a cell is focused
     settings: {
       name: '',
       reducedMotion: false,
@@ -2566,6 +2815,7 @@ function setMode(id) {
   state.currentOrgId = null;
   state.currentSubId = null;
   state.currentTier = 'now';
+  state.calMonthOffset = 0;
   if (id !== 'inbox') state.triageIndex = 0;
   saveState();
   render();
@@ -3370,34 +3620,58 @@ function renderEventsCard(modeId, activeSub) {
   const subId = activeSub ? activeSub.id : null;
   const scope = activeSub ? activeSub.name : (modeId ? DEFAULT_MODES.find(m => m.id === modeId).name : 'All');
 
-  // Events in this scope, future first
   const all = eventsInMode(modeId, subId);
-  const future = all.filter(e => daysUntil(e.date) != null && daysUntil(e.date) >= 0)
-    .sort((a, b) => a.date.localeCompare(b.date));
-  const past = all.filter(e => daysUntil(e.date) != null && daysUntil(e.date) < 0)
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 3); // only show a few past events
 
-  card.innerHTML = `<span class="card-label">Events · ${escapeHtml(scope)}</span>`;
+  // Header with view toggle
+  const header = document.createElement('div');
+  header.className = 'events-card-header';
+  header.innerHTML = `
+    <span class="card-label">Events · ${escapeHtml(scope)}${all.length > 0 ? ' · ' + all.length : ''}</span>
+    <div class="event-view-toggle">
+      <button class="${state.eventView === 'list' ? 'active' : ''}" data-view="list">List</button>
+      <button class="${state.eventView === 'calendar' ? 'active' : ''}" data-view="calendar">Calendar</button>
+    </div>
+  `;
+  header.querySelectorAll('.event-view-toggle button').forEach(b => {
+    b.onclick = () => {
+      state.eventView = b.dataset.view;
+      state.calSelectedDate = null;
+      saveState();
+      render();
+    };
+  });
+  card.appendChild(header);
 
-  if (future.length === 0 && past.length === 0) {
-    card.insertAdjacentHTML('beforeend', `
-      <div class="empty">Nothing scheduled. <span class="sparkle">✦</span> Time stretches flat and uneventful.</div>
-    `);
+  // Body: list or calendar
+  if (state.eventView === 'calendar') {
+    card.appendChild(renderCalendarView(modeId, subId, all));
   } else {
-    const list = document.createElement('ul');
-    list.className = 'event-list';
-    future.forEach(e => list.appendChild(renderEventRow(e, false)));
-    past.forEach(e => list.appendChild(renderEventRow(e, true)));
-    card.appendChild(list);
+    const future = all.filter(e => daysUntil(e.date) != null && daysUntil(e.date) >= 0)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const past = all.filter(e => daysUntil(e.date) != null && daysUntil(e.date) < 0)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 3);
+
+    if (future.length === 0 && past.length === 0) {
+      card.insertAdjacentHTML('beforeend', `
+        <div class="empty">Nothing scheduled. <span class="sparkle">✦</span> Time stretches flat and uneventful.</div>
+      `);
+    } else {
+      const list = document.createElement('ul');
+      list.className = 'event-list';
+      future.forEach(e => list.appendChild(renderEventRow(e, false)));
+      past.forEach(e => list.appendChild(renderEventRow(e, true)));
+      card.appendChild(list);
+    }
   }
 
-  // Add event form
+  // Add event form (always visible under both views)
   const form = document.createElement('div');
   form.className = 'event-add-form';
+  const prefillDate = state.calSelectedDate || todayISO();
   form.innerHTML = `
     <input type="text" id="eventTitle" placeholder="Event title..." autocomplete="off">
-    <input type="date" id="eventDate" value="${todayISO()}">
+    <input type="date" id="eventDate" value="${prefillDate}">
     <button class="pill-btn primary" id="eventAddBtn">+ Add</button>
   `;
   const toggleRow = document.createElement('div');
@@ -3441,6 +3715,162 @@ function renderEventsCard(modeId, activeSub) {
   titleInput.onkeydown = (e) => { if (e.key === 'Enter') doAdd(); };
 
   return card;
+}
+
+function renderCalendarView(modeId, subId, events) {
+  const wrap = document.createElement('div');
+
+  const today = new Date();
+  const viewMonth = new Date(today.getFullYear(), today.getMonth() + (state.calMonthOffset || 0), 1);
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const monthLabel = viewMonth.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'calendar-header';
+  header.innerHTML = `
+    <div class="calendar-month-name">${escapeHtml(monthLabel)}</div>
+    <div class="calendar-nav">
+      <button class="cal-nav-btn" data-nav="prev" title="Previous month">‹</button>
+      <button class="cal-today-btn" data-nav="today">Today</button>
+      <button class="cal-nav-btn" data-nav="next" title="Next month">›</button>
+    </div>
+  `;
+  header.querySelectorAll('[data-nav]').forEach(b => {
+    b.onclick = () => {
+      const dir = b.dataset.nav;
+      if (dir === 'prev') state.calMonthOffset = (state.calMonthOffset || 0) - 1;
+      else if (dir === 'next') state.calMonthOffset = (state.calMonthOffset || 0) + 1;
+      else if (dir === 'today') state.calMonthOffset = 0;
+      state.calSelectedDate = null;
+      saveState();
+      render();
+    };
+  });
+  wrap.appendChild(header);
+
+  // Grid
+  const grid = document.createElement('div');
+  grid.className = 'cal-grid';
+
+  // Monday-first day headers
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  dayNames.forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-day-header';
+    h.textContent = d;
+    grid.appendChild(h);
+  });
+
+  // Calendar math
+  const firstDay = new Date(year, month, 1);
+  // JS: Sun=0..Sat=6; want Mon=0..Sun=6
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+
+  // Events indexed by date
+  const eventsByDate = {};
+  events.forEach(e => {
+    if (!eventsByDate[e.date]) eventsByDate[e.date] = [];
+    eventsByDate[e.date].push(e);
+  });
+
+  const todayIso = todayISO();
+
+  // Previous-month trailing days
+  for (let i = startOffset - 1; i >= 0; i--) {
+    const dayNum = daysInPrev - i;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell other-month';
+    cell.innerHTML = `<div class="cal-cell-num">${dayNum}</div>`;
+    grid.appendChild(cell);
+  }
+
+  // Current month cells
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const cell = document.createElement('div');
+    let classes = 'cal-cell';
+    if (iso === todayIso) classes += ' today';
+    if (iso < todayIso) classes += ' past';
+    const dayEvents = eventsByDate[iso] || [];
+    if (dayEvents.length > 0) classes += ' has-events';
+    if (dayEvents.some(e => e.isCountdown)) classes += ' has-countdown';
+    cell.className = classes;
+
+    let inner = `<div class="cal-cell-num">${d}</div>`;
+    if (dayEvents.length > 0) {
+      inner += `<div class="cal-cell-events">`;
+      dayEvents.slice(0, 2).forEach(e => {
+        inner += `<div class="cal-cell-event${e.isCountdown ? ' countdown' : ''}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</div>`;
+      });
+      if (dayEvents.length > 2) {
+        inner += `<div class="cal-cell-more">+${dayEvents.length - 2} more</div>`;
+      }
+      inner += `</div>`;
+    }
+    cell.innerHTML = inner;
+    cell.onclick = () => {
+      state.calSelectedDate = iso;
+      saveState();
+      render();
+    };
+    grid.appendChild(cell);
+  }
+
+  // Next-month leading days to fill the grid
+  const totalCells = startOffset + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= trailing; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell other-month';
+    cell.innerHTML = `<div class="cal-cell-num">${i}</div>`;
+    grid.appendChild(cell);
+  }
+
+  wrap.appendChild(grid);
+
+  // If a day is selected, show its events below
+  if (state.calSelectedDate) {
+    const selected = state.calSelectedDate;
+    const dayEvents = (eventsByDate[selected] || []);
+    const selDate = new Date(selected + 'T00:00:00');
+    const selLabel = selDate.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    const panel = document.createElement('div');
+    panel.className = 'cal-selected-day';
+    panel.innerHTML = `
+      <div class="cal-selected-header">
+        <div class="cal-selected-date">${escapeHtml(selLabel)}</div>
+        <button class="pill-btn small" data-close>Close</button>
+      </div>
+    `;
+    panel.querySelector('[data-close]').onclick = () => {
+      state.calSelectedDate = null;
+      saveState();
+      render();
+    };
+
+    if (dayEvents.length === 0) {
+      panel.insertAdjacentHTML('beforeend', `
+        <div class="empty" style="text-align:left;padding:6px 0 4px;">Nothing on this day. <span class="sparkle">✦</span> Add one below.</div>
+      `);
+    } else {
+      const list = document.createElement('ul');
+      list.className = 'event-list';
+      dayEvents.forEach(e => {
+        const isPast = daysUntil(e.date) < 0;
+        list.appendChild(renderEventRow(e, isPast));
+      });
+      panel.appendChild(list);
+    }
+
+    wrap.appendChild(panel);
+  }
+
+  return wrap;
 }
 
 function renderEventRow(event, isPast) {
