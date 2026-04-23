@@ -2023,6 +2023,29 @@ body.calm-mode {
 
 .sub-btn.add:hover { box-shadow: none; color: var(--ink); }
 
+/* 4b: Nested sub-bar for Family's level-2 members.
+   Slightly smaller, indented-feeling, sits directly under level 1. */
+.sub-bar-nested {
+  margin-top: -10px;
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 2px dashed var(--rule);
+}
+
+.sub-bar-nested .sub-bar-label {
+  color: var(--ink-soft);
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: none;
+}
+
+.sub-bar-nested .sub-btn {
+  font-size: 12px;
+  padding: 5px 11px;
+}
+
 /* ==========================================================
    EVENTS + COUNTDOWNS (3b)
    ========================================================== */
@@ -2718,18 +2741,23 @@ const DEFAULT_MODES = [
 
 function defaultState() {
   return {
-    version: 2, // bumped for 4a colour fields
+    version: 3, // bumped for 4b sub-entities everywhere
     currentMode: 'dashboard',
     currentTier: 'now',
     currentClientId: null,
     currentOrgId: null,
     onboarded: false,
-    tasks: [], // { id, text, mode, subId, tier, done, waitingOn, createdAt, colour }
-    events: [], // { id, title, date, mode?, subId?, isCountdown, createdAt }
+    tasks: [], // { id, text, mode, subId, memberId?, tier, done, waitingOn, createdAt, colour }
+    events: [], // { id, title, date, mode?, subId?, memberId?, isCountdown, createdAt }
     clients: [], // { id, name, rate, colour? }
     orgs: [],    // { id, name, colour? }
-    households: [], // { id, name, colour? }
-    notes: {}, // keyed by 'mode' or 'mode:subId', value is text
+    households: [], // { id, name, colour?, members: [{ id, name, colour? }] }
+    // 4b: Personal and Mortal Coil get user-defined categories, same pattern.
+    categories: {
+      personal: [],    // { id, name, colour? }
+      'mortal-coil': [] // { id, name, colour? }
+    },
+    notes: {}, // keyed by 'mode' or 'mode:subId' or 'mode:subId:memberId', value is text
     pinnedSubs: [],
     triageStyle: 'focused', // 'focused' or 'list'
     triageIndex: 0,
@@ -2738,6 +2766,8 @@ function defaultState() {
     calSelectedDate: null, // ISO date string when a cell is focused
     // Per-mode colour override map: { modeId: paletteId }. Empty = use DEFAULT_MODES.
     modeColours: {},
+    // Current level-2 selection for Family (nested under currentSubId which is the household)
+    currentMemberId: null,
     settings: {
       name: '',
       reducedMotion: false,
@@ -2759,26 +2789,56 @@ function loadState() {
       state.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
       // Ensure modeColours object exists (added in 4a)
       state.modeColours = { ...(parsed.modeColours || {}) };
+      // 4b: Ensure categories object and its slots exist
+      state.categories = {
+        personal: (parsed.categories && parsed.categories.personal) || [],
+        'mortal-coil': (parsed.categories && parsed.categories['mortal-coil']) || []
+      };
       // ensure task records have all fields (for older captures)
       state.tasks = (state.tasks || []).map(t => ({
         id: t.id || uid(),
         text: t.text || '',
         mode: t.mode || null,
         subId: t.subId || null,
+        memberId: t.memberId || null, // 4b: Family level-2
         tier: t.tier || 'inbox',
         done: !!t.done,
         doneAt: t.doneAt || null,
         waitingOn: t.waitingOn || null,
         waitingSince: t.waitingSince || null,
         chips: t.chips || [],
-        colour: t.colour || null, // 4a: null = inherit from sub/mode
+        colour: t.colour || null,
         createdAt: t.createdAt || Date.now()
       }));
+      // Ensure events have memberId
+      state.events = (state.events || []).map(e => ({
+        ...e,
+        memberId: e.memberId || null
+      }));
       // Ensure sub-entities have colour field (nullable = auto-vary)
-      ['clients', 'orgs', 'households'].forEach(key => {
+      ['clients', 'orgs'].forEach(key => {
         state[key] = (state[key] || []).map(s => ({
           ...s,
           colour: s.colour || null
+        }));
+      });
+      // Ensure households have colour + members array
+      state.households = (state.households || []).map(h => ({
+        id: h.id || uid(),
+        name: h.name || '',
+        colour: h.colour || null,
+        members: (h.members || []).map(mem => ({
+          id: mem.id || uid(),
+          name: mem.name || '',
+          colour: mem.colour || null
+        }))
+      }));
+      // Ensure categories have colour
+      ['personal', 'mortal-coil'].forEach(mid => {
+        state.categories[mid] = (state.categories[mid] || []).map(c => ({
+          id: c.id || uid(),
+          name: c.name || '',
+          colour: c.colour || null
         }));
       });
     }
@@ -2916,6 +2976,7 @@ function addTask(text, opts) {
     text: text.trim(),
     mode: opts.mode || null,
     subId: opts.subId || null,
+    memberId: opts.memberId || null, // 4b
     tier: opts.tier || 'inbox',
     done: false,
     doneAt: null,
@@ -2961,19 +3022,22 @@ function deleteTask(id) {
 /* ============================================================
    NOTES (3a)
    Keys: 'mode' (e.g. 'work') or 'mode:subId' (e.g. 'work:abc123')
+   or 'mode:subId:memberId' for Family member-scoped notes (4b).
    ============================================================ */
-function noteKey(modeId, subId) {
-  return subId ? `${modeId}:${subId}` : modeId;
+function noteKey(modeId, subId, memberId) {
+  if (memberId) return `${modeId}:${subId}:${memberId}`;
+  if (subId) return `${modeId}:${subId}`;
+  return modeId;
 }
 
-function getNote(modeId, subId) {
+function getNote(modeId, subId, memberId) {
   if (!state.notes) state.notes = {};
-  return state.notes[noteKey(modeId, subId)] || '';
+  return state.notes[noteKey(modeId, subId, memberId)] || '';
 }
 
-function setNote(modeId, subId, text) {
+function setNote(modeId, subId, memberId, text) {
   if (!state.notes) state.notes = {};
-  const key = noteKey(modeId, subId);
+  const key = noteKey(modeId, subId, memberId);
   if (!text || !text.trim()) {
     delete state.notes[key];
   } else {
@@ -2986,6 +3050,8 @@ function getSubEntities(modeId) {
   if (modeId === 'work') return state.clients || [];
   if (modeId === 'community') return state.orgs || [];
   if (modeId === 'family') return state.households || [];
+  if (modeId === 'personal') return (state.categories && state.categories.personal) || [];
+  if (modeId === 'mortal-coil') return (state.categories && state.categories['mortal-coil']) || [];
   return [];
 }
 
@@ -2993,7 +3059,68 @@ function subEntityLabel(modeId) {
   if (modeId === 'work') return 'client';
   if (modeId === 'community') return 'org';
   if (modeId === 'family') return 'household';
+  if (modeId === 'personal' || modeId === 'mortal-coil') return 'category';
   return '';
+}
+
+// Plural label used in the sub-bar row ("Clients", "Orgs", "Categories"...)
+function subEntityGroupLabel(modeId) {
+  if (modeId === 'work') return 'Clients';
+  if (modeId === 'community') return 'Orgs';
+  if (modeId === 'family') return 'Households';
+  if (modeId === 'personal' || modeId === 'mortal-coil') return 'Categories';
+  return '';
+}
+
+// Which modes have sub-entities at all (everything except dashboard, inbox, waiting)
+const MODES_WITH_SUBS = ['work', 'community', 'family', 'personal', 'mortal-coil'];
+
+/* ------------------------------------------------------------
+   4b: FAMILY LEVEL-2 MEMBER HELPERS
+   Family is two-level: households, then members inside each.
+   ------------------------------------------------------------ */
+function getHousehold(householdId) {
+  if (!householdId) return null;
+  return (state.households || []).find(h => h.id === householdId) || null;
+}
+
+function getMembers(householdId) {
+  const h = getHousehold(householdId);
+  return h ? (h.members || []) : [];
+}
+
+function getMember(householdId, memberId) {
+  if (!householdId || !memberId) return null;
+  const members = getMembers(householdId);
+  return members.find(m => m.id === memberId) || null;
+}
+
+function addMember(householdId, name) {
+  const h = getHousehold(householdId);
+  if (!h) return null;
+  if (!h.members) h.members = [];
+  const m = { id: uid(), name: name.trim(), colour: null };
+  h.members.push(m);
+  saveState();
+  return m;
+}
+
+function deleteMember(householdId, memberId) {
+  const h = getHousehold(householdId);
+  if (!h) return;
+  h.members = (h.members || []).filter(m => m.id !== memberId);
+  // Unassign any tasks that pointed at this member (they stay on the household)
+  state.tasks.forEach(t => {
+    if (t.mode === 'family' && t.subId === householdId && t.memberId === memberId) {
+      t.memberId = null;
+    }
+  });
+  state.events.forEach(e => {
+    if (e.mode === 'family' && e.subId === householdId && e.memberId === memberId) {
+      e.memberId = null;
+    }
+  });
+  saveState();
 }
 
 /* ------------------------------------------------------------
@@ -3020,9 +3147,22 @@ function subColour(modeId, subId) {
   return autoVaryFromParent(modeColour(modeId), subId);
 }
 
+// 4b: Family level-2 member colour. Varies from its household.
+function memberColour(householdId, memberId) {
+  if (!householdId || !memberId) return modeColour('family');
+  const m = getMember(householdId, memberId);
+  if (m && m.colour) return m.colour;
+  // Auto-vary from the household's resolved colour
+  return autoVaryFromParent(subColour('family', householdId), memberId);
+}
+
 function taskColour(task) {
   if (!task) return 'pink';
   if (task.colour) return task.colour;
+  // 4b: Family member > household > mode
+  if (task.mode === 'family' && task.subId && task.memberId) {
+    return memberColour(task.subId, task.memberId);
+  }
   if (task.mode && task.subId) return subColour(task.mode, task.subId);
   if (task.mode) return modeColour(task.mode);
   return 'pink';
@@ -3068,10 +3208,11 @@ function upcomingEvents(limit) {
   return limit ? all.slice(0, limit) : all;
 }
 
-function eventsInMode(modeId, subId) {
+function eventsInMode(modeId, subId, memberId) {
   if (!modeId) return allEvents();
-  const base = allEvents().filter(e => e.mode === modeId);
-  if (subId) return base.filter(e => e.subId === subId);
+  let base = allEvents().filter(e => e.mode === modeId);
+  if (subId !== undefined && subId !== null) base = base.filter(e => e.subId === subId);
+  if (memberId !== undefined && memberId !== null) base = base.filter(e => e.memberId === memberId);
   return base;
 }
 
@@ -3091,6 +3232,7 @@ function addEvent(opts) {
     date: opts.date || todayISO(),
     mode: opts.mode || null,
     subId: opts.subId || null,
+    memberId: opts.memberId || null, // 4b
     isCountdown: !!opts.isCountdown,
     createdAt: Date.now()
   };
@@ -3186,6 +3328,7 @@ function setMode(id) {
   state.currentClientId = null;
   state.currentOrgId = null;
   state.currentSubId = null;
+  state.currentMemberId = null; // 4b
   state.currentTier = 'now';
   state.calMonthOffset = 0;
   if (id !== 'inbox') state.triageIndex = 0;
@@ -3196,6 +3339,16 @@ function setMode(id) {
 
 function setSubEntity(subId) {
   state.currentSubId = subId || null;
+  state.currentMemberId = null; // 4b: changing sub clears member
+  state.currentTier = 'now';
+  saveState();
+  render();
+  window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
+}
+
+// 4b: Family level-2 — select a household member (nested under currentSubId)
+function setMember(memberId) {
+  state.currentMemberId = memberId || null;
   state.currentTier = 'now';
   saveState();
   render();
@@ -4023,7 +4176,9 @@ function renderTriageList(inbox) {
 }
 
 /* ============================================================
-   RENDER: MODE VIEW (2a - tier tabs + task list + add)
+   RENDER: MODE VIEW (2a + 4b: unified sub-entity support across
+   Work, Community, Family, Personal, Mortal Coil. Family adds
+   a second level: household > member.)
    ============================================================ */
 function renderModeView(modeId) {
   const mode = DEFAULT_MODES.find(m => m.id === modeId);
@@ -4031,129 +4186,80 @@ function renderModeView(modeId) {
 
   const root = document.createElement('div');
 
-  // Sub-entity context (only Work / Community)
+  // Level-1 sub-entity context
   const subs = getSubEntities(modeId);
   const subId = state.currentSubId;
   const activeSub = subId ? subs.find(s => s.id === subId) : null;
 
-  // Masthead - if a sub is selected, show its name
+  // Level-2 member context (only valid for Family with a household active)
+  const memberId = (modeId === 'family' && activeSub) ? state.currentMemberId : null;
+  const activeMember = memberId ? getMember(activeSub.id, memberId) : null;
+
+  // Resolve active colour for the masthead
+  let activeColourId;
+  if (activeMember) {
+    activeColourId = memberColour(activeSub.id, activeMember.id);
+  } else if (activeSub) {
+    activeColourId = subColour(modeId, activeSub.id);
+  } else {
+    activeColourId = modeColour(modeId);
+  }
+
+  // Masthead with breadcrumb
   const masthead = document.createElement('div');
   masthead.className = 'mode-masthead';
-  // 4a: masthead picks up sub colour when sub is active, else mode colour
-  const activeColourId = activeSub
-    ? subColour(modeId, activeSub.id)
-    : modeColour(modeId);
   masthead.setAttribute('style', colourStyle(activeColourId));
   const firstWord = mode.name.split(' ')[0];
   const rest = mode.name.split(' ').slice(1).join(' ');
-  const crumb = activeSub
-    ? `<div class="card-label" style="margin-bottom:14px;">${mode.glyph} ${escapeHtml(mode.name)} / ${escapeHtml(activeSub.name)}</div>`
-    : `<div class="card-label" style="margin-bottom:14px;">${mode.glyph} ${escapeHtml(mode.name)}</div>`;
-  const title = activeSub
-    ? `<h1>${escapeHtml(activeSub.name)}</h1>`
-    : `<h1>${escapeHtml(firstWord)}${rest ? ' <em>' + escapeHtml(rest) + '</em>' : ' <em>mode</em>'}.</h1>`;
+
+  // Breadcrumb: Mode [ / Sub [ / Member ] ]
+  let crumbText = `${mode.glyph} ${escapeHtml(mode.name)}`;
+  if (activeSub) crumbText += ` / ${escapeHtml(activeSub.name)}`;
+  if (activeMember) crumbText += ` / ${escapeHtml(activeMember.name)}`;
+  const crumb = `<div class="card-label" style="margin-bottom:14px;">${crumbText}</div>`;
+
+  let title;
+  if (activeMember) {
+    title = `<h1>${escapeHtml(activeMember.name)}</h1>`;
+  } else if (activeSub) {
+    title = `<h1>${escapeHtml(activeSub.name)}</h1>`;
+  } else {
+    title = `<h1>${escapeHtml(firstWord)}${rest ? ' <em>' + escapeHtml(rest) + '</em>' : ' <em>mode</em>'}.</h1>`;
+  }
+
+  let mastheadDesc;
+  if (activeMember) {
+    mastheadDesc = `Tasks, notes and events tagged to ${escapeHtml(activeMember.name)}.`;
+  } else if (activeSub) {
+    mastheadDesc = subEntityDescription(modeId);
+  } else {
+    mastheadDesc = modeDescription(mode.id);
+  }
+
   masthead.innerHTML = `
     <div class="mode-masthead-inner">
       ${crumb}
       ${title}
-      <p>${activeSub ? subEntityDescription(modeId) : modeDescription(mode.id)}</p>
+      <p>${mastheadDesc}</p>
     </div>
   `;
   root.appendChild(masthead);
 
-  // Sub-entity selector (Work, Community, Family)
-  if (modeId === 'work' || modeId === 'community' || modeId === 'family') {
-    const subBar = document.createElement('div');
-    subBar.className = 'sub-bar';
-    const lbl = document.createElement('span');
-    lbl.className = 'sub-bar-label';
-    lbl.textContent = modeId === 'work' ? 'Clients' : (modeId === 'community' ? 'Orgs' : 'Households');
-    subBar.appendChild(lbl);
+  // Level-1 sub-entity bar (for any mode with sub-entities)
+  if (MODES_WITH_SUBS.includes(modeId)) {
+    root.appendChild(buildSubBar(modeId, subs, subId));
 
-    // "All" button - uses mode colour
-    const allBtn = document.createElement('button');
-    allBtn.className = 'sub-btn' + (!subId ? ' active' : '');
-    allBtn.setAttribute('style', `--sub-colour: var(--pal-${modeColour(modeId)});`);
-    allBtn.textContent = 'All';
-    allBtn.onclick = () => setSubEntity(null);
-    subBar.appendChild(allBtn);
-
-    subs.forEach(s => {
-      const b = document.createElement('button');
-      b.className = 'sub-btn' + (subId === s.id ? ' active' : '');
-      b.setAttribute('style', `--sub-colour: var(--pal-${subColour(modeId, s.id)});`);
-      b.textContent = s.name;
-      b.onclick = () => setSubEntity(s.id);
-      // 4a: context menu / long-press for colour + rename
-      const openSubMenu = (anchor) => {
-        const currentColour = s.colour || null; // null = auto-vary
-        openColourPopover(anchor, {
-          title: escapeHtml(s.name) + ' colour',
-          currentColour: currentColour,
-          allowInherit: true,
-          inheritLabel: 'Auto-vary from ' + DEFAULT_MODES.find(x => x.id === modeId).name,
-          onPick: (newId) => {
-            s.colour = newId;
-            saveState();
-            render();
-          },
-          onReset: currentColour ? () => {
-            s.colour = null;
-            saveState();
-            render();
-          } : null
-        });
-      };
-      b.oncontextmenu = (ev) => {
-        ev.preventDefault();
-        openSubMenu(b);
-      };
-      // Long press on touch
-      let pressTimer = null;
-      b.addEventListener('touchstart', () => {
-        pressTimer = setTimeout(() => {
-          pressTimer = null;
-          openSubMenu(b);
-        }, 600);
-      }, { passive: true });
-      b.addEventListener('touchend', () => { if (pressTimer) clearTimeout(pressTimer); });
-      b.addEventListener('touchmove', () => { if (pressTimer) clearTimeout(pressTimer); });
-      subBar.appendChild(b);
-    });
-
-    // Add sub button
-    const addBtn = document.createElement('button');
-    addBtn.className = 'sub-btn add';
-    addBtn.textContent = '+ ' + subEntityLabel(modeId);
-    addBtn.onclick = () => {
-      const label = subEntityLabel(modeId);
-      const name = prompt(`New ${label} name:`);
-      if (!name || !name.trim()) return;
-      const entity = { id: uid(), name: name.trim() };
-      if (modeId === 'work') {
-        if (!state.clients) state.clients = [];
-        state.clients.push(entity);
-      } else if (modeId === 'community') {
-        if (!state.orgs) state.orgs = [];
-        state.orgs.push(entity);
-      } else if (modeId === 'family') {
-        if (!state.households) state.households = [];
-        state.households.push(entity);
-      }
-      saveState();
-      toast('added.');
-      setSubEntity(entity.id);
-    };
-    subBar.appendChild(addBtn);
-
-    root.appendChild(subBar);
+    // 4b: Level-2 member bar for Family, only when a household is active
+    if (modeId === 'family' && activeSub) {
+      root.appendChild(buildMemberBar(activeSub, memberId));
+    }
   }
 
-  // Tier bar (filter respects sub-entity when active)
+  // Tier bar (filter respects sub-entity and member when active)
   const tierBar = document.createElement('div');
   tierBar.className = 'tier-bar';
   TIERS.forEach(tier => {
-    const count = tasksInModeTierSub(modeId, tier.id, activeSub ? activeSub.id : null).length;
+    const count = tasksInModeTierSub(modeId, tier.id, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null).length;
     const btn = document.createElement('button');
     btn.className = 'tier-tab' + (state.currentTier === tier.id ? ' active' : '');
     btn.innerHTML = `${escapeHtml(tier.name)}${count > 0 ? `<span class="count">${count}</span>` : ''}`;
@@ -4162,7 +4268,7 @@ function renderModeView(modeId) {
   });
   // Done tab
   const doneBtn = document.createElement('button');
-  const doneCount = tasksInModeSub(modeId, activeSub ? activeSub.id : null).filter(t => t.done).length;
+  const doneCount = tasksInModeSub(modeId, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null).filter(t => t.done).length;
   doneBtn.className = 'tier-tab' + (state.currentTier === 'done' ? ' active' : '');
   doneBtn.innerHTML = `Done${doneCount > 0 ? `<span class="count">${doneCount}</span>` : ''}`;
   doneBtn.onclick = () => { state.currentTier = 'done'; saveState(); render(); };
@@ -4176,14 +4282,14 @@ function renderModeView(modeId) {
   const tierInfo = TIERS.find(t => t.id === state.currentTier);
   const isDoneView = state.currentTier === 'done';
   const tasks = isDoneView
-    ? tasksInModeSub(modeId, activeSub ? activeSub.id : null).filter(t => t.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0))
-    : tasksInModeTierSub(modeId, state.currentTier, activeSub ? activeSub.id : null);
+    ? tasksInModeSub(modeId, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null).filter(t => t.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0))
+    : tasksInModeTierSub(modeId, state.currentTier, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null);
 
   const tierLabel = isDoneView ? 'Done' : (tierInfo ? tierInfo.name : 'Now');
   const tierSub = !isDoneView && tierInfo && tierInfo.sub
     ? ` · <span style="opacity:0.8;">${escapeHtml(tierInfo.sub)}</span>`
     : '';
-  const scopeName = activeSub ? activeSub.name : mode.name;
+  const scopeName = activeMember ? activeMember.name : (activeSub ? activeSub.name : mode.name);
   card.innerHTML = `<span class="card-label">${escapeHtml(tierLabel)} · ${escapeHtml(scopeName)}${tierSub}</span>`;
 
   if (tasks.length === 0) {
@@ -4202,9 +4308,7 @@ function renderModeView(modeId) {
   if (!isDoneView) {
     const addBar = document.createElement('div');
     addBar.className = 'add-task-bar';
-    const placeholder = activeSub
-      ? `Add a task to ${escapeHtml(activeSub.name)} (${escapeHtml(tierLabel)})...`
-      : `Add a task to ${escapeHtml(tierLabel)}...`;
+    const placeholder = `Add a task to ${escapeHtml(scopeName)} (${escapeHtml(tierLabel)})...`;
     addBar.innerHTML = `
       <input class="add-task-input" placeholder="${placeholder}" autocomplete="off">
       <button class="pill-btn primary">+ Add</button>
@@ -4217,6 +4321,7 @@ function renderModeView(modeId) {
       addTask(text, {
         mode: modeId,
         subId: activeSub ? activeSub.id : null,
+        memberId: activeMember ? activeMember.id : null,
         tier: state.currentTier
       });
       input.value = '';
@@ -4230,26 +4335,194 @@ function renderModeView(modeId) {
 
   root.appendChild(card);
 
-  // Events card (scoped to mode, or mode + sub-entity if active)
-  root.appendChild(renderEventsCard(modeId, activeSub));
-
-  // Notes card (scoped to mode, or mode + sub-entity if active)
-  root.appendChild(renderNotesCard(modeId, activeSub));
+  // Events + Notes cards, scoped by mode + sub + member
+  root.appendChild(renderEventsCard(modeId, activeSub, activeMember));
+  root.appendChild(renderNotesCard(modeId, activeSub, activeMember));
 
   return root;
+}
+
+/* ------------------------------------------------------------
+   4b: Build the level-1 sub-entity pill bar.
+   Used for Work, Community, Family, Personal, Mortal Coil.
+   ------------------------------------------------------------ */
+function buildSubBar(modeId, subs, subId) {
+  const subBar = document.createElement('div');
+  subBar.className = 'sub-bar';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'sub-bar-label';
+  lbl.textContent = subEntityGroupLabel(modeId);
+  subBar.appendChild(lbl);
+
+  // "All" button - uses mode colour
+  const allBtn = document.createElement('button');
+  allBtn.className = 'sub-btn' + (!subId ? ' active' : '');
+  allBtn.setAttribute('style', `--sub-colour: var(--pal-${modeColour(modeId)});`);
+  allBtn.textContent = 'All';
+  allBtn.onclick = () => setSubEntity(null);
+  subBar.appendChild(allBtn);
+
+  subs.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'sub-btn' + (subId === s.id ? ' active' : '');
+    b.setAttribute('style', `--sub-colour: var(--pal-${subColour(modeId, s.id)});`);
+    b.textContent = s.name;
+    b.onclick = () => setSubEntity(s.id);
+
+    // 4a: context menu / long-press for colour picker
+    const openSubMenu = (anchor) => {
+      const currentColour = s.colour || null;
+      openColourPopover(anchor, {
+        title: escapeHtml(s.name) + ' colour',
+        currentColour: currentColour,
+        allowInherit: true,
+        inheritLabel: 'Auto-vary from ' + DEFAULT_MODES.find(x => x.id === modeId).name,
+        onPick: (newId) => {
+          s.colour = newId;
+          saveState();
+          render();
+        },
+        onReset: currentColour ? () => {
+          s.colour = null;
+          saveState();
+          render();
+        } : null
+      });
+    };
+    b.oncontextmenu = (ev) => { ev.preventDefault(); openSubMenu(b); };
+    let pressTimer = null;
+    b.addEventListener('touchstart', () => {
+      pressTimer = setTimeout(() => { pressTimer = null; openSubMenu(b); }, 600);
+    }, { passive: true });
+    b.addEventListener('touchend', () => { if (pressTimer) clearTimeout(pressTimer); });
+    b.addEventListener('touchmove', () => { if (pressTimer) clearTimeout(pressTimer); });
+    subBar.appendChild(b);
+  });
+
+  // Add button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'sub-btn add';
+  addBtn.textContent = '+ ' + subEntityLabel(modeId);
+  addBtn.onclick = () => {
+    const label = subEntityLabel(modeId);
+    const name = prompt(`New ${label} name:`);
+    if (!name || !name.trim()) return;
+    const entity = { id: uid(), name: name.trim(), colour: null };
+    if (modeId === 'work') {
+      if (!state.clients) state.clients = [];
+      state.clients.push(entity);
+    } else if (modeId === 'community') {
+      if (!state.orgs) state.orgs = [];
+      state.orgs.push(entity);
+    } else if (modeId === 'family') {
+      if (!state.households) state.households = [];
+      entity.members = [];
+      state.households.push(entity);
+    } else if (modeId === 'personal' || modeId === 'mortal-coil') {
+      if (!state.categories) state.categories = { personal: [], 'mortal-coil': [] };
+      if (!state.categories[modeId]) state.categories[modeId] = [];
+      state.categories[modeId].push(entity);
+    }
+    saveState();
+    toast('added.');
+    setSubEntity(entity.id);
+  };
+  subBar.appendChild(addBtn);
+
+  return subBar;
+}
+
+/* ------------------------------------------------------------
+   4b: Build the level-2 member bar for Family.
+   Shown only when a household is active.
+   ------------------------------------------------------------ */
+function buildMemberBar(household, memberId) {
+  const bar = document.createElement('div');
+  bar.className = 'sub-bar sub-bar-nested';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'sub-bar-label';
+  lbl.textContent = 'In ' + household.name;
+  bar.appendChild(lbl);
+
+  // "Everyone" = all tasks in this household, unfiltered by member
+  const allBtn = document.createElement('button');
+  allBtn.className = 'sub-btn' + (!memberId ? ' active' : '');
+  allBtn.setAttribute('style', `--sub-colour: var(--pal-${subColour('family', household.id)});`);
+  allBtn.textContent = 'Everyone';
+  allBtn.onclick = () => setMember(null);
+  bar.appendChild(allBtn);
+
+  (household.members || []).forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'sub-btn' + (memberId === m.id ? ' active' : '');
+    b.setAttribute('style', `--sub-colour: var(--pal-${memberColour(household.id, m.id)});`);
+    b.textContent = m.name;
+    b.onclick = () => setMember(m.id);
+
+    // Context / long-press colour picker
+    const openMemberMenu = (anchor) => {
+      const currentColour = m.colour || null;
+      openColourPopover(anchor, {
+        title: escapeHtml(m.name) + ' colour',
+        currentColour: currentColour,
+        allowInherit: true,
+        inheritLabel: 'Auto-vary from ' + household.name,
+        onPick: (newId) => {
+          m.colour = newId;
+          saveState();
+          render();
+        },
+        onReset: currentColour ? () => {
+          m.colour = null;
+          saveState();
+          render();
+        } : null
+      });
+    };
+    b.oncontextmenu = (ev) => { ev.preventDefault(); openMemberMenu(b); };
+    let pressTimer = null;
+    b.addEventListener('touchstart', () => {
+      pressTimer = setTimeout(() => { pressTimer = null; openMemberMenu(b); }, 600);
+    }, { passive: true });
+    b.addEventListener('touchend', () => { if (pressTimer) clearTimeout(pressTimer); });
+    b.addEventListener('touchmove', () => { if (pressTimer) clearTimeout(pressTimer); });
+    bar.appendChild(b);
+  });
+
+  // Add member button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'sub-btn add';
+  addBtn.textContent = '+ in ' + household.name;
+  addBtn.onclick = () => {
+    const name = prompt(`New person, pet, project or whatever, in ${household.name}:`);
+    if (!name || !name.trim()) return;
+    const m = addMember(household.id, name);
+    if (m) {
+      toast('added.');
+      setMember(m.id);
+    }
+  };
+  bar.appendChild(addBtn);
+
+  return bar;
 }
 
 /* ============================================================
    TASK QUERIES WITH SUB-ENTITY
    ============================================================ */
-function tasksInModeSub(modeId, subId) {
-  if (subId) return state.tasks.filter(t => t.mode === modeId && t.subId === subId);
-  return state.tasks.filter(t => t.mode === modeId);
+function tasksInModeSub(modeId, subId, memberId) {
+  let result = state.tasks.filter(t => t.mode === modeId);
+  if (subId !== undefined && subId !== null) result = result.filter(t => t.subId === subId);
+  if (memberId !== undefined && memberId !== null) result = result.filter(t => t.memberId === memberId);
+  return result;
 }
 
-function tasksInModeTierSub(modeId, tier, subId) {
-  const base = state.tasks.filter(t => t.mode === modeId && t.tier === tier && !t.done);
-  if (subId) return base.filter(t => t.subId === subId);
+function tasksInModeTierSub(modeId, tier, subId, memberId) {
+  let base = state.tasks.filter(t => t.mode === modeId && t.tier === tier && !t.done);
+  if (subId !== undefined && subId !== null) base = base.filter(t => t.subId === subId);
+  if (memberId !== undefined && memberId !== null) base = base.filter(t => t.memberId === memberId);
   return base;
 }
 
@@ -4257,24 +4530,29 @@ function subEntityDescription(modeId) {
   if (modeId === 'work') return "Client-specific tasks, notes and scope.";
   if (modeId === 'community') return "Org-specific work, coordination and notes.";
   if (modeId === 'family') return "Household-specific tasks and notes.";
+  if (modeId === 'personal') return "Category-specific tasks and notes.";
+  if (modeId === 'mortal-coil') return "Category-specific admin and paperwork.";
   return '';
 }
 
 /* ============================================================
    NOTES CARD (3a)
    ============================================================ */
-function renderNotesCard(modeId, activeSub) {
+function renderNotesCard(modeId, activeSub, activeMember) {
   const card = document.createElement('div');
   card.className = 'notes-card';
 
   const subId = activeSub ? activeSub.id : null;
-  const scope = activeSub ? activeSub.name : DEFAULT_MODES.find(m => m.id === modeId).name;
-  const label = activeSub
-    ? `Notes · ${escapeHtml(scope)}`
-    : `Notes · ${escapeHtml(scope)}`;
-  const placeholder = activeSub
-    ? `Notes, scope, last contact, anything about ${escapeHtml(scope)}. Saves as you type.`
-    : `General notes for ${escapeHtml(scope)}. Saves as you type.`;
+  const memberId = activeMember ? activeMember.id : null;
+  const scope = activeMember
+    ? activeMember.name
+    : (activeSub ? activeSub.name : DEFAULT_MODES.find(m => m.id === modeId).name);
+  const label = `Notes · ${escapeHtml(scope)}`;
+  const placeholder = activeMember
+    ? `Notes about ${escapeHtml(scope)}. Saves as you type.`
+    : (activeSub
+        ? `Notes, scope, last contact, anything about ${escapeHtml(scope)}. Saves as you type.`
+        : `General notes for ${escapeHtml(scope)}. Saves as you type.`);
 
   card.innerHTML = `
     <span class="card-label">${label}</span>
@@ -4286,7 +4564,7 @@ function renderNotesCard(modeId, activeSub) {
   `;
 
   const textarea = card.querySelector('#notesArea');
-  textarea.value = getNote(modeId, subId);
+  textarea.value = getNote(modeId, subId, memberId);
 
   const savedEl = card.querySelector('#notesSaved');
   let saveTimer = null;
@@ -4294,7 +4572,7 @@ function renderNotesCard(modeId, activeSub) {
   textarea.addEventListener('input', () => {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      setNote(modeId, subId, textarea.value);
+      setNote(modeId, subId, memberId, textarea.value);
       savedEl.classList.add('show');
       setTimeout(() => savedEl.classList.remove('show'), 1200);
     }, 400);
@@ -4306,14 +4584,17 @@ function renderNotesCard(modeId, activeSub) {
 /* ============================================================
    EVENTS + COUNTDOWNS CARDS (3b)
    ============================================================ */
-function renderEventsCard(modeId, activeSub) {
+function renderEventsCard(modeId, activeSub, activeMember) {
   const card = document.createElement('div');
   card.className = 'events-card';
 
   const subId = activeSub ? activeSub.id : null;
-  const scope = activeSub ? activeSub.name : (modeId ? DEFAULT_MODES.find(m => m.id === modeId).name : 'All');
+  const memberId = activeMember ? activeMember.id : null;
+  const scope = activeMember
+    ? activeMember.name
+    : (activeSub ? activeSub.name : (modeId ? DEFAULT_MODES.find(m => m.id === modeId).name : 'All'));
 
-  const all = eventsInMode(modeId, subId);
+  const all = eventsInMode(modeId, subId, memberId);
 
   // Header with view toggle
   const header = document.createElement('div');
@@ -4395,6 +4676,7 @@ function renderEventsCard(modeId, activeSub) {
       date: dateInput.value || todayISO(),
       mode: modeId || null,
       subId: subId,
+      memberId: memberId,
       isCountdown: cdInput.checked
     });
     titleInput.value = '';
@@ -4980,6 +5262,16 @@ function openTaskPanel(taskId) {
       </div>
     </div>
 
+    <div class="task-panel-section" id="tpSubSection" style="display:none;">
+      <h4 id="tpSubLabel">Sub-entity</h4>
+      <div class="option-row" id="tpSubRow"></div>
+    </div>
+
+    <div class="task-panel-section" id="tpMemberSection" style="display:none;">
+      <h4 id="tpMemberLabel">Who</h4>
+      <div class="option-row" id="tpMemberRow"></div>
+    </div>
+
     <div class="task-panel-section">
       <h4>Tags</h4>
       <div class="option-row">
@@ -5024,10 +5316,95 @@ function openTaskPanel(taskId) {
     text: task.text,
     tier: task.tier,
     mode: task.mode,
+    subId: task.subId || null,          // 4b
+    memberId: task.memberId || null,    // 4b
     chips: (task.chips || []).slice(),
     waitingOn: task.waitingOn,
     colour: task.colour || null
   };
+
+  // 4b: re-render sub-entity and member pickers based on staged.mode / staged.subId
+  function renderTaskSubSection() {
+    const section = panel.querySelector('#tpSubSection');
+    const memberSection = panel.querySelector('#tpMemberSection');
+    const subRow = panel.querySelector('#tpSubRow');
+    const subLabel = panel.querySelector('#tpSubLabel');
+    if (!section || !subRow) return;
+
+    if (!staged.mode || !MODES_WITH_SUBS.includes(staged.mode)) {
+      section.style.display = 'none';
+      memberSection.style.display = 'none';
+      return;
+    }
+
+    const subs = getSubEntities(staged.mode);
+    const groupLabel = subEntityGroupLabel(staged.mode);
+    subLabel.textContent = groupLabel || 'Sub-entity';
+
+    if (!subs.length) {
+      section.style.display = 'block';
+      subRow.innerHTML = `<div class="colour-picker-note">No ${escapeHtml(subEntityLabel(staged.mode))}s yet. Add one from the ${escapeHtml(DEFAULT_MODES.find(m => m.id === staged.mode).name)} view.</div>`;
+      memberSection.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    let html = `<button class="option ${!staged.subId ? 'active' : ''}" data-sub="">Unassigned</button>`;
+    subs.forEach(s => {
+      html += `<button class="option ${staged.subId === s.id ? 'active' : ''}" data-sub="${s.id}">${escapeHtml(s.name)}</button>`;
+    });
+    subRow.innerHTML = html;
+    subRow.querySelectorAll('[data-sub]').forEach(b => {
+      b.onclick = () => {
+        staged.subId = b.dataset.sub || null;
+        // Changing sub clears member
+        staged.memberId = null;
+        subRow.querySelectorAll('[data-sub]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        renderTaskMemberSection();
+        renderTaskColourControl();
+      };
+    });
+
+    renderTaskMemberSection();
+  }
+
+  function renderTaskMemberSection() {
+    const memberSection = panel.querySelector('#tpMemberSection');
+    const memberRow = panel.querySelector('#tpMemberRow');
+    const memberLabel = panel.querySelector('#tpMemberLabel');
+    if (!memberSection || !memberRow) return;
+
+    // Only show for Family with a household selected
+    if (staged.mode !== 'family' || !staged.subId) {
+      memberSection.style.display = 'none';
+      return;
+    }
+
+    const h = getHousehold(staged.subId);
+    if (!h || !(h.members || []).length) {
+      memberSection.style.display = 'block';
+      memberLabel.textContent = 'Who in ' + h.name;
+      memberRow.innerHTML = `<div class="colour-picker-note">No people, pets or projects in ${escapeHtml(h.name)} yet. Add from the Family view.</div>`;
+      return;
+    }
+
+    memberSection.style.display = 'block';
+    memberLabel.textContent = 'Who in ' + h.name;
+    let html = `<button class="option ${!staged.memberId ? 'active' : ''}" data-member="">Everyone</button>`;
+    h.members.forEach(mem => {
+      html += `<button class="option ${staged.memberId === mem.id ? 'active' : ''}" data-member="${mem.id}">${escapeHtml(mem.name)}</button>`;
+    });
+    memberRow.innerHTML = html;
+    memberRow.querySelectorAll('[data-member]').forEach(b => {
+      b.onclick = () => {
+        staged.memberId = b.dataset.member || null;
+        memberRow.querySelectorAll('[data-member]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        renderTaskColourControl();
+      };
+    });
+  }
 
   // 4a: render the task colour control (reflects staged state)
   function renderTaskColourControl() {
@@ -5035,23 +5412,31 @@ function openTaskPanel(taskId) {
     const hint = panel.querySelector('#tpColourHint');
     if (!swatch || !hint) return;
     // Work out what colour this task would show with current staged values
-    const effective = staged.colour
-      ? staged.colour
-      : (staged.mode
-          ? (task.subId ? subColour(staged.mode, task.subId) : modeColour(staged.mode))
-          : 'pink');
+    let effective = 'pink';
+    let inheritLabel = 'default';
+    if (staged.colour) {
+      effective = staged.colour;
+    } else if (staged.mode === 'family' && staged.subId && staged.memberId) {
+      effective = memberColour(staged.subId, staged.memberId);
+      const mem = getMember(staged.subId, staged.memberId);
+      inheritLabel = 'inherits from ' + (mem ? mem.name : 'member');
+    } else if (staged.mode && staged.subId) {
+      effective = subColour(staged.mode, staged.subId);
+      const subs = getSubEntities(staged.mode);
+      const s = subs.find(x => x.id === staged.subId);
+      inheritLabel = 'inherits from ' + (s ? s.name : subEntityLabel(staged.mode));
+    } else if (staged.mode) {
+      effective = modeColour(staged.mode);
+      const m = DEFAULT_MODES.find(x => x.id === staged.mode);
+      inheritLabel = 'inherits from ' + (m ? m.name : 'mode');
+    }
     swatch.setAttribute('style', `--swatch: var(--pal-${effective});`);
     const paletteName = PALETTE.find(p => p.id === effective)?.name || '';
-    if (staged.colour) {
-      hint.textContent = paletteName + ' · picked';
-    } else if (staged.mode) {
-      const m = DEFAULT_MODES.find(x => x.id === staged.mode);
-      const inheritFrom = task.subId ? 'sub-entity' : (m ? m.name : 'mode');
-      hint.textContent = paletteName + ' · inherits from ' + inheritFrom;
-    } else {
-      hint.textContent = paletteName + ' · default';
-    }
+    hint.textContent = staged.colour
+      ? paletteName + ' · picked'
+      : paletteName + ' · ' + inheritLabel;
   }
+  renderTaskSubSection();
   renderTaskColourControl();
 
   panel.querySelector('#tpColourSwatch').onclick = (e) => {
@@ -5082,9 +5467,13 @@ function openTaskPanel(taskId) {
   panel.querySelectorAll('[data-mode]').forEach(b => {
     b.onclick = () => {
       staged.mode = b.dataset.mode || null;
+      // Changing mode clears sub + member (they're mode-specific)
+      staged.subId = null;
+      staged.memberId = null;
       panel.querySelectorAll('[data-mode]').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
-      renderTaskColourControl(); // colour preview updates if inheriting
+      renderTaskSubSection();
+      renderTaskColourControl();
     };
   });
 
@@ -5128,6 +5517,8 @@ function openTaskPanel(taskId) {
       text: staged.text.trim(),
       tier: staged.tier,
       mode: staged.mode,
+      subId: staged.subId,
+      memberId: staged.memberId,
       chips: staged.chips,
       waitingOn: staged.waitingOn,
       colour: staged.colour
