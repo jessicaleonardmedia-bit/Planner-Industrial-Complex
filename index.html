@@ -2720,19 +2720,23 @@ function swatchVars(id) {
   };
 }
 
-// Auto-vary a sub-entity's colour from its parent mode: rotate
-// N steps through the palette. Deterministic from the sub's id
-// so colours stay stable across reloads.
+// Auto-vary a sub-entity's colour from its parent. Stays within a
+// tight neighbourhood of the parent's palette position so siblings
+// feel related rather than randomly different. Deterministic from
+// the child's id so colours stay stable across reloads.
 function autoVaryFromParent(parentColourId, subId) {
   const baseIdx = PALETTE_IDS.indexOf(parentColourId);
   if (baseIdx === -1) return 'pink';
-  // Hash the sub's id to a number, mod palette length - 1 (skip 0)
+  // Hash the id to a small deterministic number
   let h = 0;
   for (let i = 0; i < (subId || '').length; i++) {
     h = (h * 31 + subId.charCodeAt(i)) | 0;
   }
-  const offset = (Math.abs(h) % (PALETTE.length - 1)) + 1;
-  return PALETTE_IDS[(baseIdx + offset) % PALETTE.length];
+  // Pick from neighbours: -2, -1, +1, +2 (skip 0 = parent itself)
+  const offsets = [-2, -1, 1, 2];
+  const offset = offsets[Math.abs(h) % offsets.length];
+  const idx = (baseIdx + offset + PALETTE.length) % PALETTE.length;
+  return PALETTE_IDS[idx];
 }
 
 const DEFAULT_MODES = [
