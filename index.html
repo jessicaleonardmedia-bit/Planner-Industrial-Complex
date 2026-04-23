@@ -1194,6 +1194,275 @@ body.calm-mode {
 @media (max-width: 600px) { .mode-masthead { padding: 24px 22px; } }
 
 /* ==========================================================
+   INBOX PULSE & TRIAGE (2b)
+   ========================================================== */
+.mode-btn.inbox-pulse .count { background: var(--butter); color: var(--ink); }
+
+.triage-style-toggle {
+  display: inline-flex;
+  background: var(--cream);
+  border-radius: 100px;
+  box-shadow: 0 0 0 2px var(--ink);
+  padding: 3px;
+}
+
+.triage-style-toggle button {
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.triage-style-toggle button.active { background: var(--ink); color: var(--butter); }
+
+.triage-shell { max-width: 680px; margin: 0 auto; }
+
+.triage-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  gap: 14px;
+}
+
+.triage-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--cream-3);
+  border-radius: 100px;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  overflow: hidden;
+}
+
+.triage-progress-fill {
+  height: 100%;
+  background: var(--pink);
+  border-radius: 100px;
+  transition: width var(--dur) var(--ease);
+}
+
+.triage-card {
+  background: var(--cream);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 2.5px var(--ink), 8px 8px 0 var(--ink);
+  padding: 40px 36px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.triage-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: var(--pink-cream);
+  border-radius: 50%;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+.triage-card-inner { position: relative; z-index: 1; }
+
+.triage-card-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 14px;
+}
+
+.triage-card-body {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .triage-card { padding: 28px 22px; }
+  .triage-card-body { font-size: 22px; }
+}
+
+.triage-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.triage-big-btn {
+  background: var(--cream);
+  border: none;
+  border-radius: var(--r-md);
+  padding: 20px;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2.5px var(--ink), 4px 4px 0 var(--ink);
+  color: var(--ink);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.triage-big-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2.5px var(--ink), 6px 6px 0 var(--ink);
+}
+
+.triage-big-btn:active {
+  transform: translate(0, 0);
+  box-shadow: 0 0 0 2.5px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.triage-big-btn .sub {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 6px;
+  color: var(--mute);
+}
+
+.triage-big-btn.now { background: var(--pink); color: var(--cream); }
+.triage-big-btn.now .sub { color: var(--cream); opacity: 0.85; }
+.triage-big-btn.soon { background: var(--sky); }
+.triage-big-btn.someday { background: var(--butter); }
+.triage-big-btn.bin { background: var(--ink); color: var(--cream); }
+.triage-big-btn.bin .sub { color: var(--butter); }
+
+.triage-mode-row {
+  background: var(--cream-2);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.triage-mode-row-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.triage-mode-options { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.triage-mode-opt {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transition: transform var(--dur) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.triage-mode-opt:hover { transform: translate(-1px, -1px); box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.triage-mode-opt.active { background: var(--pink); color: var(--cream); }
+
+.triage-nav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.triage-nav-left, .triage-nav-right { display: flex; gap: 8px; }
+
+/* List mode cards */
+.triage-list-card {
+  background: var(--cream);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2px var(--ink), 4px 4px 0 var(--ink);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.triage-list-card:nth-child(2n) { background: var(--cream-2); }
+
+.triage-list-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 8px;
+}
+
+.triage-list-body {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.triage-list-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.triage-mini {
+  padding: 6px 12px;
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transition: transform var(--dur) var(--ease);
+}
+
+.triage-mini:hover { transform: translate(-1px, -1px); box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.triage-mini.now { background: var(--pink); color: var(--cream); }
+.triage-mini.soon { background: var(--sky); }
+.triage-mini.someday { background: var(--butter); }
+.triage-mini.bin { background: var(--ink); color: var(--cream); }
+
+.triage-list-mode-select {
+  margin-left: auto;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: none;
+  background: var(--cream);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+/* ==========================================================
    INSTALL HINT
    ========================================================== */
 .install-hint {
@@ -1258,6 +1527,8 @@ function defaultState() {
     clients: [], // { id, name, rate }
     orgs: [],    // { id, name }
     pinnedSubs: [],
+    triageStyle: 'focused', // 'focused' or 'list'
+    triageIndex: 0,
     settings: {
       name: '',
       reducedMotion: false,
@@ -1454,20 +1725,36 @@ function renderModeBar() {
   const bar = document.createElement('div');
   bar.className = 'modes';
 
-  const modes = DEFAULT_MODES;
+  // Dashboard first
+  const dashBtn = document.createElement('button');
+  dashBtn.className = 'mode-btn' + (state.currentMode === 'dashboard' ? ' active' : '');
+  dashBtn.innerHTML = `<span class="glyph">●</span>Dashboard`;
+  dashBtn.onclick = () => setMode('dashboard');
+  bar.appendChild(dashBtn);
 
-  for (const m of modes) {
+  // Inbox next, with count and pulse styling if anything sitting
+  const inboxCount = inboxTasks().length;
+  const inboxBtn = document.createElement('button');
+  inboxBtn.className = 'mode-btn' + (state.currentMode === 'inbox' ? ' active' : '');
+  if (inboxCount > 0) inboxBtn.classList.add('inbox-pulse');
+  inboxBtn.innerHTML = `<span class="glyph">✦</span>Inbox`;
+  if (inboxCount > 0) {
+    inboxBtn.insertAdjacentHTML('beforeend', `<span class="count">${inboxCount}</span>`);
+  }
+  inboxBtn.onclick = () => setMode('inbox');
+  bar.appendChild(inboxBtn);
+
+  // Then the 5 taskable modes
+  for (const m of DEFAULT_MODES) {
+    if (m.id === 'dashboard') continue;
     const btn = document.createElement('button');
     btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '');
     btn.innerHTML = `<span class="glyph">${m.glyph}</span>${escapeHtml(m.name)}`;
 
-    // Add counts for modes with tasks (not dashboard itself)
     // Count = open Now-tier tasks (the "this week" view)
-    if (m.id !== 'dashboard') {
-      const count = state.tasks.filter(t => t.mode === m.id && !t.done && t.tier === 'now').length;
-      if (count > 0) {
-        btn.insertAdjacentHTML('beforeend', `<span class="count">${count}</span>`);
-      }
+    const count = state.tasks.filter(t => t.mode === m.id && !t.done && t.tier === 'now').length;
+    if (count > 0) {
+      btn.insertAdjacentHTML('beforeend', `<span class="count">${count}</span>`);
     }
 
     btn.onclick = () => setMode(m.id);
@@ -1482,6 +1769,7 @@ function setMode(id) {
   state.currentClientId = null;
   state.currentOrgId = null;
   state.currentTier = 'now';
+  if (id !== 'inbox') state.triageIndex = 0;
   saveState();
   render();
   window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
@@ -1549,13 +1837,15 @@ function renderGreeting() {
           <div class="num">${doneToday}</div>
           <div class="label">Done</div>
         </div>
-        <div class="stat-pill">
+        <div class="stat-pill" data-act="inbox">
           <div class="num">${inboxCount}</div>
           <div class="label">Inbox</div>
         </div>
       </div>
     </div>
   `;
+  const inboxPill = el.querySelector('[data-act="inbox"]');
+  if (inboxPill) inboxPill.onclick = () => setMode('inbox');
   return el;
 }
 
@@ -1615,14 +1905,17 @@ function renderDashboard() {
     <span class="card-label">Inbox</span>
     ${inboxCount === 0
       ? `<div class="empty">Inbox: empty. <span class="sparkle">✦</span> Suspicious, but we'll take it.</div>`
-      : `<div style="font-family:'Fraunces',serif;font-weight:700;font-size:24px;line-height:1.2;">
+      : `<div style="font-family:'Fraunces',serif;font-weight:700;font-size:24px;line-height:1.2;margin-bottom:10px;">
            ${inboxCount} thing${inboxCount === 1 ? '' : 's'} <em style="color:var(--pink-deep);">unsorted.</em>
          </div>
-         <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;color:var(--mute);margin-top:6px;text-transform:uppercase;">
-           sort flow coming in chunk 2
-         </div>`
+         <div style="font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-soft);line-height:1.5;margin-bottom:14px;">
+           Small piles are easy. Big piles are also easy, just slower.
+         </div>
+         <button class="pill-btn primary" data-act="triage">Triage now →</button>`
     }
   `;
+  const triageBtn = inbox.querySelector('[data-act="triage"]');
+  if (triageBtn) triageBtn.onclick = () => setMode('inbox');
   root.appendChild(inbox);
 
   // Modes overview card
@@ -1675,6 +1968,247 @@ function renderDashboard() {
   root.appendChild(placeholder);
 
   return root;
+}
+
+/* ============================================================
+   RENDER: INBOX VIEW (2b - triage focused + list)
+   ============================================================ */
+function renderInboxView() {
+  const root = document.createElement('div');
+  const inbox = inboxTasks();
+
+  // Empty state
+  if (inbox.length === 0) {
+    const masthead = document.createElement('div');
+    masthead.className = 'mode-masthead';
+    masthead.innerHTML = `
+      <div class="mode-masthead-inner">
+        <div class="card-label" style="margin-bottom:14px;">✦ Inbox</div>
+        <h1>Inbox: <em>empty.</em></h1>
+        <p>Suspicious, but we'll take it.</p>
+      </div>
+    `;
+    root.appendChild(masthead);
+
+    const card = document.createElement('div');
+    card.className = 'candy';
+    card.innerHTML = `
+      <div class="empty" style="padding:40px 20px;">
+        Nothing unsorted. <span class="sparkle">✦</span> Everything's where it should be, or you haven't started yet. Both acceptable.
+      </div>
+    `;
+    root.appendChild(card);
+    return root;
+  }
+
+  // Masthead with style toggle
+  const masthead = document.createElement('div');
+  masthead.className = 'mode-masthead';
+  masthead.innerHTML = `
+    <div class="mode-masthead-inner">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div class="card-label" style="margin-bottom:10px;">✦ Inbox · ${inbox.length} to sort</div>
+          <h1>The <em>Inbox.</em></h1>
+          <p>Unsorted captures. Pick a tier. No pressure. Stop whenever, the rest will wait.</p>
+        </div>
+        <div class="triage-style-toggle" style="margin-top:6px;">
+          <button class="${state.triageStyle === 'focused' ? 'active' : ''}" data-style="focused">Focused</button>
+          <button class="${state.triageStyle === 'list' ? 'active' : ''}" data-style="list">List</button>
+        </div>
+      </div>
+    </div>
+  `;
+  masthead.querySelectorAll('.triage-style-toggle button').forEach(b => {
+    b.onclick = () => {
+      state.triageStyle = b.dataset.style;
+      state.triageIndex = 0;
+      saveState();
+      render();
+    };
+  });
+  root.appendChild(masthead);
+
+  if (state.triageStyle === 'focused') {
+    root.appendChild(renderTriageFocused(inbox));
+  } else {
+    root.appendChild(renderTriageList(inbox));
+  }
+
+  return root;
+}
+
+function renderTriageFocused(inbox) {
+  const wrap = document.createElement('div');
+  wrap.className = 'triage-shell';
+
+  // Clamp index
+  if (state.triageIndex >= inbox.length) state.triageIndex = 0;
+  if (state.triageIndex < 0) state.triageIndex = 0;
+  const idx = state.triageIndex;
+  const task = inbox[idx];
+  const total = inbox.length;
+  const pct = Math.round((idx / total) * 100);
+
+  // Progress
+  const progress = document.createElement('div');
+  progress.className = 'triage-progress';
+  progress.innerHTML = `
+    <span>Item ${idx + 1} of ${total}</span>
+    <div class="triage-progress-bar"><div class="triage-progress-fill" style="width:${pct}%"></div></div>
+    <span>${pct}%</span>
+  `;
+  wrap.appendChild(progress);
+
+  // Card
+  const createdDate = new Date(task.createdAt);
+  const createdLabel = createdDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+  const timeLabel = createdDate.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+
+  const card = document.createElement('div');
+  card.className = 'triage-card';
+  card.innerHTML = `
+    <div class="triage-card-inner">
+      <div class="triage-card-meta">Captured ${escapeHtml(createdLabel)} · ${escapeHtml(timeLabel)}</div>
+      <div class="triage-card-body">${escapeHtml(task.text)}</div>
+    </div>
+  `;
+  wrap.appendChild(card);
+
+  // Tier buttons
+  const actions = document.createElement('div');
+  actions.className = 'triage-actions-grid';
+  actions.innerHTML = `
+    <button class="triage-big-btn now" data-tier="now">Now<span class="sub">This week</span></button>
+    <button class="triage-big-btn soon" data-tier="soon">Soon<span class="sub">On the radar</span></button>
+    <button class="triage-big-btn someday" data-tier="someday">Someday<span class="sub">No pressure</span></button>
+    <button class="triage-big-btn bin" data-tier="bin">Bin<span class="sub">Never mind</span></button>
+  `;
+  wrap.appendChild(actions);
+
+  // Mode row
+  const modeRow = document.createElement('div');
+  modeRow.className = 'triage-mode-row';
+  const modeOptsHTML = [
+    `<button class="triage-mode-opt ${!task.mode ? 'active' : ''}" data-mode="">Unassigned</button>`,
+    ...TASKABLE_MODES.map(mid => {
+      const m = DEFAULT_MODES.find(x => x.id === mid);
+      return `<button class="triage-mode-opt ${task.mode === mid ? 'active' : ''}" data-mode="${mid}"><span>${m.glyph}</span>${escapeHtml(m.name)}</button>`;
+    })
+  ].join('');
+  modeRow.innerHTML = `
+    <div class="triage-mode-row-label">Assign a mode (optional)</div>
+    <div class="triage-mode-options">${modeOptsHTML}</div>
+  `;
+  wrap.appendChild(modeRow);
+
+  // Nav
+  const nav = document.createElement('div');
+  nav.className = 'triage-nav';
+  nav.innerHTML = `
+    <div class="triage-nav-left">
+      <button class="pill-btn" data-nav="prev"${idx === 0 ? ' disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>← Previous</button>
+    </div>
+    <div class="triage-nav-right">
+      <button class="pill-btn" data-nav="skip"${idx >= total - 1 ? ' disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Skip</button>
+      <button class="pill-btn" data-nav="next"${idx >= total - 1 ? ' disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Next →</button>
+    </div>
+  `;
+  wrap.appendChild(nav);
+
+  // Wire mode options
+  modeRow.querySelectorAll('.triage-mode-opt').forEach(b => {
+    b.onclick = () => {
+      updateTask(task.id, { mode: b.dataset.mode || null });
+      render();
+    };
+  });
+
+  // Wire tier buttons
+  actions.querySelectorAll('[data-tier]').forEach(b => {
+    b.onclick = () => {
+      const tier = b.dataset.tier;
+      if (tier === 'bin') {
+        deleteTask(task.id);
+        toast('binned.');
+      } else {
+        updateTask(task.id, { tier });
+        const label = tier === 'now' ? 'Now' : tier === 'soon' ? 'Soon' : 'Someday';
+        toast(`→ ${label}`);
+      }
+      // Index stays; next item slides into this slot
+      const remaining = inboxTasks();
+      if (state.triageIndex >= remaining.length && remaining.length > 0) {
+        state.triageIndex = remaining.length - 1;
+      }
+      saveState();
+      render();
+    };
+  });
+
+  // Wire nav
+  nav.querySelectorAll('[data-nav]').forEach(b => {
+    b.onclick = () => {
+      const dir = b.dataset.nav;
+      if (dir === 'prev' && state.triageIndex > 0) state.triageIndex--;
+      else if ((dir === 'next' || dir === 'skip') && state.triageIndex < inbox.length - 1) state.triageIndex++;
+      saveState();
+      render();
+    };
+  });
+
+  return wrap;
+}
+
+function renderTriageList(inbox) {
+  const wrap = document.createElement('div');
+
+  inbox.forEach(task => {
+    const createdDate = new Date(task.createdAt);
+    const createdLabel = createdDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
+    const timeLabel = createdDate.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+
+    const card = document.createElement('div');
+    card.className = 'triage-list-card';
+    const modeOptsHTML = [
+      `<option value="" ${!task.mode ? 'selected' : ''}>Unassigned</option>`,
+      ...TASKABLE_MODES.map(mid => {
+        const m = DEFAULT_MODES.find(x => x.id === mid);
+        return `<option value="${mid}" ${task.mode === mid ? 'selected' : ''}>${m.glyph} ${escapeHtml(m.name)}</option>`;
+      })
+    ].join('');
+    card.innerHTML = `
+      <div class="triage-list-meta">${escapeHtml(createdLabel)} · ${escapeHtml(timeLabel)}</div>
+      <div class="triage-list-body">${escapeHtml(task.text)}</div>
+      <div class="triage-list-actions">
+        <button class="triage-mini now" data-tier="now">Now</button>
+        <button class="triage-mini soon" data-tier="soon">Soon</button>
+        <button class="triage-mini someday" data-tier="someday">Someday</button>
+        <button class="triage-mini bin" data-tier="bin">Bin</button>
+        <select class="triage-list-mode-select" data-select="mode">${modeOptsHTML}</select>
+      </div>
+    `;
+    card.querySelectorAll('[data-tier]').forEach(b => {
+      b.onclick = () => {
+        const tier = b.dataset.tier;
+        if (tier === 'bin') {
+          deleteTask(task.id);
+          toast('binned.');
+        } else {
+          updateTask(task.id, { tier });
+          const label = tier === 'now' ? 'Now' : tier === 'soon' ? 'Soon' : 'Someday';
+          toast(`→ ${label}`);
+        }
+        render();
+      };
+    });
+    card.querySelector('[data-select="mode"]').onchange = (e) => {
+      updateTask(task.id, { mode: e.target.value || null });
+    };
+    wrap.appendChild(card);
+  });
+
+  return wrap;
 }
 
 /* ============================================================
@@ -2180,6 +2714,8 @@ function render() {
 
   if (state.currentMode === 'dashboard') {
     app.appendChild(renderDashboard());
+  } else if (state.currentMode === 'inbox') {
+    app.appendChild(renderInboxView());
   } else {
     app.appendChild(renderModeView(state.currentMode));
   }
