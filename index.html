@@ -1009,15 +1009,13 @@ body.calm-mode {
   cursor: pointer;
   transition: transform var(--dur), background var(--dur);
 }
-.toast .toast-undo:hover,
-.toast .toast-undo:focus-visible {
-  background: var(--butter);
-  color: var(--ink);
-  outline: none;
-  transform: translateY(-1px);
+.toast .toast-undo:hover {
+  background: var(--pink-deep);
+  color: var(--butter);
 }
 .toast .toast-undo:focus-visible {
-  box-shadow: 0 0 0 3px var(--pink);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--butter);
 }
 
 /* ==========================================================
@@ -4136,7 +4134,7 @@ function buildComingUpItem(e) {
   item.querySelector('.event-delete-btn').onclick = (ev) => {
     ev.stopPropagation();
     const snapshot = deleteEvent(e.id);
-    undoToast('event gone ✦ undo?', () => {
+    undoToast('event gone', () => {
       restoreEvent(snapshot);
       render();
     });
@@ -4408,7 +4406,7 @@ function renderTriageFocused(inbox) {
       const tier = b.dataset.tier;
       if (tier === 'bin') {
         const snapshot = deleteTask(task.id);
-        undoToast('binned ✦ undo?', () => {
+        undoToast('binned', () => {
           restoreTask(snapshot);
           render();
         });
@@ -4474,7 +4472,7 @@ function renderTriageList(inbox) {
         const tier = b.dataset.tier;
         if (tier === 'bin') {
           const snapshot = deleteTask(task.id);
-          undoToast('binned ✦ undo?', () => {
+          undoToast('binned', () => {
             restoreTask(snapshot);
             render();
           });
@@ -5219,7 +5217,7 @@ function renderEventRow(event, isPast) {
   li.querySelector('.event-delete-btn').onclick = (e) => {
     e.stopPropagation();
     const snapshot = deleteEvent(event.id);
-    undoToast('event gone ✦ undo?', () => {
+    undoToast('event gone', () => {
       restoreEvent(snapshot);
       render();
     });
@@ -5845,7 +5843,7 @@ function openTaskPanel(taskId) {
   panel.querySelector('#tpDelete').onclick = () => {
     const snapshot = deleteTask(task.id);
     closeDrawers();
-    undoToast('deleted ✦ undo?', () => {
+    undoToast('deleted', () => {
       restoreTask(snapshot);
       render();
     });
