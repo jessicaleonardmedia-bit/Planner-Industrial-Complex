@@ -929,6 +929,11 @@ body.calm-mode {
   padding: 0;
   font: inherit;
   color: inherit;
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: middle;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .toggle:focus-visible {
@@ -1573,7 +1578,15 @@ body.calm-mode {
 }
 
 .triage-mode-opt:hover { transform: translate(-1px, -1px); box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
-.triage-mode-opt.active { background: var(--pink); color: var(--cream); }
+.triage-mode-opt.active {
+  background: var(--sub-colour, var(--pink));
+  color: var(--cream);
+  box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
+}
+/* 4c: when the inherited colour is pale, flip text to ink */
+.triage-mode-opt.active.dark-text {
+  color: var(--ink);
+}
 
 .triage-nav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .triage-nav-left, .triage-nav-right { display: flex; gap: 8px; }
@@ -4624,7 +4637,10 @@ function renderTriageFocused(inbox) {
     `<button class="triage-mode-opt ${!staged.mode ? 'active' : ''}" data-mode="">Unassigned</button>`,
     ...TASKABLE_MODES.map(mid => {
       const m = DEFAULT_MODES.find(x => x.id === mid);
-      return `<button class="triage-mode-opt ${staged.mode === mid ? 'active' : ''}" data-mode="${mid}"><span>${m.glyph}</span>${escapeHtml(m.name)}</button>`;
+      const colour = modeColour(mid);
+      const darkClass = needsDarkText(colour) ? ' dark-text' : '';
+      const styleAttr = `--sub-colour: ${colourCssValue(colour)};`;
+      return `<button class="triage-mode-opt${staged.mode === mid ? ' active' : ''}${darkClass}" style="${styleAttr}" data-mode="${mid}"><span>${m.glyph}</span>${escapeHtml(m.name)}</button>`;
     })
   ].join('');
   modeRow.innerHTML = `
@@ -4686,7 +4702,10 @@ function renderTriageFocused(inbox) {
     block.style.display = 'block';
     let html = `<button class="triage-mode-opt ${!staged.subId ? 'active' : ''}" data-sub="">Unassigned</button>`;
     subs.forEach(s => {
-      html += `<button class="triage-mode-opt ${staged.subId === s.id ? 'active' : ''}" data-sub="${s.id}">${escapeHtml(s.name)}</button>`;
+      const colour = subColour(staged.mode, s.id);
+      const darkClass = needsDarkText(colour) ? ' dark-text' : '';
+      const styleAttr = `--sub-colour: ${colourCssValue(colour)};`;
+      html += `<button class="triage-mode-opt${staged.subId === s.id ? ' active' : ''}${darkClass}" style="${styleAttr}" data-sub="${s.id}">${escapeHtml(s.name)}</button>`;
     });
     opts.innerHTML = html;
     opts.querySelectorAll('[data-sub]').forEach(b => {
@@ -4727,7 +4746,10 @@ function renderTriageFocused(inbox) {
     label.textContent = 'Who in ' + h.name + ' (optional)';
     let html = `<button class="triage-mode-opt ${!staged.memberId ? 'active' : ''}" data-member="">Everyone</button>`;
     h.members.forEach(mem => {
-      html += `<button class="triage-mode-opt ${staged.memberId === mem.id ? 'active' : ''}" data-member="${mem.id}">${escapeHtml(mem.name)}</button>`;
+      const colour = memberColour(h.id, mem.id);
+      const darkClass = needsDarkText(colour) ? ' dark-text' : '';
+      const styleAttr = `--sub-colour: ${colourCssValue(colour)};`;
+      html += `<button class="triage-mode-opt${staged.memberId === mem.id ? ' active' : ''}${darkClass}" style="${styleAttr}" data-member="${mem.id}">${escapeHtml(mem.name)}</button>`;
     });
     opts.innerHTML = html;
     opts.querySelectorAll('[data-member]').forEach(b => {
