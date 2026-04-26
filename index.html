@@ -1200,6 +1200,73 @@ body.calm-mode {
 
 .tier-tab.active .count { background: var(--cream); color: var(--pink); }
 
+/* 4c: Chip filter row sits below tier tabs, above the tasks card.
+   Sticky AND filter on tag chips. Inset frame to read as "filter affordance". */
+.chip-filter-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--cream-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1.5px var(--rule);
+  margin-bottom: 14px;
+}
+
+.chip-filter-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--mute);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.chip-filter-pill {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  border-radius: 100px;
+  padding: 4px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+.chip-filter-pill:hover { transform: translate(-1px, -1px); }
+
+/* Active state: each chip uses its own colour */
+.chip-filter-pill.active.energy   { background: var(--sage);     color: var(--ink); }
+.chip-filter-pill.active.quick    { background: var(--butter);   color: var(--ink); }
+.chip-filter-pill.active.call     { background: var(--pink-soft); color: var(--ink); }
+.chip-filter-pill.active.email    { background: var(--sky);      color: var(--ink); }
+.chip-filter-pill.active.errand   { background: var(--peach);    color: var(--ink); }
+.chip-filter-pill.active.thinking { background: var(--cream-3);  color: var(--ink); }
+.chip-filter-pill.active.money    { background: var(--pink);     color: var(--ink); }
+
+/* Dim state: chip not present in current scope and not currently filtering */
+.chip-filter-pill.dim {
+  opacity: 0.35;
+}
+
+.chip-filter-clear {
+  background: transparent;
+  border: 1.5px dashed var(--ink);
+  border-radius: 100px;
+  padding: 4px 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--mute);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  margin-left: 4px;
+}
+
+.chip-filter-clear:hover { color: var(--ink); border-style: solid; }
+
 /* ==========================================================
    TASK LIST (2a)
    ========================================================== */
@@ -3261,6 +3328,7 @@ function defaultState() {
     triageStyle: 'focused', // 'focused' or 'list'
     triageIndex: 0,
     inboxFilter: 'untriaged', // 4c: 'untriaged' or 'no-mode'
+    chipFilter: [], // 4c: array of active chip IDs (AND filter on tasks)
     eventView: 'list', // 'list' or 'calendar'
     calMonthOffset: 0, // current month + offset
     calSelectedDate: null, // ISO date string when a cell is focused
@@ -5114,6 +5182,51 @@ function renderModeView(modeId) {
   tierBar.appendChild(doneBtn);
   root.appendChild(tierBar);
 
+  // 4c: Chip filter row. Show only when at least one task in scope has a chip.
+  // Sticky AND filter — persists across navigation. Dim chips not present in
+  // current scope so the user knows what's relevant here vs everywhere.
+  const scopeChipSet = chipsInScope(modeId, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null);
+  if (scopeChipSet.size > 0) {
+    const filterRow = document.createElement('div');
+    filterRow.className = 'chip-filter-row';
+    const activeFilters = state.chipFilter || [];
+    const chipPillsHTML = CHIP_TYPES.map(ct => {
+      const isActive = activeFilters.includes(ct.id);
+      const inScope = scopeChipSet.has(ct.id);
+      const dimClass = (!isActive && !inScope) ? ' dim' : '';
+      const activeClass = isActive ? ' active' : '';
+      return `<button class="chip-filter-pill ${ct.cls}${activeClass}${dimClass}" data-chip="${ct.id}">${escapeHtml(ct.label)}</button>`;
+    }).join('');
+    const clearBtn = activeFilters.length
+      ? `<button class="chip-filter-clear" id="chipFilterClear" title="Clear all filters">clear ✕</button>`
+      : '';
+    filterRow.innerHTML = `
+      <span class="chip-filter-label">Filter:</span>
+      ${chipPillsHTML}
+      ${clearBtn}
+    `;
+    filterRow.querySelectorAll('[data-chip]').forEach(b => {
+      b.onclick = () => {
+        const id = b.dataset.chip;
+        const filters = (state.chipFilter || []).slice();
+        const idx = filters.indexOf(id);
+        if (idx >= 0) filters.splice(idx, 1);
+        else filters.push(id);
+        state.chipFilter = filters;
+        saveState();
+        render();
+      };
+    });
+    if (activeFilters.length) {
+      filterRow.querySelector('#chipFilterClear').onclick = () => {
+        state.chipFilter = [];
+        saveState();
+        render();
+      };
+    }
+    root.appendChild(filterRow);
+  }
+
   // Tasks card — inset border picks up the active mode/sub/member colour
   // so Tasks visually belongs to the current scope, while Events and
   // Notes keep their fixed section colours (sky/butter).
@@ -5124,9 +5237,12 @@ function renderModeView(modeId) {
 
   const tierInfo = TIERS.find(t => t.id === state.currentTier);
   const isDoneView = state.currentTier === 'done';
-  const tasks = isDoneView
+  const rawTasks = isDoneView
     ? tasksInModeSub(modeId, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null).filter(t => t.done).sort((a,b) => (b.doneAt||0) - (a.doneAt||0))
     : tasksInModeTierSub(modeId, state.currentTier, activeSub ? activeSub.id : null, activeMember ? activeMember.id : null);
+  // 4c: apply chip filter to whatever's shown
+  const tasks = applyChipFilter(rawTasks);
+  const filterIsActive = (state.chipFilter || []).length > 0;
 
   const tierLabel = isDoneView ? 'Done' : (tierInfo ? tierInfo.name : 'Now');
   const tierSub = !isDoneView && tierInfo && tierInfo.sub
@@ -5136,9 +5252,19 @@ function renderModeView(modeId) {
   card.innerHTML = `<span class="card-label">${escapeHtml(tierLabel)} · ${escapeHtml(scopeName)}${tierSub}</span>`;
 
   if (tasks.length === 0) {
-    const msg = isDoneView
-      ? `Nothing done yet in ${escapeHtml(scopeName)}. <span class="sparkle">♦</span> There is still time. Or there isn't. Who's to say.`
-      : tierEmptyCopy(state.currentTier, scopeName);
+    let msg;
+    if (filterIsActive && rawTasks.length > 0) {
+      // Filter eliminated everything
+      const filterLabels = state.chipFilter.map(id => {
+        const ct = CHIP_TYPES.find(x => x.id === id);
+        return ct ? ct.label : id;
+      }).join(' + ');
+      msg = `Nothing matches <strong style="font-family:'Fraunces',serif;font-style:italic;">${escapeHtml(filterLabels)}</strong>. <span class="sparkle">✦</span> Narrow your filter, or there's nothing here.`;
+    } else if (isDoneView) {
+      msg = `Nothing done yet in ${escapeHtml(scopeName)}. <span class="sparkle">♦</span> There is still time. Or there isn't. Who's to say.`;
+    } else {
+      msg = tierEmptyCopy(state.currentTier, scopeName);
+    }
     card.innerHTML += `<div class="empty">${msg}</div>`;
   } else {
     const list = document.createElement('ul');
@@ -5600,6 +5726,26 @@ function tasksInModeTierSub(modeId, tier, subId, memberId) {
   if (subId !== undefined && subId !== null) base = base.filter(t => t.subId === subId);
   if (memberId !== undefined && memberId !== null) base = base.filter(t => t.memberId === memberId);
   return base;
+}
+
+// 4c: Apply the active chip filter (AND logic) to a task list.
+// Returns the input unchanged if no chips are active.
+function applyChipFilter(tasks) {
+  const active = state.chipFilter || [];
+  if (!active.length) return tasks;
+  return tasks.filter(t => {
+    const taskChips = t.chips || [];
+    return active.every(c => taskChips.includes(c));
+  });
+}
+
+// 4c: Compute which chips are present on at least one task in scope.
+// Used to dim chips that aren't currently relevant.
+function chipsInScope(modeId, subId, memberId) {
+  const scope = tasksInModeSub(modeId, subId, memberId);
+  const set = new Set();
+  scope.forEach(t => (t.chips || []).forEach(c => set.add(c)));
+  return set;
 }
 
 function subEntityDescription(modeId) {
