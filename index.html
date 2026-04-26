@@ -1592,6 +1592,25 @@ body.calm-mode {
   box-shadow: 0 0 0 2px var(--pink);
 }
 
+/* 4c: Typed cutoff input. Same footprint as the dropdown for visual stability. */
+.cutoff-typed-input {
+  background: var(--cream);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--ink);
+  min-width: 100px;
+  width: 100px;
+  text-align: center;
+}
+
+.cutoff-typed-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--pink);
+}
+
 .cutoff-weekend-row {
   display: flex;
   align-items: center;
@@ -3701,6 +3720,7 @@ function defaultState() {
       triageRequireSubmit: false,
       timeOfDayOverride: null,
       timeFormat: '24h', // 4c: '24h' or '12h' - global time display preference
+      cutoffInputMode: 'dropdown', // 4c: 'dropdown' (hour-only) or 'typed' (loose text input)
       // 4c: Mode cutoffs. Soft = banner + fade. Hard = mode hidden from nav until next day.
       workCutoffSoft: '17:00',
       workCutoffSoftWeekends: false,
@@ -4100,6 +4120,19 @@ function cutoffHourSelect(id, currentValue) {
     options.push(`<option value="${v}"${sel}>${escapeHtml(label)}</option>`);
   }
   return `<select class="cutoff-hour-select" id="${id}">${options.join('')}</select>`;
+}
+
+// 4c: Build the HTML for a typed cutoff time input. Accepts loose formats
+// like "17:00", "5pm", "9:30am", "off". Normalised on blur.
+function cutoffTypedInput(id, currentValue) {
+  const display = (currentValue === 'off' || !currentValue) ? 'off' : formatTimeDisplay(currentValue);
+  return `<input type="text" class="cutoff-typed-input" id="${id}" value="${escapeHtml(display)}" placeholder="off, 17:00, 5pm" inputmode="text">`;
+}
+
+// 4c: Single entry point. Dispatches based on user preference.
+function cutoffInput(id, currentValue) {
+  const mode = (state && state.settings && state.settings.cutoffInputMode) || 'dropdown';
+  return mode === 'typed' ? cutoffTypedInput(id, currentValue) : cutoffHourSelect(id, currentValue);
 }
 
 function greetingCopy() {
@@ -7060,6 +7093,20 @@ function openSettingsDrawer() {
           }).join('')}
         </div>
       </div>
+
+      <div style="margin-top:18px;">
+        <div style="font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;margin-bottom:4px;">Cutoff input</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mute);margin-bottom:6px;">Dropdown picks on-the-hour. Typed lets you set 17:30, 18:45, etc.</div>
+        <div class="time-of-day-pills" id="cutoffInputModePills">
+          ${[
+            { id: 'dropdown', label: 'Dropdown' },
+            { id: 'typed', label: 'Typed' }
+          ].map(t => {
+            const active = (state.settings.cutoffInputMode || 'dropdown') === t.id;
+            return `<button type="button" class="tod-pill${active ? ' active' : ''}" data-cim="${t.id}">${escapeHtml(t.label)}</button>`;
+          }).join('')}
+        </div>
+      </div>
     </div>
 
     <div class="drawer-section">
@@ -7068,7 +7115,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row">
         <div class="cutoff-row-label">Soft cutoff</div>
-        ${cutoffHourSelect('workCutoffSoft', state.settings.workCutoffSoft)}
+        ${cutoffInput('workCutoffSoft', state.settings.workCutoffSoft)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="workCutoffSoftWeekends"${state.settings.workCutoffSoftWeekends ? ' checked' : ''}>
@@ -7077,7 +7124,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row" style="margin-top:14px;">
         <div class="cutoff-row-label">Hard cutoff</div>
-        ${cutoffHourSelect('workCutoffHard', state.settings.workCutoffHard)}
+        ${cutoffInput('workCutoffHard', state.settings.workCutoffHard)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="workCutoffHardWeekends"${state.settings.workCutoffHardWeekends ? ' checked' : ''}>
@@ -7091,7 +7138,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row">
         <div class="cutoff-row-label">Soft cutoff</div>
-        ${cutoffHourSelect('communityCutoffSoft', state.settings.communityCutoffSoft)}
+        ${cutoffInput('communityCutoffSoft', state.settings.communityCutoffSoft)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="communityCutoffSoftWeekends"${state.settings.communityCutoffSoftWeekends ? ' checked' : ''}>
@@ -7100,7 +7147,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row" style="margin-top:14px;">
         <div class="cutoff-row-label">Hard cutoff</div>
-        ${cutoffHourSelect('communityCutoffHard', state.settings.communityCutoffHard)}
+        ${cutoffInput('communityCutoffHard', state.settings.communityCutoffHard)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="communityCutoffHardWeekends"${state.settings.communityCutoffHardWeekends ? ' checked' : ''}>
@@ -7201,22 +7248,59 @@ function openSettingsDrawer() {
     };
   });
 
+  // 4c: Cutoff input mode toggle (dropdown/typed). Same re-open-drawer pattern
+  // so the cutoff inputs swap shape immediately.
+  drawer.querySelectorAll('#cutoffInputModePills .tod-pill').forEach(p => {
+    p.onclick = () => {
+      const v = p.dataset.cim;
+      state.settings.cutoffInputMode = v;
+      saveState();
+      render();
+      openSettingsDrawer();
+    };
+  });
+
   // 4a: Render the mode colours list
   renderModeColoursList(drawer.querySelector('#modeColourList'));
 
   // 4c: Render the recycle bin list
   renderRecycleBinList(drawer.querySelector('#recycleBinList'));
 
-  // 4c: Wire cutoff dropdowns. Save on change. Re-render so soft fade /
-  // hard hide reflects the new value immediately.
+  // 4c: Wire cutoff inputs. Two shapes: <select> (dropdown mode) or
+  // <input type="text"> (typed mode). Save on change/blur.
   ['workCutoffSoft', 'workCutoffHard', 'communityCutoffSoft', 'communityCutoffHard'].forEach(key => {
-    const sel = drawer.querySelector('#' + key);
-    if (!sel) return;
-    sel.onchange = () => {
-      state.settings[key] = sel.value;
-      saveState();
-      render();
-    };
+    const el = drawer.querySelector('#' + key);
+    if (!el) return;
+    if (el.tagName === 'SELECT') {
+      el.onchange = () => {
+        state.settings[key] = el.value;
+        saveState();
+        render();
+      };
+    } else {
+      // Typed input. Normalise on blur. Re-render to refresh fade/nav.
+      el.onblur = () => {
+        const raw = el.value.trim().toLowerCase();
+        if (raw === '' || raw === 'off') {
+          state.settings[key] = 'off';
+          el.value = 'off';
+        } else {
+          const normalised = normaliseTimeInput(raw);
+          if (normalised) {
+            state.settings[key] = normalised;
+            el.value = formatTimeDisplay(normalised);
+          } else {
+            // Invalid - reset display to current saved value
+            const cur = state.settings[key] || 'off';
+            el.value = cur === 'off' ? 'off' : formatTimeDisplay(cur);
+            toast('time format: 17:00, 5pm, off', false);
+          }
+        }
+        saveState();
+        render();
+      };
+      el.onkeydown = (ev) => { if (ev.key === 'Enter') el.blur(); };
+    }
   });
 
   ['workCutoffSoftWeekends', 'workCutoffHardWeekends', 'communityCutoffSoftWeekends', 'communityCutoffHardWeekends'].forEach(key => {
