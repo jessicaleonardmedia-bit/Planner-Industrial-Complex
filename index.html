@@ -1051,6 +1051,58 @@ body.calm-mode {
   margin-right: 6px;
 }
 
+/* 4c: Interactive undo-toast for delete actions */
+.undo-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(140px);
+  background: var(--ink);
+  color: var(--cream);
+  padding: 10px 12px 10px 18px;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  box-shadow: 0 0 0 2px var(--ink), 4px 4px 0 var(--pink);
+  z-index: 200;
+  transition: transform var(--dur) cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 32px);
+}
+
+.undo-toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.undo-toast .undo-msg {
+  flex: 1;
+}
+
+.undo-toast .undo-btn {
+  background: var(--pink);
+  color: var(--cream);
+  border: none;
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 0 1.5px var(--cream);
+  flex-shrink: 0;
+}
+
+.undo-toast .undo-btn:hover {
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
 /* ==========================================================
    BOTTOM BAR (mobile quick-capture sticky)
    ========================================================== */
@@ -3158,6 +3210,7 @@ body.calm-mode {
 <div class="app" id="app"></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="undo-toast" id="undoToast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /* ============================================================
@@ -3463,6 +3516,30 @@ function toast(msg, sparkle = true) {
   toast._t = setTimeout(() => el.classList.remove('show'), 2000);
 }
 
+// 4c: Interactive toast with an Undo button. Shown for ~5s. If user taps Undo
+// before timeout, onUndo() is called. Otherwise the toast just fades.
+// If a new undoToast is shown while one is active, the old one disappears
+// (its action is still committed, just no longer undoable).
+function undoToast(msg, onUndo) {
+  const el = document.getElementById('undoToast');
+  if (!el) return;
+  el.innerHTML = `
+    <span class="undo-msg"><span class="sparkle" style="color:var(--pink);margin-right:6px;">✦</span>${escapeHtml(msg)}</span>
+    <button class="undo-btn" id="undoToastBtn">Undo</button>
+  `;
+  el.classList.add('show');
+  clearTimeout(undoToast._t);
+  undoToast._t = setTimeout(() => el.classList.remove('show'), 5000);
+  const btn = el.querySelector('#undoToastBtn');
+  if (btn) {
+    btn.onclick = () => {
+      clearTimeout(undoToast._t);
+      el.classList.remove('show');
+      if (typeof onUndo === 'function') onUndo();
+    };
+  }
+}
+
 /* ---------- Time-of-day awareness ---------- */
 function timeOfDay() {
   // 4c: optional override from settings (for irregular rhythm or testing)
@@ -3619,6 +3696,16 @@ function toggleDone(id) {
 function deleteTask(id) {
   state.tasks = state.tasks.filter(t => t.id !== id);
   saveState();
+}
+
+// 4c: Restore a previously deleted task. Used by undoToast.
+function restoreTask(taskSnapshot) {
+  if (!taskSnapshot || !taskSnapshot.id) return;
+  // Avoid duplicates if somehow already there
+  if (state.tasks.find(t => t.id === taskSnapshot.id)) return;
+  state.tasks.push(taskSnapshot);
+  saveState();
+  render();
 }
 
 /* ============================================================
@@ -3932,6 +4019,16 @@ function deleteEvent(id) {
   if (!state.events) return;
   state.events = state.events.filter(e => e.id !== id);
   saveState();
+}
+
+// 4c: Restore a previously deleted event. Used by undoToast.
+function restoreEvent(eventSnapshot) {
+  if (!eventSnapshot || !eventSnapshot.id) return;
+  if (!state.events) state.events = [];
+  if (state.events.find(e => e.id === eventSnapshot.id)) return;
+  state.events.push(eventSnapshot);
+  saveState();
+  render();
 }
 
 /* ============================================================
@@ -4505,7 +4602,9 @@ function buildComingUpItem(e) {
   `;
   item.querySelector('.event-delete-btn').onclick = (ev) => {
     ev.stopPropagation();
+    const snapshot = { ...e };
     deleteEvent(e.id);
+    undoToast('Event deleted.', () => restoreEvent(snapshot));
     render();
   };
   return item;
@@ -4934,8 +5033,9 @@ function renderTriageFocused(inbox) {
     // Commit staged values, then advance to the next item in the active filter.
     const filter = state.inboxFilter || 'untriaged';
     if (staged.tier === 'bin') {
+      const snapshot = { ...task };
       deleteTask(task.id);
-      toast('binned.');
+      undoToast('Binned.', () => restoreTask(snapshot));
     } else {
       updateTask(task.id, {
         tier: staged.tier,
@@ -5006,8 +5106,9 @@ function renderTriageFocused(inbox) {
         // In no-mode filter, tier change doesn't remove from the pool so we stay on the same item.
         const filter = state.inboxFilter || 'untriaged';
         if (tier === 'bin') {
+          const snapshot = { ...task };
           deleteTask(task.id);
-          toast('binned.');
+          undoToast('Binned.', () => restoreTask(snapshot));
         } else {
           updateTask(task.id, { tier });
           const label = tier === 'now' ? 'Now' : tier === 'soon' ? 'Soon' : 'Someday';
@@ -5077,8 +5178,9 @@ function renderTriageList(inbox) {
       b.onclick = () => {
         const tier = b.dataset.tier;
         if (tier === 'bin') {
+          const snapshot = { ...task };
           deleteTask(task.id);
-          toast('binned.');
+          undoToast('Binned.', () => restoreTask(snapshot));
         } else {
           updateTask(task.id, { tier });
           const label = tier === 'now' ? 'Now' : tier === 'soon' ? 'Soon' : 'Someday';
@@ -6126,7 +6228,9 @@ function renderEventRow(event, isPast) {
 
   li.querySelector('.event-delete-btn').onclick = (e) => {
     e.stopPropagation();
+    const snapshot = { ...event };
     deleteEvent(event.id);
+    undoToast('Event deleted.', () => restoreEvent(snapshot));
     render();
   };
 
@@ -6924,10 +7028,10 @@ function openTaskPanel(taskId) {
   panel.querySelector('#tpCancel').onclick = closeDrawers;
 
   panel.querySelector('#tpDelete').onclick = () => {
-    if (!confirm('Delete this task?')) return;
+    const snapshot = { ...task };
     deleteTask(task.id);
     closeDrawers();
-    toast('deleted.');
+    undoToast('Task deleted.', () => restoreTask(snapshot));
     render();
   };
 
