@@ -3384,8 +3384,9 @@ function toast(msg, sparkle = true) {
 /* ---------- Time-of-day awareness ---------- */
 function timeOfDay() {
   // 4c: optional override from settings (for irregular rhythm or testing)
-  const override = state.settings && state.settings.timeOfDayOverride;
-  if (override) return override;
+  if (state && state.settings && state.settings.timeOfDayOverride) {
+    return state.settings.timeOfDayOverride;
+  }
   const h = new Date().getHours();
   const day = new Date().getDay();
   if (day === 0 || day === 6) return 'weekend';
@@ -6099,18 +6100,25 @@ function openSettingsDrawer() {
 
     <div class="drawer-section">
       <h3>Rhythm</h3>
-      <div class="wizard-note" style="margin-bottom:10px;">The greeting and dashboards shift with the time of day. If your rhythm doesn't match the clock, override it here.</div>
+      <div class="wizard-note" style="margin-bottom:10px;">
+        Greetings and dashboards shift with the time of day. Override here if your rhythm doesn't match the clock.
+        <br><br>
+        <strong style="font-family:'Fraunces',serif;font-weight:700;color:var(--ink);font-style:normal;">Currently showing:</strong>
+        <code id="todCurrentValue" style="font-family:'DM Mono',monospace;background:var(--cream-2);padding:2px 8px;border-radius:6px;color:var(--ink);">${escapeHtml(timeOfDay())}</code>
+        <span id="todCurrentMode" style="color:var(--mute);font-size:11px;">${state.settings.timeOfDayOverride ? ' (override)' : ' (auto)'}</span>
+      </div>
       <div class="time-of-day-pills" id="todPills">
         ${[
-          { id: null, label: 'Auto' },
+          { id: '', label: 'Auto' },
           { id: 'morning', label: 'Morning' },
           { id: 'midday', label: 'Midday' },
           { id: 'evening', label: 'Evening' },
           { id: 'weekend', label: 'Weekend' },
           { id: 'late', label: 'Late' }
         ].map(t => {
-          const active = (state.settings.timeOfDayOverride || null) === t.id;
-          return `<button type="button" class="tod-pill${active ? ' active' : ''}" data-tod="${t.id || ''}">${escapeHtml(t.label)}</button>`;
+          const current = state.settings.timeOfDayOverride || '';
+          const active = current === t.id;
+          return `<button type="button" class="tod-pill${active ? ' active' : ''}" data-tod="${t.id}">${escapeHtml(t.label)}</button>`;
         }).join('')}
       </div>
     </div>
@@ -6168,15 +6176,24 @@ function openSettingsDrawer() {
     };
   });
 
-  // 4c: Time-of-day override pills
+  // 4c: Time-of-day override pills.
+  // On click: write to state, save, render the app underneath. Then update the
+  // active pill class and the "Currently showing" line in place — no drawer rebuild.
   drawer.querySelectorAll('.tod-pill').forEach(p => {
     p.onclick = () => {
       const v = p.dataset.tod || null;
       state.settings.timeOfDayOverride = v;
-      drawer.querySelectorAll('.tod-pill').forEach(x => x.classList.remove('active'));
-      p.classList.add('active');
       saveState();
       render();
+      // Update active class on all tod pills
+      drawer.querySelectorAll('.tod-pill').forEach(x => {
+        x.classList.toggle('active', (x.dataset.tod || '') === (v || ''));
+      });
+      // Update the "Currently showing" line
+      const valEl = drawer.querySelector('#todCurrentValue');
+      const modeEl = drawer.querySelector('#todCurrentMode');
+      if (valEl) valEl.textContent = timeOfDay();
+      if (modeEl) modeEl.textContent = v ? ' (override)' : ' (auto)';
     };
   });
 
