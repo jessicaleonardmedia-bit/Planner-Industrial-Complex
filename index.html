@@ -1465,6 +1465,39 @@ body.calm-mode {
   transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
 
+/* 4c: Grace indicator. Persistent ticker shown when grace is running but
+   the dialog is hidden (snoozed/silenced). Sits above the faded content. */
+.grace-indicator {
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--r-sm);
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--pink);
+}
+
+.grace-indicator-label {
+  flex: 1;
+}
+
+.grace-indicator-time {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--pink);
+  font-style: italic;
+}
+
 /* 4c: Grace dialog. Persistent overlay until user picks an action. */
 .grace-backdrop {
   position: fixed;
@@ -3932,7 +3965,8 @@ function hardCutoffActive(modeId) {
 function graceActiveFor(modeId) {
   if (!state._cutoffGrace) return false;
   if (state._cutoffGrace.mode !== modeId) return false;
-  if (state._cutoffGrace.expiresAt <= Date.now()) return false;
+  // Grace is active if the cap hasn't been hit yet
+  if (graceCapHit()) return false;
   return true;
 }
 
@@ -3943,20 +3977,30 @@ function effectiveHardCutoff(modeId) {
 }
 
 function startCutoffGrace(modeId) {
+  // 4c: When hard cutoff hits and the user wants to keep working, they get
+  // a single 15-minute window starting now. The dialog can be snoozed for
+  // 5 mins or hidden until the 15 is up, but the cap is fixed.
+  const now = Date.now();
   state._cutoffGrace = {
     mode: modeId,
-    startedAt: Date.now(),
-    totalUsedMins: 0,
-    expiresAt: Date.now() // initially expired, dialog gives the option to extend
+    startedAt: now,
+    capExpiresAt: now + 15 * 60 * 1000,
+    dialogShowsAt: now // dialog showing right now
   };
 }
 
-function extendCutoffGrace(addMins) {
+// Snooze the dialog for N minutes. Cap is unchanged.
+// If snooze would go past cap, dialog is silenced for the rest of the cap.
+function snoozeGraceDialog(addMins) {
   if (!state._cutoffGrace) return;
-  state._cutoffGrace.totalUsedMins += addMins;
-  // Set expiry to now + the added minutes (extending while already active starts
-  // from now, not from previous expiry). This prevents stockpiling time.
-  state._cutoffGrace.expiresAt = Date.now() + addMins * 60 * 1000;
+  const target = Date.now() + addMins * 60 * 1000;
+  state._cutoffGrace.dialogShowsAt = Math.min(target, state._cutoffGrace.capExpiresAt);
+}
+
+// Hide the dialog for the rest of the grace window (no more interruptions).
+function silenceGraceDialog() {
+  if (!state._cutoffGrace) return;
+  state._cutoffGrace.dialogShowsAt = state._cutoffGrace.capExpiresAt;
 }
 
 // 4c: Track the grace expiry timer so we can cancel/replace it.
@@ -3970,31 +4014,43 @@ function clearCutoffGrace() {
   }
 }
 
-function graceMinsRemaining() {
+function graceMsRemaining() {
   if (!state._cutoffGrace) return 0;
-  return Math.max(0, 15 - state._cutoffGrace.totalUsedMins);
+  return Math.max(0, state._cutoffGrace.capExpiresAt - Date.now());
 }
 
-// 4c: Schedule a render() call when the current grace expires. This makes the
-// dialog reappear (or kick the user) at the right moment, even if they don't
-// have it open. We track the timeout id so a new schedule cancels the old one.
+// Has the grace window expired (15 min cap hit)?
+function graceCapHit() {
+  return state._cutoffGrace && Date.now() >= state._cutoffGrace.capExpiresAt;
+}
+
+// Should the dialog be visible right now?
+function graceDialogDue() {
+  if (!state._cutoffGrace) return false;
+  return Date.now() >= state._cutoffGrace.dialogShowsAt && !graceCapHit();
+}
+
+// 4c: Schedule whatever's next. Either the dialog reappearing (snooze ended)
+// or the cap being hit (kick out). One timer at a time.
 function scheduleGraceExpiryCheck() {
   if (_graceExpiryTimer) {
     clearTimeout(_graceExpiryTimer);
     _graceExpiryTimer = null;
   }
   if (!state._cutoffGrace) return;
-  const ms = state._cutoffGrace.expiresAt - Date.now();
+  const now = Date.now();
+  // The next thing to handle is whichever comes first: the dialog reappearing
+  // or the cap being hit.
+  const nextEvent = Math.min(state._cutoffGrace.dialogShowsAt, state._cutoffGrace.capExpiresAt);
+  const ms = nextEvent - now;
   if (ms <= 0) {
     render();
     return;
   }
   _graceExpiryTimer = setTimeout(() => {
     _graceExpiryTimer = null;
-    // When grace expires, re-render. If there's still cap available, the
-    // dialog will reopen offering more time. If not, render() bumps to dash.
-    if (graceMinsRemaining() === 0) {
-      // Cap exhausted: clear grace and bump.
+    if (graceCapHit()) {
+      // 15 mins are up. Clear grace and bump.
       clearCutoffGrace();
       state.currentMode = 'dashboard';
       saveState();
@@ -5955,6 +6011,38 @@ function renderModeView(modeId) {
     root.appendChild(banner);
   }
 
+  // 4c: Grace indicator. Shows when hard cutoff is active and grace is running
+  // but the dialog isn't currently visible (snoozed or silenced). Live ticker
+  // so the user always knows how much time is left in the 15-min cap.
+  if (hardCutoffActive(modeId) && graceActiveFor(modeId)) {
+    const indicator = document.createElement('div');
+    indicator.className = 'grace-indicator';
+    indicator.setAttribute('role', 'note');
+    indicator.id = 'graceIndicator';
+    const updateText = () => {
+      const ms = graceMsRemaining();
+      if (ms <= 0) return;
+      const mins = Math.floor(ms / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
+      indicator.innerHTML = `
+        <span class="grace-indicator-label">On borrowed time</span>
+        <span class="grace-indicator-time">${escapeHtml(timeStr)}</span>
+      `;
+    };
+    updateText();
+    // Tick every second. Cleared automatically when the element is removed
+    // (next render replaces the DOM).
+    const tick = setInterval(() => {
+      if (!document.body.contains(indicator)) {
+        clearInterval(tick);
+        return;
+      }
+      updateText();
+    }, 1000);
+    root.appendChild(indicator);
+  }
+
   // 4c: Mode content wrapper. Soft cutoff applies a fade to this element,
   // leaving the masthead, sub-bars and banner unaffected.
   // Three states:
@@ -7601,18 +7689,19 @@ function openColourPopover(anchorEl, opts) {
 /* ------------------------------------------------------------
    4c: Hard-cutoff grace dialog.
    Triggered when the user is currently on a hard-cutoff mode and grace
-   isn't yet active. Offers two extension options:
-   - "+5 min": each click adds 5 min and counts toward 15 min cap
-   - "+15 min once": single 15 min extension, also counts toward cap
-   Each click counts toward the 15-min total. When 15 min are used up,
-   both buttons disable. When grace expires, the dialog dismisses and
-   the user is kicked to dashboard.
+   isn't yet active. Opens a single 15-minute window starting now.
+   The dialog shows a live countdown of the 15-min cap.
+   - "Snooze 5 min": hides dialog for 5 min, then reappears (cap unchanged)
+   - "Don't ask again": hides dialog for the rest of the cap
+   - "Leave now": forfeit remaining time, go to dashboard
+   When the cap is hit, user is kicked.
    ------------------------------------------------------------ */
 function openCutoffGraceDialog(modeId) {
   // Remove any existing instance
   document.querySelectorAll('.grace-backdrop').forEach(el => el.remove());
 
-  // Initialise grace if not yet started
+  // Initialise grace if not yet started for this mode. This is what starts
+  // the 15-minute cap counting down.
   if (!state._cutoffGrace || state._cutoffGrace.mode !== modeId) {
     startCutoffGrace(modeId);
   }
@@ -7631,16 +7720,16 @@ function openCutoffGraceDialog(modeId) {
     ? "Hard cutoff. You're meant to be done."
     : "Hard cutoff. Tools down time.";
   const subCopy = isCommunity
-    ? "If you have to finish a thing, you can stretch this. There's a cap."
-    : "If you have to finish a thing, take a few. There's a cap.";
+    ? "If you have to finish a thing, you've got 15 minutes."
+    : "If you have to finish a thing, you've got 15 minutes.";
 
   modal.innerHTML = `
     <h4>${escapeHtml(headerCopy)}</h4>
     <p>${escapeHtml(subCopy)}</p>
     <div class="grace-countdown" id="graceCountdown"></div>
     <div class="grace-actions">
-      <button class="pill-btn" id="graceExtend5" type="button">+ 5 minutes</button>
-      <button class="pill-btn" id="graceExtend15" type="button">+ 15 minutes once</button>
+      <button class="pill-btn" id="graceSnooze5" type="button">Snooze 5 min</button>
+      <button class="pill-btn" id="graceSilence" type="button">Don't ask again</button>
     </div>
     <div class="grace-meta" id="graceMeta"></div>
     <div class="grace-leave">
@@ -7651,40 +7740,29 @@ function openCutoffGraceDialog(modeId) {
   backdrop.appendChild(modal);
   document.body.appendChild(backdrop);
 
-  // ---- Update the countdown + button state ----
+  // ---- Update the live countdown ----
   let intervalId = null;
 
   function updateUI() {
     const countdownEl = modal.querySelector('#graceCountdown');
     const metaEl = modal.querySelector('#graceMeta');
-    const ext5 = modal.querySelector('#graceExtend5');
-    const ext15 = modal.querySelector('#graceExtend15');
 
-    const remainingCap = graceMinsRemaining();
-    const grace = state._cutoffGrace;
-    const msLeft = grace ? grace.expiresAt - Date.now() : 0;
+    const msLeft = graceMsRemaining();
 
-    // Update countdown
     if (msLeft > 0) {
       const mins = Math.floor(msLeft / 60000);
       const secs = Math.floor((msLeft % 60000) / 1000);
       countdownEl.textContent = `${mins}:${String(secs).padStart(2, '0')} remaining`;
       countdownEl.classList.remove('expired');
     } else {
-      countdownEl.textContent = remainingCap > 0 ? 'Pick an extension or leave.' : 'No more time. Sorry.';
+      countdownEl.textContent = "Time's up.";
       countdownEl.classList.add('expired');
     }
 
-    // Update button availability based on the cap
-    ext5.disabled = remainingCap < 5;
-    ext15.disabled = remainingCap < 15;
+    metaEl.textContent = '15 min cap from when this dialog first appeared';
 
-    // Meta text: "5 of 15 used" etc
-    const used = grace ? grace.totalUsedMins : 0;
-    metaEl.textContent = `${used} of 15 minutes used`;
-
-    // If grace has expired AND there's no remaining cap, kick out automatically
-    if (msLeft <= 0 && remainingCap === 0) {
+    // Cap hit: kick out automatically
+    if (msLeft <= 0) {
       cleanup();
       clearCutoffGrace();
       state.currentMode = 'dashboard';
@@ -7698,24 +7776,23 @@ function openCutoffGraceDialog(modeId) {
     backdrop.remove();
   }
 
-  // Buttons
-  modal.querySelector('#graceExtend5').onclick = () => {
-    if (graceMinsRemaining() < 5) return;
-    extendCutoffGrace(5);
-    cleanup();
-    render();
-    // Schedule a re-render at grace expiry so the dialog reopens (or kicks)
-    scheduleGraceExpiryCheck();
-  };
-
-  modal.querySelector('#graceExtend15').onclick = () => {
-    if (graceMinsRemaining() < 15) return;
-    extendCutoffGrace(15);
+  // Snooze: hide the dialog for 5 mins, then reappear (cap unchanged)
+  modal.querySelector('#graceSnooze5').onclick = () => {
+    snoozeGraceDialog(5);
     cleanup();
     render();
     scheduleGraceExpiryCheck();
   };
 
+  // Silence: hide the dialog for the rest of the cap (no more interruptions)
+  modal.querySelector('#graceSilence').onclick = () => {
+    silenceGraceDialog();
+    cleanup();
+    render();
+    scheduleGraceExpiryCheck();
+  };
+
+  // Leave: forfeit remaining time, go to dashboard
   modal.querySelector('#graceLeave').onclick = () => {
     cleanup();
     clearCutoffGrace();
@@ -8491,11 +8568,16 @@ function render() {
 
   applySettings();
 
-  // 4c: After the page is rendered, if the user is on a hard-cutoff mode
-  // without active grace, open the grace dialog. Don't reopen if it's
-  // already on screen.
-  if (hardCutoffActive(state.currentMode) && !graceActiveFor(state.currentMode)) {
-    if (!document.querySelector('.grace-backdrop')) {
+  // 4c: After the page is rendered, decide whether to show the grace dialog.
+  // Three cases:
+  // - Hard cutoff just hit, grace not yet started → open dialog (this initialises grace)
+  // - Grace active, dialog due (snooze ended) → reopen dialog
+  // - Grace active but silenced/snoozed → no dialog
+  // Don't reopen if it's already on screen.
+  if (hardCutoffActive(state.currentMode)) {
+    const graceExists = state._cutoffGrace && state._cutoffGrace.mode === state.currentMode;
+    const shouldShow = !graceExists || graceDialogDue();
+    if (shouldShow && !document.querySelector('.grace-backdrop')) {
       openCutoffGraceDialog(state.currentMode);
     }
   }
