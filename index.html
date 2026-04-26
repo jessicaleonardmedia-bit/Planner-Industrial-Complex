@@ -6019,9 +6019,18 @@ function renderModeView(modeId) {
     indicator.className = 'grace-indicator';
     indicator.setAttribute('role', 'note');
     indicator.id = 'graceIndicator';
+    let tick = null;
     const updateText = () => {
       const ms = graceMsRemaining();
-      if (ms <= 0) return;
+      if (ms <= 0) {
+        // Cap hit. Kick to dashboard.
+        if (tick) clearInterval(tick);
+        clearCutoffGrace();
+        state.currentMode = 'dashboard';
+        saveState();
+        render();
+        return;
+      }
       const mins = Math.floor(ms / 60000);
       const secs = Math.floor((ms % 60000) / 1000);
       const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
@@ -6033,7 +6042,7 @@ function renderModeView(modeId) {
     updateText();
     // Tick every second. Cleared automatically when the element is removed
     // (next render replaces the DOM).
-    const tick = setInterval(() => {
+    tick = setInterval(() => {
       if (!document.body.contains(indicator)) {
         clearInterval(tick);
         return;
@@ -8585,10 +8594,31 @@ function render() {
 
 /* ============================================================
    CLOCK TICK
+   Updates every 30s. Also re-evaluates cutoffs to catch transitions
+   that happen while the user is on the page (e.g. soft cutoff hitting
+   at 5pm while they're on Work).
    ============================================================ */
+let _lastCutoffSnapshot = '';
+
+function cutoffSnapshot() {
+  // Compact string of all cutoff-relevant state, for change detection.
+  return [
+    softCutoffActive('work') ? 'ws' : '',
+    hardCutoffActive('work') ? 'wh' : '',
+    softCutoffActive('community') ? 'cs' : '',
+    hardCutoffActive('community') ? 'ch' : '',
+  ].join('|');
+}
+
 setInterval(() => {
   const clock = document.getElementById('clock');
   if (clock) clock.textContent = formatClock();
+  // 4c: If any cutoff status flipped since last tick, re-render the page.
+  const snap = cutoffSnapshot();
+  if (snap !== _lastCutoffSnapshot) {
+    _lastCutoffSnapshot = snap;
+    render();
+  }
 }, 30000);
 
 /* ============================================================
@@ -8597,6 +8627,7 @@ setInterval(() => {
 loadState();
 applySettings();
 purgeOldRecycleBin(); // 4c: clear bin entries older than 24h on every load
+_lastCutoffSnapshot = cutoffSnapshot(); // 4c: avoid spurious render on first tick
 
 if (!state.onboarded) {
   render();
@@ -8610,6 +8641,26 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   window._installPrompt = e;
 });
+
+// 4c: When the tab regains focus or becomes visible, re-check cutoff state.
+// Browsers throttle/pause setInterval and setTimeout for backgrounded tabs,
+// so a hard cutoff that "should" have fired while we were away wouldn't have.
+// On wake, force a re-render which re-evaluates everything against wall-clock time.
+function recheckOnFocus() {
+  // Always render. It's cheap and catches all the time-sensitive things:
+  // - hard cutoff transitions
+  // - soft cutoff transitions
+  // - grace cap expiry
+  // - banner re-rotation if the day rolled over
+  // - clock display
+  render();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') recheckOnFocus();
+});
+window.addEventListener('focus', recheckOnFocus);
+window.addEventListener('pageshow', recheckOnFocus);
 </script>
 </body>
 </html>
