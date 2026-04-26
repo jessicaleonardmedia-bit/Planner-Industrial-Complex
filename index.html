@@ -266,6 +266,7 @@ body.calm-mode {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  position: relative;
 }
 
 .pill-btn:hover {
@@ -295,6 +296,20 @@ body.calm-mode {
 .pill-btn.small {
   padding: 6px 12px;
   font-size: 12px;
+}
+
+/* 4c: Touch target extension - invisible 44x44 hitbox for small pill buttons.
+   Visual stays the same, tap area is bigger. */
+.pill-btn.small::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  transform: translate(-50%, -50%);
 }
 
 .pill-btn.icon-only {
@@ -888,6 +903,32 @@ body.calm-mode {
   font-weight: 500;
 }
 
+/* 4c: Time-of-day override pills in settings */
+.time-of-day-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tod-pill {
+  background: var(--cream);
+  color: var(--ink);
+  border: none;
+  border-radius: 100px;
+  padding: 6px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.tod-pill:hover { transform: translate(-1px, -1px); box-shadow: 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink); }
+.tod-pill.active {
+  background: var(--ink);
+  color: var(--cream);
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
 .toggle-row {
   display: flex;
   align-items: center;
@@ -964,6 +1005,21 @@ body.calm-mode {
 
 .toggle.on { background: var(--pink); }
 .toggle.on .thumb { left: 26px; }
+
+/* 4c: Touch target extension - WCAG AAA requires 44x44px tappable area.
+   Visual size stays at 48x26; an invisible ::before extends the hit zone. */
+.toggle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  transform: translate(-50%, -50%);
+  /* Invisible. Extends the click/touch hit area. */
+}
 
 /* ==========================================================
    TOAST
@@ -3217,7 +3273,8 @@ function defaultState() {
       reducedMotion: false,
       calmMode: false,
       focusMode: false,
-      triageRequireSubmit: false
+      triageRequireSubmit: false,
+      timeOfDayOverride: null
     }
   };
 }
@@ -3326,6 +3383,9 @@ function toast(msg, sparkle = true) {
 
 /* ---------- Time-of-day awareness ---------- */
 function timeOfDay() {
+  // 4c: optional override from settings (for irregular rhythm or testing)
+  const override = state.settings && state.settings.timeOfDayOverride;
+  if (override) return override;
   const h = new Date().getHours();
   const day = new Date().getDay();
   if (day === 0 || day === 6) return 'weekend';
@@ -6038,6 +6098,24 @@ function openSettingsDrawer() {
     </div>
 
     <div class="drawer-section">
+      <h3>Rhythm</h3>
+      <div class="wizard-note" style="margin-bottom:10px;">The greeting and dashboards shift with the time of day. If your rhythm doesn't match the clock, override it here.</div>
+      <div class="time-of-day-pills" id="todPills">
+        ${[
+          { id: null, label: 'Auto' },
+          { id: 'morning', label: 'Morning' },
+          { id: 'midday', label: 'Midday' },
+          { id: 'evening', label: 'Evening' },
+          { id: 'weekend', label: 'Weekend' },
+          { id: 'late', label: 'Late' }
+        ].map(t => {
+          const active = (state.settings.timeOfDayOverride || null) === t.id;
+          return `<button type="button" class="tod-pill${active ? ' active' : ''}" data-tod="${t.id || ''}">${escapeHtml(t.label)}</button>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="drawer-section">
       <h3>Mode colours</h3>
       <div class="wizard-note" style="margin-bottom:10px;">Pick a palette colour for each mode. Sub-entities (clients, households, orgs) will auto-vary from their parent, unless you pick their own.</div>
       <div id="modeColourList"></div>
@@ -6087,6 +6165,18 @@ function openSettingsDrawer() {
       t.setAttribute('aria-checked', String(state.settings[key]));
       applySettings();
       saveState();
+    };
+  });
+
+  // 4c: Time-of-day override pills
+  drawer.querySelectorAll('.tod-pill').forEach(p => {
+    p.onclick = () => {
+      const v = p.dataset.tod || null;
+      state.settings.timeOfDayOverride = v;
+      drawer.querySelectorAll('.tod-pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      saveState();
+      render();
     };
   });
 
