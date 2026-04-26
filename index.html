@@ -1939,7 +1939,14 @@ body.calm-mode {
 }
 
 .option:hover { transform: translate(-2px, -2px); box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink); }
-.option.active { background: var(--pink); color: var(--cream); }
+.option.active {
+  background: var(--sub-colour, var(--pink));
+  color: var(--cream);
+}
+/* 4c: when the inherited colour is pale, flip text to ink */
+.option.active.dark-text {
+  color: var(--ink);
+}
 .option.active.tier-now     { background: var(--pink); }
 .option.active.tier-soon    { background: var(--sky); color: var(--ink); }
 .option.active.tier-someday { background: var(--butter); color: var(--ink); }
@@ -1952,7 +1959,14 @@ body.calm-mode {
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.option.chip-opt.active { background: var(--pink); color: var(--cream); }
+/* 4c: chip-opts use their own chip colour when active */
+.option.chip-opt.active.energy   { background: var(--sage);      color: var(--ink); }
+.option.chip-opt.active.quick    { background: var(--butter);    color: var(--ink); }
+.option.chip-opt.active.call     { background: var(--pink-soft); color: var(--ink); }
+.option.chip-opt.active.email    { background: var(--sky);       color: var(--ink); }
+.option.chip-opt.active.errand   { background: var(--peach);     color: var(--ink); }
+.option.chip-opt.active.thinking { background: var(--cream-3);   color: var(--ink); }
+.option.chip-opt.active.money    { background: var(--pink);      color: var(--ink); }
 
 .waiting-input-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 
@@ -6648,7 +6662,10 @@ function openTaskPanel(taskId) {
         <button class="option ${!task.mode ? 'active' : ''}" data-mode="">Unassigned</button>
         ${TASKABLE_MODES.map(mid => {
           const m = DEFAULT_MODES.find(x => x.id === mid);
-          return `<button class="option ${task.mode === mid ? 'active' : ''}" data-mode="${mid}">${m.glyph} ${escapeHtml(m.name)}</button>`;
+          const colour = modeColour(mid);
+          const darkClass = needsDarkText(colour) ? ' dark-text' : '';
+          const styleAttr = `--sub-colour: ${colourCssValue(colour)};`;
+          return `<button class="option${task.mode === mid ? ' active' : ''}${darkClass}" style="${styleAttr}" data-mode="${mid}">${m.glyph} ${escapeHtml(m.name)}</button>`;
         }).join('')}
       </div>
     </div>
@@ -6667,7 +6684,7 @@ function openTaskPanel(taskId) {
       <h4>Tags</h4>
       <div class="option-row">
         ${CHIP_TYPES.map(c => `
-          <button class="option chip-opt ${(task.chips||[]).includes(c.id) ? 'active' : ''}" data-chip="${c.id}">${escapeHtml(c.label)}</button>
+          <button class="option chip-opt ${c.cls} ${(task.chips||[]).includes(c.id) ? 'active' : ''}" data-chip="${c.id}">${escapeHtml(c.label)}</button>
         `).join('')}
       </div>
     </div>
@@ -6742,7 +6759,10 @@ function openTaskPanel(taskId) {
     section.style.display = 'block';
     let html = `<button class="option ${!staged.subId ? 'active' : ''}" data-sub="">Unassigned</button>`;
     subs.forEach(s => {
-      html += `<button class="option ${staged.subId === s.id ? 'active' : ''}" data-sub="${s.id}">${escapeHtml(s.name)}</button>`;
+      const colour = subColour(staged.mode, s.id);
+      const darkClass = needsDarkText(colour) ? ' dark-text' : '';
+      const styleAttr = `--sub-colour: ${colourCssValue(colour)};`;
+      html += `<button class="option${staged.subId === s.id ? ' active' : ''}${darkClass}" style="${styleAttr}" data-sub="${s.id}">${escapeHtml(s.name)}</button>`;
     });
     subRow.innerHTML = html;
     subRow.querySelectorAll('[data-sub]').forEach(b => {
@@ -6784,7 +6804,10 @@ function openTaskPanel(taskId) {
     memberLabel.textContent = 'Who in ' + h.name;
     let html = `<button class="option ${!staged.memberId ? 'active' : ''}" data-member="">Everyone</button>`;
     h.members.forEach(mem => {
-      html += `<button class="option ${staged.memberId === mem.id ? 'active' : ''}" data-member="${mem.id}">${escapeHtml(mem.name)}</button>`;
+      const colour = memberColour(h.id, mem.id);
+      const darkClass = needsDarkText(colour) ? ' dark-text' : '';
+      const styleAttr = `--sub-colour: ${colourCssValue(colour)};`;
+      html += `<button class="option${staged.memberId === mem.id ? ' active' : ''}${darkClass}" style="${styleAttr}" data-member="${mem.id}">${escapeHtml(mem.name)}</button>`;
     });
     memberRow.innerHTML = html;
     memberRow.querySelectorAll('[data-member]').forEach(b => {
