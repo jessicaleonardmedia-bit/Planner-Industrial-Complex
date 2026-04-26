@@ -1457,6 +1457,103 @@ body.calm-mode {
   transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
 
+/* 4c: Hard cutoff fade. Heavier than soft. Used both during pending grace
+   (dialog showing) and during active grace (countdown ticking). */
+.mode-content.hard-cutoff-fade {
+  opacity: 0.4;
+  filter: saturate(0.4) grayscale(0.3);
+  transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+/* 4c: Grace dialog. Persistent overlay until user picks an action. */
+.grace-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 26, 38, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 250;
+  backdrop-filter: blur(2px);
+}
+
+.grace-modal {
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: var(--r-md);
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 22px 24px;
+  max-width: 380px;
+  width: calc(100vw - 32px);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.grace-modal h4 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.grace-modal p {
+  font-size: 13px;
+  color: var(--mute);
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+}
+
+.grace-countdown {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--cream-2);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.grace-countdown.expired {
+  background: var(--pink-soft);
+  color: var(--ink);
+}
+
+.grace-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.grace-actions .pill-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.grace-actions .pill-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.grace-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.grace-leave {
+  text-align: center;
+  border-top: 1.5px dashed var(--rule);
+  padding-top: 12px;
+}
+
 /* 4c: Cutoff settings rows in drawer */
 .cutoff-row {
   display: flex;
@@ -1472,8 +1569,7 @@ body.calm-mode {
   flex: 1;
 }
 
-.cutoff-time-input {
-  width: 90px;
+.cutoff-hour-select {
   background: var(--cream);
   border: 1.5px solid var(--ink);
   border-radius: 8px;
@@ -1481,10 +1577,17 @@ body.calm-mode {
   font-family: 'DM Mono', monospace;
   font-size: 13px;
   color: var(--ink);
-  text-align: center;
+  cursor: pointer;
+  min-width: 100px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%232a1a26' d='M0 0l5 6 5-6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
 }
 
-.cutoff-time-input:focus {
+.cutoff-hour-select:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--pink);
 }
@@ -3597,6 +3700,7 @@ function defaultState() {
       focusMode: false,
       triageRequireSubmit: false,
       timeOfDayOverride: null,
+      timeFormat: '24h', // 4c: '24h' or '12h' - global time display preference
       // 4c: Mode cutoffs. Soft = banner + fade. Hard = mode hidden from nav until next day.
       workCutoffSoft: '17:00',
       workCutoffSoftWeekends: false,
@@ -3801,6 +3905,84 @@ function hardCutoffActive(modeId) {
   return isPastCutoff(state.settings[key], !!state.settings[wkKey]);
 }
 
+// 4c: Grace state. When hard cutoff hits and user is on the mode, they get
+// a dialog with options to extend by 5 or 15 minutes. Each extension counts
+// toward a 15-min cap. Tracked in-memory only (resets on app reload).
+//   _cutoffGrace = { mode, startedAt, totalUsedMins, expiresAt }
+function graceActiveFor(modeId) {
+  if (!state._cutoffGrace) return false;
+  if (state._cutoffGrace.mode !== modeId) return false;
+  if (state._cutoffGrace.expiresAt <= Date.now()) return false;
+  return true;
+}
+
+// True if hard cutoff is in effect AND the user has no active grace.
+// Used by nav and setMode redirect logic.
+function effectiveHardCutoff(modeId) {
+  return hardCutoffActive(modeId) && !graceActiveFor(modeId);
+}
+
+function startCutoffGrace(modeId) {
+  state._cutoffGrace = {
+    mode: modeId,
+    startedAt: Date.now(),
+    totalUsedMins: 0,
+    expiresAt: Date.now() // initially expired, dialog gives the option to extend
+  };
+}
+
+function extendCutoffGrace(addMins) {
+  if (!state._cutoffGrace) return;
+  state._cutoffGrace.totalUsedMins += addMins;
+  // Set expiry to now + the added minutes (extending while already active starts
+  // from now, not from previous expiry). This prevents stockpiling time.
+  state._cutoffGrace.expiresAt = Date.now() + addMins * 60 * 1000;
+}
+
+// 4c: Track the grace expiry timer so we can cancel/replace it.
+let _graceExpiryTimer = null;
+
+function clearCutoffGrace() {
+  state._cutoffGrace = null;
+  if (_graceExpiryTimer) {
+    clearTimeout(_graceExpiryTimer);
+    _graceExpiryTimer = null;
+  }
+}
+
+function graceMinsRemaining() {
+  if (!state._cutoffGrace) return 0;
+  return Math.max(0, 15 - state._cutoffGrace.totalUsedMins);
+}
+
+// 4c: Schedule a render() call when the current grace expires. This makes the
+// dialog reappear (or kick the user) at the right moment, even if they don't
+// have it open. We track the timeout id so a new schedule cancels the old one.
+function scheduleGraceExpiryCheck() {
+  if (_graceExpiryTimer) {
+    clearTimeout(_graceExpiryTimer);
+    _graceExpiryTimer = null;
+  }
+  if (!state._cutoffGrace) return;
+  const ms = state._cutoffGrace.expiresAt - Date.now();
+  if (ms <= 0) {
+    render();
+    return;
+  }
+  _graceExpiryTimer = setTimeout(() => {
+    _graceExpiryTimer = null;
+    // When grace expires, re-render. If there's still cap available, the
+    // dialog will reopen offering more time. If not, render() bumps to dash.
+    if (graceMinsRemaining() === 0) {
+      // Cap exhausted: clear grace and bump.
+      clearCutoffGrace();
+      state.currentMode = 'dashboard';
+      saveState();
+    }
+    render();
+  }, ms);
+}
+
 // Has the user dismissed the cutoff banner today for this mode?
 function cutoffBannerDismissedToday(modeId) {
   if (!state.cutoffBannerDismissed) return false;
@@ -3867,6 +4049,59 @@ function normaliseTimeInput(raw) {
   return String(h).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
 }
 
+// 4c: Format a time according to the user's timeFormat preference.
+// Accepts either a Date object or an 'HH:MM' string.
+// Returns '17:00' (24h) or '5 pm' / '5:30 pm' (12h).
+function formatTimeDisplay(timeOrDate) {
+  let h, mins;
+  if (timeOrDate instanceof Date) {
+    h = timeOrDate.getHours();
+    mins = timeOrDate.getMinutes();
+  } else if (typeof timeOrDate === 'string') {
+    const m = timeOrDate.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return timeOrDate;
+    h = parseInt(m[1], 10);
+    mins = parseInt(m[2], 10);
+  } else {
+    return '';
+  }
+  const fmt = (state && state.settings && state.settings.timeFormat) || '24h';
+  if (fmt === '12h') {
+    const period = h >= 12 ? 'pm' : 'am';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    return mins === 0 ? `${h12} ${period}` : `${h12}:${String(mins).padStart(2, '0')} ${period}`;
+  }
+  return `${String(h).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
+// 4c: Format a time for the cutoff hour dropdown. Same as formatTimeDisplay
+// but always renders the on-the-hour format.
+function formatHourLabel(hour24) {
+  const h = parseInt(hour24, 10);
+  const fmt = (state && state.settings && state.settings.timeFormat) || '24h';
+  if (fmt === '12h') {
+    const period = h >= 12 ? 'pm' : 'am';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    return `${h12} ${period}`;
+  }
+  return `${String(h).padStart(2, '0')}:00`;
+}
+
+// 4c: Build the HTML for a cutoff hour dropdown.
+// Off + 24 hour entries.
+function cutoffHourSelect(id, currentValue) {
+  const options = ['<option value="off"' + ((currentValue === 'off' || !currentValue) ? ' selected' : '') + '>Off</option>'];
+  for (let h = 0; h < 24; h++) {
+    const v = String(h).padStart(2, '0') + ':00';
+    const label = formatHourLabel(h);
+    const sel = currentValue === v ? ' selected' : '';
+    options.push(`<option value="${v}"${sel}>${escapeHtml(label)}</option>`);
+  }
+  return `<select class="cutoff-hour-select" id="${id}">${options.join('')}</select>`;
+}
+
 function greetingCopy() {
   const tod = timeOfDay();
   const name = state.settings.name || 'you';
@@ -3883,7 +4118,7 @@ function greetingCopy() {
 function formatClock() {
   const d = new Date();
   const date = d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' });
-  const time = d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  const time = formatTimeDisplay(d);
   return `${date} · ${time}`;
 }
 
@@ -4435,8 +4670,8 @@ function renderModeBar() {
   // Then the 5 taskable modes
   for (const m of DEFAULT_MODES) {
     if (m.id === 'dashboard') continue;
-    // 4c: hide modes that are past hard cutoff today
-    if (hardCutoffActive(m.id)) continue;
+    // 4c: hide modes that are past hard cutoff today (unless grace is active)
+    if (effectiveHardCutoff(m.id)) continue;
     const btn = document.createElement('button');
     const mC = modeColour(m.id);
     btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '') + (needsDarkText(mC) ? ' dark-text' : '');
@@ -4468,8 +4703,9 @@ function renderModeBar() {
 }
 
 function setMode(id) {
-  // 4c: Refuse to navigate to a hard-cutoff mode. Falls back to dashboard.
-  if (hardCutoffActive(id)) {
+  // 4c: Refuse to navigate to a hard-cutoff mode (unless grace is active).
+  // Falls back to dashboard.
+  if (effectiveHardCutoff(id)) {
     state.currentMode = 'dashboard';
     saveState();
     render();
@@ -5244,7 +5480,7 @@ function renderTriageFocused(inbox) {
   // Card
   const createdDate = new Date(task.createdAt);
   const createdLabel = createdDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
-  const timeLabel = createdDate.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+  const timeLabel = formatTimeDisplay(createdDate);
 
   const card = document.createElement('div');
   card.className = 'triage-card';
@@ -5539,7 +5775,7 @@ function renderTriageList(inbox) {
   inbox.forEach(task => {
     const createdDate = new Date(task.createdAt);
     const createdLabel = createdDate.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' });
-    const timeLabel = createdDate.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' });
+    const timeLabel = formatTimeDisplay(createdDate);
 
     const card = document.createElement('div');
     card.className = 'triage-list-card';
@@ -5673,7 +5909,7 @@ function renderModeView(modeId) {
     banner.className = 'cutoff-banner' + (modeId === 'community' ? ' community' : '');
     banner.setAttribute('role', 'note');
     const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+    const timeStr = formatTimeDisplay(now);
     banner.innerHTML = `
       <span class="cutoff-banner-time">${escapeHtml(timeStr)}</span>
       <span class="cutoff-banner-body">${escapeHtml(cutoffBannerCopy(modeId))}</span>
@@ -5688,8 +5924,18 @@ function renderModeView(modeId) {
 
   // 4c: Mode content wrapper. Soft cutoff applies a fade to this element,
   // leaving the masthead, sub-bars and banner unaffected.
+  // Three states:
+  // - hard cutoff active (with or without grace): heavy-fade
+  // - soft cutoff only: soft-fade
+  // - none: no fade
   const content = document.createElement('div');
-  content.className = 'mode-content' + (softCutoffActive(modeId) ? ' soft-cutoff-fade' : '');
+  let fadeClass = '';
+  if (hardCutoffActive(modeId)) {
+    fadeClass = ' hard-cutoff-fade';
+  } else if (softCutoffActive(modeId)) {
+    fadeClass = ' soft-cutoff-fade';
+  }
+  content.className = 'mode-content' + fadeClass;
 
   // Tier bar (filter respects sub-entity and member when active)
   const tierBar = document.createElement('div');
@@ -6801,6 +7047,19 @@ function openSettingsDrawer() {
           return `<button type="button" class="tod-pill${active ? ' active' : ''}" data-tod="${t.id}">${escapeHtml(t.label)}</button>`;
         }).join('')}
       </div>
+
+      <div style="margin-top:18px;">
+        <div style="font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;margin-bottom:6px;">Time format</div>
+        <div class="time-of-day-pills" id="timeFormatPills">
+          ${[
+            { id: '24h', label: '24-hour (17:00)' },
+            { id: '12h', label: '12-hour (5 pm)' }
+          ].map(t => {
+            const active = (state.settings.timeFormat || '24h') === t.id;
+            return `<button type="button" class="tod-pill${active ? ' active' : ''}" data-fmt="${t.id}">${escapeHtml(t.label)}</button>`;
+          }).join('')}
+        </div>
+      </div>
     </div>
 
     <div class="drawer-section">
@@ -6809,7 +7068,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row">
         <div class="cutoff-row-label">Soft cutoff</div>
-        <input type="text" class="cutoff-time-input" id="workCutoffSoft" value="${escapeHtml(state.settings.workCutoffSoft || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+        ${cutoffHourSelect('workCutoffSoft', state.settings.workCutoffSoft)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="workCutoffSoftWeekends"${state.settings.workCutoffSoftWeekends ? ' checked' : ''}>
@@ -6818,7 +7077,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row" style="margin-top:14px;">
         <div class="cutoff-row-label">Hard cutoff</div>
-        <input type="text" class="cutoff-time-input" id="workCutoffHard" value="${escapeHtml(state.settings.workCutoffHard || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+        ${cutoffHourSelect('workCutoffHard', state.settings.workCutoffHard)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="workCutoffHardWeekends"${state.settings.workCutoffHardWeekends ? ' checked' : ''}>
@@ -6832,7 +7091,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row">
         <div class="cutoff-row-label">Soft cutoff</div>
-        <input type="text" class="cutoff-time-input" id="communityCutoffSoft" value="${escapeHtml(state.settings.communityCutoffSoft || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+        ${cutoffHourSelect('communityCutoffSoft', state.settings.communityCutoffSoft)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="communityCutoffSoftWeekends"${state.settings.communityCutoffSoftWeekends ? ' checked' : ''}>
@@ -6841,7 +7100,7 @@ function openSettingsDrawer() {
 
       <div class="cutoff-row" style="margin-top:14px;">
         <div class="cutoff-row-label">Hard cutoff</div>
-        <input type="text" class="cutoff-time-input" id="communityCutoffHard" value="${escapeHtml(state.settings.communityCutoffHard || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+        ${cutoffHourSelect('communityCutoffHard', state.settings.communityCutoffHard)}
       </div>
       <label class="cutoff-weekend-row">
         <input type="checkbox" id="communityCutoffHardWeekends"${state.settings.communityCutoffHardWeekends ? ' checked' : ''}>
@@ -6911,14 +7170,14 @@ function openSettingsDrawer() {
   // 4c: Time-of-day override pills.
   // On click: write to state, save, render the app underneath. Then update the
   // active pill class and the "Currently showing" line in place — no drawer rebuild.
-  drawer.querySelectorAll('.tod-pill').forEach(p => {
+  drawer.querySelectorAll('#todPills .tod-pill').forEach(p => {
     p.onclick = () => {
       const v = p.dataset.tod || null;
       state.settings.timeOfDayOverride = v;
       saveState();
       render();
-      // Update active class on all tod pills
-      drawer.querySelectorAll('.tod-pill').forEach(x => {
+      // Update active class on tod pills only (not the time-format ones)
+      drawer.querySelectorAll('#todPills .tod-pill').forEach(x => {
         x.classList.toggle('active', (x.dataset.tod || '') === (v || ''));
       });
       // Update the "Currently showing" line
@@ -6929,38 +7188,35 @@ function openSettingsDrawer() {
     };
   });
 
+  // 4c: Time format toggle (12h/24h). On click: write, save, re-render the app
+  // (so all displayed times pick up the new format), then re-open the drawer
+  // so the cutoff dropdown labels reflect the new format.
+  drawer.querySelectorAll('#timeFormatPills .tod-pill').forEach(p => {
+    p.onclick = () => {
+      const v = p.dataset.fmt;
+      state.settings.timeFormat = v;
+      saveState();
+      render();
+      openSettingsDrawer();
+    };
+  });
+
   // 4a: Render the mode colours list
   renderModeColoursList(drawer.querySelector('#modeColourList'));
 
   // 4c: Render the recycle bin list
   renderRecycleBinList(drawer.querySelector('#recycleBinList'));
 
-  // 4c: Wire cutoff inputs. Validate HH:MM or "off". Save on blur. Re-render
-  // so soft fade / hard hide reflects the new value immediately.
+  // 4c: Wire cutoff dropdowns. Save on change. Re-render so soft fade /
+  // hard hide reflects the new value immediately.
   ['workCutoffSoft', 'workCutoffHard', 'communityCutoffSoft', 'communityCutoffHard'].forEach(key => {
-    const input = drawer.querySelector('#' + key);
-    if (!input) return;
-    input.onblur = () => {
-      const raw = input.value.trim().toLowerCase();
-      if (raw === '' || raw === 'off') {
-        state.settings[key] = 'off';
-        input.value = 'off';
-      } else {
-        // Try to normalise loose input like "5pm", "5:30", "17", "17:00"
-        const normalised = normaliseTimeInput(raw);
-        if (normalised) {
-          state.settings[key] = normalised;
-          input.value = normalised;
-        } else {
-          // Invalid - reset to previous
-          input.value = state.settings[key] || 'off';
-          toast('time format: HH:MM or off', false);
-        }
-      }
+    const sel = drawer.querySelector('#' + key);
+    if (!sel) return;
+    sel.onchange = () => {
+      state.settings[key] = sel.value;
       saveState();
       render();
     };
-    input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
   });
 
   ['workCutoffSoftWeekends', 'workCutoffHardWeekends', 'communityCutoffSoftWeekends', 'communityCutoffHardWeekends'].forEach(key => {
@@ -7258,6 +7514,138 @@ function openColourPopover(anchorEl, opts) {
    kind can be 'primary' (pink), 'danger' (ink) or undefined (cream)
    Auto-closes on action click. Cancel always closes.
    ------------------------------------------------------------ */
+/* ------------------------------------------------------------
+   4c: Hard-cutoff grace dialog.
+   Triggered when the user is currently on a hard-cutoff mode and grace
+   isn't yet active. Offers two extension options:
+   - "+5 min": each click adds 5 min and counts toward 15 min cap
+   - "+15 min once": single 15 min extension, also counts toward cap
+   Each click counts toward the 15-min total. When 15 min are used up,
+   both buttons disable. When grace expires, the dialog dismisses and
+   the user is kicked to dashboard.
+   ------------------------------------------------------------ */
+function openCutoffGraceDialog(modeId) {
+  // Remove any existing instance
+  document.querySelectorAll('.grace-backdrop').forEach(el => el.remove());
+
+  // Initialise grace if not yet started
+  if (!state._cutoffGrace || state._cutoffGrace.mode !== modeId) {
+    startCutoffGrace(modeId);
+  }
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'grace-backdrop';
+  backdrop.setAttribute('role', 'dialog');
+  backdrop.setAttribute('aria-modal', 'true');
+  backdrop.setAttribute('aria-label', 'Cutoff grace');
+
+  const modal = document.createElement('div');
+  modal.className = 'grace-modal';
+
+  const isCommunity = modeId === 'community';
+  const headerCopy = isCommunity
+    ? "Hard cutoff. You're meant to be done."
+    : "Hard cutoff. Tools down time.";
+  const subCopy = isCommunity
+    ? "If you have to finish a thing, you can stretch this. There's a cap."
+    : "If you have to finish a thing, take a few. There's a cap.";
+
+  modal.innerHTML = `
+    <h4>${escapeHtml(headerCopy)}</h4>
+    <p>${escapeHtml(subCopy)}</p>
+    <div class="grace-countdown" id="graceCountdown"></div>
+    <div class="grace-actions">
+      <button class="pill-btn" id="graceExtend5" type="button">+ 5 minutes</button>
+      <button class="pill-btn" id="graceExtend15" type="button">+ 15 minutes once</button>
+    </div>
+    <div class="grace-meta" id="graceMeta"></div>
+    <div class="grace-leave">
+      <button class="pill-btn small" id="graceLeave" type="button">Leave now</button>
+    </div>
+  `;
+
+  backdrop.appendChild(modal);
+  document.body.appendChild(backdrop);
+
+  // ---- Update the countdown + button state ----
+  let intervalId = null;
+
+  function updateUI() {
+    const countdownEl = modal.querySelector('#graceCountdown');
+    const metaEl = modal.querySelector('#graceMeta');
+    const ext5 = modal.querySelector('#graceExtend5');
+    const ext15 = modal.querySelector('#graceExtend15');
+
+    const remainingCap = graceMinsRemaining();
+    const grace = state._cutoffGrace;
+    const msLeft = grace ? grace.expiresAt - Date.now() : 0;
+
+    // Update countdown
+    if (msLeft > 0) {
+      const mins = Math.floor(msLeft / 60000);
+      const secs = Math.floor((msLeft % 60000) / 1000);
+      countdownEl.textContent = `${mins}:${String(secs).padStart(2, '0')} remaining`;
+      countdownEl.classList.remove('expired');
+    } else {
+      countdownEl.textContent = remainingCap > 0 ? 'Pick an extension or leave.' : 'No more time. Sorry.';
+      countdownEl.classList.add('expired');
+    }
+
+    // Update button availability based on the cap
+    ext5.disabled = remainingCap < 5;
+    ext15.disabled = remainingCap < 15;
+
+    // Meta text: "5 of 15 used" etc
+    const used = grace ? grace.totalUsedMins : 0;
+    metaEl.textContent = `${used} of 15 minutes used`;
+
+    // If grace has expired AND there's no remaining cap, kick out automatically
+    if (msLeft <= 0 && remainingCap === 0) {
+      cleanup();
+      clearCutoffGrace();
+      state.currentMode = 'dashboard';
+      saveState();
+      render();
+    }
+  }
+
+  function cleanup() {
+    if (intervalId) clearInterval(intervalId);
+    backdrop.remove();
+  }
+
+  // Buttons
+  modal.querySelector('#graceExtend5').onclick = () => {
+    if (graceMinsRemaining() < 5) return;
+    extendCutoffGrace(5);
+    cleanup();
+    render();
+    // Schedule a re-render at grace expiry so the dialog reopens (or kicks)
+    scheduleGraceExpiryCheck();
+  };
+
+  modal.querySelector('#graceExtend15').onclick = () => {
+    if (graceMinsRemaining() < 15) return;
+    extendCutoffGrace(15);
+    cleanup();
+    render();
+    scheduleGraceExpiryCheck();
+  };
+
+  modal.querySelector('#graceLeave').onclick = () => {
+    cleanup();
+    clearCutoffGrace();
+    state.currentMode = 'dashboard';
+    saveState();
+    render();
+  };
+
+  // Initial render
+  updateUI();
+  // Refresh every second so the countdown ticks
+  intervalId = setInterval(updateUI, 1000);
+}
+
 function openConfirmModal(opts) {
   // Remove any existing confirm modals
   document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
@@ -7968,9 +8356,17 @@ function render() {
   const app = document.getElementById('app');
   app.innerHTML = '';
 
-  // 4c: If the current mode is past hard cutoff, redirect to dashboard.
+  // 4c: Hard cutoff handling. If the user is currently on a hard-cutoff mode:
+  // - With active grace: render the mode page (with heavier fade applied via
+  //   renderModeView), no dialog
+  // - Without active grace: render the page heavy-faded AND open the grace
+  //   dialog (post-render so it sits on top)
+  // If grace exists but the user has navigated away, clear it.
   if (hardCutoffActive(state.currentMode)) {
-    state.currentMode = 'dashboard';
+    // Stay on the mode. The dialog will be opened post-render if needed.
+  } else if (state._cutoffGrace && state._cutoffGrace.mode !== state.currentMode) {
+    // User left the mode (or hard cutoff is no longer active). Clear grace.
+    clearCutoffGrace();
   }
 
   app.appendChild(renderTopbar());
@@ -8010,6 +8406,15 @@ function render() {
   document.getElementById('settingsBtn').onclick = openSettingsDrawer;
 
   applySettings();
+
+  // 4c: After the page is rendered, if the user is on a hard-cutoff mode
+  // without active grace, open the grace dialog. Don't reopen if it's
+  // already on screen.
+  if (hardCutoffActive(state.currentMode) && !graceActiveFor(state.currentMode)) {
+    if (!document.querySelector('.grace-backdrop')) {
+      openCutoffGraceDialog(state.currentMode);
+    }
+  }
 }
 
 /* ============================================================
