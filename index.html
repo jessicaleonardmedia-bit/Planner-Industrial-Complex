@@ -1332,6 +1332,41 @@ body.calm-mode {
 
 .triage-style-toggle button.active { background: var(--ink); color: var(--butter); }
 
+/* 4c: Inbox filter pills (Untriaged / No mode) */
+.inbox-filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.inbox-filter-pill {
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.inbox-filter-pill:hover { transform: translate(-1px, -1px); }
+.inbox-filter-pill.active { background: var(--ink); color: var(--cream); }
+.inbox-filter-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  background: rgba(42, 26, 38, 0.18);
+  color: inherit;
+  padding: 1px 7px;
+  border-radius: 100px;
+}
+.inbox-filter-pill.active .inbox-filter-count {
+  background: rgba(255, 248, 236, 0.25);
+}
+
 .triage-shell { max-width: 680px; margin: 0 auto; }
 
 .triage-progress {
@@ -1460,6 +1495,45 @@ body.calm-mode {
 .triage-big-btn.someday { background: var(--butter); }
 .triage-big-btn.bin { background: var(--ink); color: var(--cream); }
 .triage-big-btn.bin .sub { color: var(--butter); }
+
+/* 4c: staged state when require-Submit is on */
+.triage-big-btn.staged {
+  outline: 3px solid var(--butter);
+  outline-offset: 3px;
+}
+.triage-big-btn.dim {
+  opacity: 0.45;
+}
+
+/* 4c: Submit row at the bottom of triage when require-Submit is on */
+.triage-submit-row {
+  margin-bottom: 16px;
+}
+.triage-submit-btn {
+  width: 100%;
+  background: var(--pink);
+  color: var(--cream);
+  border: none;
+  border-radius: 100px;
+  padding: 14px 20px;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 0 0 2.5px var(--ink), 4px 4px 0 var(--ink);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.triage-submit-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2.5px var(--ink), 6px 6px 0 var(--ink);
+}
+.triage-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 0 0 2.5px var(--ink) !important;
+}
 
 .triage-mode-row {
   background: var(--cream-2);
@@ -2253,6 +2327,23 @@ body.calm-mode {
     inset 0 0 0 2px var(--sub-colour, var(--ink)),
     0 0 0 1.5px var(--ink),
     2px 2px 0 var(--ink);
+}
+
+/* 4c: Hint badge inside All pill, e.g. "All  3 no client" */
+.sub-btn-hint {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(42, 26, 38, 0.12);
+  color: var(--mute);
+  letter-spacing: 0.04em;
+}
+.sub-btn.outline.active .sub-btn-hint {
+  background: rgba(42, 26, 38, 0.18);
 }
 
 /* 4b: Nested sub-bar for Family's level-2 members.
@@ -3092,6 +3183,7 @@ function defaultState() {
     pinnedSubs: [],
     triageStyle: 'focused', // 'focused' or 'list'
     triageIndex: 0,
+    inboxFilter: 'untriaged', // 4c: 'untriaged' or 'no-mode'
     eventView: 'list', // 'list' or 'calendar'
     calMonthOffset: 0, // current month + offset
     calSelectedDate: null, // ISO date string when a cell is focused
@@ -3103,7 +3195,8 @@ function defaultState() {
       name: '',
       reducedMotion: false,
       calmMode: false,
-      focusMode: false
+      focusMode: false,
+      triageRequireSubmit: false
     }
   };
 }
@@ -3285,6 +3378,20 @@ function tasksInModeAndTier(modeId, tier) {
 
 function inboxTasks() {
   return state.tasks.filter(t => t.tier === 'inbox');
+}
+
+// 4c: Tasks that have a tier but no mode - they "drifted" out of the inbox without
+// being assigned to a mode and need re-homing. Surfaced as a filter in the Inbox view
+// so they don't get lost.
+function noModeTasks() {
+  return state.tasks.filter(t => !t.done && t.tier !== 'inbox' && !t.mode);
+}
+
+// 4c: Combined view: what shows in Inbox depends on the active filter.
+function inboxFilteredTasks() {
+  const filter = state.inboxFilter || 'untriaged';
+  if (filter === 'no-mode') return noModeTasks();
+  return inboxTasks();
 }
 
 function waitingTasks() {
@@ -4348,10 +4455,19 @@ function pickAnotherOneThing() {
    ============================================================ */
 function renderInboxView() {
   const root = document.createElement('div');
-  const inbox = inboxTasks();
+  const untriaged = inboxTasks();
+  const noMode = noModeTasks();
+  const filter = state.inboxFilter || 'untriaged';
+  const inbox = filter === 'no-mode' ? noMode : untriaged;
 
-  // Empty state
-  if (inbox.length === 0) {
+  // 4c: If the active filter is empty but the other has items, auto-flip to it.
+  if (filter === 'no-mode' && noMode.length === 0 && untriaged.length > 0) {
+    state.inboxFilter = 'untriaged';
+    return renderInboxView();
+  }
+
+  // True empty state - both pools empty
+  if (untriaged.length === 0 && noMode.length === 0) {
     const masthead = document.createElement('div');
     masthead.className = 'mode-masthead';
     masthead.innerHTML = `
@@ -4374,14 +4490,15 @@ function renderInboxView() {
     return root;
   }
 
-  // Masthead with style toggle
+  // Masthead with filter pills + style toggle
   const masthead = document.createElement('div');
   masthead.className = 'mode-masthead';
+  const totalToSort = untriaged.length + noMode.length;
   masthead.innerHTML = `
     <div class="mode-masthead-inner">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
         <div>
-          <div class="card-label" style="margin-bottom:10px;">✦ Inbox · ${inbox.length} to sort</div>
+          <div class="card-label" style="margin-bottom:10px;">✦ Inbox · ${totalToSort} to sort</div>
           <h1>The <em>Inbox.</em></h1>
           <p>Unsorted captures. Pick a tier. No pressure. Stop whenever, the rest will wait.</p>
         </div>
@@ -4389,6 +4506,16 @@ function renderInboxView() {
           <button class="${state.triageStyle === 'focused' ? 'active' : ''}" data-style="focused">Focused</button>
           <button class="${state.triageStyle === 'list' ? 'active' : ''}" data-style="list">List</button>
         </div>
+      </div>
+      <div class="inbox-filter-row" style="margin-top:14px;">
+        <button class="inbox-filter-pill ${filter === 'untriaged' ? 'active' : ''}" data-filter="untriaged">
+          Untriaged${untriaged.length ? ' <span class="inbox-filter-count">' + untriaged.length + '</span>' : ''}
+        </button>
+        ${noMode.length ? `
+          <button class="inbox-filter-pill ${filter === 'no-mode' ? 'active' : ''}" data-filter="no-mode">
+            No mode <span class="inbox-filter-count">${noMode.length}</span>
+          </button>
+        ` : ''}
       </div>
     </div>
   `;
@@ -4400,7 +4527,27 @@ function renderInboxView() {
       render();
     };
   });
+  masthead.querySelectorAll('[data-filter]').forEach(b => {
+    b.onclick = () => {
+      state.inboxFilter = b.dataset.filter;
+      state.triageIndex = 0;
+      saveState();
+      render();
+    };
+  });
   root.appendChild(masthead);
+
+  if (inbox.length === 0) {
+    const card = document.createElement('div');
+    card.className = 'candy';
+    card.innerHTML = `
+      <div class="empty" style="padding:40px 20px;">
+        Nothing in this view. <span class="sparkle">✦</span> Switch filters above.
+      </div>
+    `;
+    root.appendChild(card);
+    return root;
+  }
 
   if (state.triageStyle === 'focused') {
     root.appendChild(renderTriageFocused(inbox));
@@ -4422,6 +4569,17 @@ function renderTriageFocused(inbox) {
   const task = inbox[idx];
   const total = inbox.length;
   const pct = Math.round((idx / total) * 100);
+
+  // 4c: Staged state. In auto-commit mode (default), staged mirrors task and we commit
+  // immediately on each click. In require-Submit mode, we hold edits in staged and only
+  // commit on Submit.
+  const requireSubmit = !!state.settings.triageRequireSubmit;
+  const staged = {
+    tier: null, // only set in require-Submit mode (auto-commit goes straight to update)
+    mode: task.mode || null,
+    subId: task.subId || null,
+    memberId: task.memberId || null
+  };
 
   // Progress
   const progress = document.createElement('div');
@@ -4459,21 +4617,39 @@ function renderTriageFocused(inbox) {
   `;
   wrap.appendChild(actions);
 
-  // Mode row
+  // Mode row + (cascading) sub-entity row + (cascading) member row
   const modeRow = document.createElement('div');
   modeRow.className = 'triage-mode-row';
   const modeOptsHTML = [
-    `<button class="triage-mode-opt ${!task.mode ? 'active' : ''}" data-mode="">Unassigned</button>`,
+    `<button class="triage-mode-opt ${!staged.mode ? 'active' : ''}" data-mode="">Unassigned</button>`,
     ...TASKABLE_MODES.map(mid => {
       const m = DEFAULT_MODES.find(x => x.id === mid);
-      return `<button class="triage-mode-opt ${task.mode === mid ? 'active' : ''}" data-mode="${mid}"><span>${m.glyph}</span>${escapeHtml(m.name)}</button>`;
+      return `<button class="triage-mode-opt ${staged.mode === mid ? 'active' : ''}" data-mode="${mid}"><span>${m.glyph}</span>${escapeHtml(m.name)}</button>`;
     })
   ].join('');
   modeRow.innerHTML = `
     <div class="triage-mode-row-label">Assign a mode (optional)</div>
-    <div class="triage-mode-options">${modeOptsHTML}</div>
+    <div class="triage-mode-options" id="triageModeOpts">${modeOptsHTML}</div>
+    <div id="triageSubBlock" style="display:none; margin-top:14px;">
+      <div class="triage-mode-row-label" id="triageSubLabel">Sub-entity</div>
+      <div class="triage-mode-options" id="triageSubOpts"></div>
+    </div>
+    <div id="triageMemberBlock" style="display:none; margin-top:14px;">
+      <div class="triage-mode-row-label" id="triageMemberLabel">Who</div>
+      <div class="triage-mode-options" id="triageMemberOpts"></div>
+    </div>
   `;
   wrap.appendChild(modeRow);
+
+  // 4c: Submit row (only when require-Submit is on)
+  let submitBtn = null;
+  if (requireSubmit) {
+    const submitRow = document.createElement('div');
+    submitRow.className = 'triage-submit-row';
+    submitRow.innerHTML = `<button class="triage-submit-btn" id="triageSubmit" disabled>Submit ✦ pick a tier</button>`;
+    wrap.appendChild(submitRow);
+    submitBtn = submitRow.querySelector('#triageSubmit');
+  }
 
   // Nav
   const nav = document.createElement('div');
@@ -4489,37 +4665,200 @@ function renderTriageFocused(inbox) {
   `;
   wrap.appendChild(nav);
 
-  // Wire mode options
-  modeRow.querySelectorAll('.triage-mode-opt').forEach(b => {
+  // ---- Cascading helpers ----
+  function renderTriageSubBlock() {
+    const block = modeRow.querySelector('#triageSubBlock');
+    const label = modeRow.querySelector('#triageSubLabel');
+    const opts = modeRow.querySelector('#triageSubOpts');
+    if (!staged.mode || !MODES_WITH_SUBS.includes(staged.mode)) {
+      block.style.display = 'none';
+      renderTriageMemberBlock();
+      return;
+    }
+    const subs = getSubEntities(staged.mode);
+    label.textContent = subEntityGroupLabel(staged.mode) + ' (optional)';
+    if (!subs.length) {
+      block.style.display = 'block';
+      opts.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--mute);">No ${escapeHtml(subEntityLabel(staged.mode))}s yet. Add one from the ${escapeHtml(DEFAULT_MODES.find(m => m.id === staged.mode).name)} view.</div>`;
+      renderTriageMemberBlock();
+      return;
+    }
+    block.style.display = 'block';
+    let html = `<button class="triage-mode-opt ${!staged.subId ? 'active' : ''}" data-sub="">Unassigned</button>`;
+    subs.forEach(s => {
+      html += `<button class="triage-mode-opt ${staged.subId === s.id ? 'active' : ''}" data-sub="${s.id}">${escapeHtml(s.name)}</button>`;
+    });
+    opts.innerHTML = html;
+    opts.querySelectorAll('[data-sub]').forEach(b => {
+      b.onclick = () => {
+        staged.subId = b.dataset.sub || null;
+        staged.memberId = null;
+        if (!requireSubmit) {
+          updateTask(task.id, { subId: staged.subId, memberId: null });
+        }
+        opts.querySelectorAll('[data-sub]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        renderTriageMemberBlock();
+      };
+    });
+    renderTriageMemberBlock();
+  }
+
+  function renderTriageMemberBlock() {
+    const block = modeRow.querySelector('#triageMemberBlock');
+    const label = modeRow.querySelector('#triageMemberLabel');
+    const opts = modeRow.querySelector('#triageMemberOpts');
+    if (staged.mode !== 'family' || !staged.subId) {
+      block.style.display = 'none';
+      return;
+    }
+    const h = getHousehold(staged.subId);
+    if (!h) {
+      block.style.display = 'none';
+      return;
+    }
+    if (!(h.members || []).length) {
+      block.style.display = 'block';
+      label.textContent = 'Who in ' + h.name;
+      opts.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--mute);">No people, pets or projects in ${escapeHtml(h.name)} yet. Add from the Family view.</div>`;
+      return;
+    }
+    block.style.display = 'block';
+    label.textContent = 'Who in ' + h.name + ' (optional)';
+    let html = `<button class="triage-mode-opt ${!staged.memberId ? 'active' : ''}" data-member="">Everyone</button>`;
+    h.members.forEach(mem => {
+      html += `<button class="triage-mode-opt ${staged.memberId === mem.id ? 'active' : ''}" data-member="${mem.id}">${escapeHtml(mem.name)}</button>`;
+    });
+    opts.innerHTML = html;
+    opts.querySelectorAll('[data-member]').forEach(b => {
+      b.onclick = () => {
+        staged.memberId = b.dataset.member || null;
+        if (!requireSubmit) {
+          updateTask(task.id, { memberId: staged.memberId });
+        }
+        opts.querySelectorAll('[data-member]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+      };
+    });
+  }
+
+  function refreshSubmitState() {
+    if (!submitBtn) return;
+    if (!staged.tier) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submit ✦ pick a tier';
+    } else if (staged.tier === 'bin') {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit ✦ → Bin';
+    } else {
+      submitBtn.disabled = false;
+      const label = staged.tier === 'now' ? 'Now' : staged.tier === 'soon' ? 'Soon' : 'Someday';
+      submitBtn.textContent = 'Submit ✦ → ' + label;
+    }
+  }
+
+  function commitAndAdvance() {
+    // Commit staged values, then advance to the next item in the active filter.
+    const filter = state.inboxFilter || 'untriaged';
+    if (staged.tier === 'bin') {
+      deleteTask(task.id);
+      toast('binned.');
+    } else {
+      updateTask(task.id, {
+        tier: staged.tier,
+        mode: staged.mode || null,
+        subId: staged.subId || null,
+        memberId: staged.memberId || null
+      });
+      const label = staged.tier === 'now' ? 'Now' : staged.tier === 'soon' ? 'Soon' : 'Someday';
+      toast('→ ' + label);
+    }
+    // In no-mode filter, the task only drops out of the pool if a mode was assigned or it was binned.
+    // In untriaged filter, any tier change drops it out (it's no longer tier=inbox).
+    const remaining = inboxFilteredTasks();
+    if (state.triageIndex >= remaining.length && remaining.length > 0) {
+      state.triageIndex = remaining.length - 1;
+    }
+    saveState();
+    render();
+  }
+
+  // ---- Wire mode options ----
+  modeRow.querySelectorAll('#triageModeOpts .triage-mode-opt').forEach(b => {
     b.onclick = () => {
-      updateTask(task.id, { mode: b.dataset.mode || null });
-      render();
+      const newMode = b.dataset.mode || null;
+      const wasNoMode = !staged.mode;
+      staged.mode = newMode;
+      // Changing mode clears sub and member
+      staged.subId = null;
+      staged.memberId = null;
+      if (!requireSubmit) {
+        updateTask(task.id, { mode: newMode, subId: null, memberId: null });
+      }
+      modeRow.querySelectorAll('#triageModeOpts .triage-mode-opt').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderTriageSubBlock();
+      // 4c: in no-mode filter, assigning a mode removes the task from the filtered pool.
+      // Auto-commit + no-mode filter: re-render so it slides out and the next item appears.
+      if (!requireSubmit && state.inboxFilter === 'no-mode' && newMode) {
+        const remaining = inboxFilteredTasks();
+        if (state.triageIndex >= remaining.length && remaining.length > 0) {
+          state.triageIndex = remaining.length - 1;
+        }
+        saveState();
+        render();
+      }
     };
   });
 
-  // Wire tier buttons
+  // Initial render of cascading rows (in case task already had a mode)
+  renderTriageSubBlock();
+
+  // ---- Wire tier buttons ----
   actions.querySelectorAll('[data-tier]').forEach(b => {
     b.onclick = () => {
       const tier = b.dataset.tier;
-      if (tier === 'bin') {
-        deleteTask(task.id);
-        toast('binned.');
+      if (requireSubmit) {
+        // Stage tier, update visuals (selected has staged outline, others dim)
+        staged.tier = tier;
+        actions.querySelectorAll('[data-tier]').forEach(x => {
+          x.classList.remove('staged');
+          x.classList.add('dim');
+        });
+        b.classList.add('staged');
+        b.classList.remove('dim');
+        refreshSubmitState();
       } else {
-        updateTask(task.id, { tier });
-        const label = tier === 'now' ? 'Now' : tier === 'soon' ? 'Soon' : 'Someday';
-        toast(`→ ${label}`);
+        // Auto-commit: tier click commits and advances immediately (in untriaged filter).
+        // In no-mode filter, tier change doesn't remove from the pool so we stay on the same item.
+        const filter = state.inboxFilter || 'untriaged';
+        if (tier === 'bin') {
+          deleteTask(task.id);
+          toast('binned.');
+        } else {
+          updateTask(task.id, { tier });
+          const label = tier === 'now' ? 'Now' : tier === 'soon' ? 'Soon' : 'Someday';
+          toast('→ ' + label);
+        }
+        const remaining = inboxFilteredTasks();
+        if (state.triageIndex >= remaining.length && remaining.length > 0) {
+          state.triageIndex = remaining.length - 1;
+        }
+        saveState();
+        render();
       }
-      // Index stays; next item slides into this slot
-      const remaining = inboxTasks();
-      if (state.triageIndex >= remaining.length && remaining.length > 0) {
-        state.triageIndex = remaining.length - 1;
-      }
-      saveState();
-      render();
     };
   });
 
-  // Wire nav
+  // ---- Wire submit button ----
+  if (submitBtn) {
+    submitBtn.onclick = () => {
+      if (!staged.tier) return;
+      commitAndAdvance();
+    };
+  }
+
+  // ---- Wire nav ----
   nav.querySelectorAll('[data-nav]').forEach(b => {
     b.onclick = () => {
       const dir = b.dataset.nav;
@@ -4770,10 +5109,16 @@ function buildSubBar(modeId, subs, subId) {
 
   // "All" button - outlined pill. Reads as "filter off" rather than a
   // solid sub-entity matching the mode colour.
+  // 4c: count tasks in this mode with no sub-entity assigned, surface as a hint badge
+  const noSubCount = state.tasks.filter(t => t.mode === modeId && !t.subId && !t.done).length;
   const allBtn = document.createElement('button');
   allBtn.className = 'sub-btn outline' + (!subId ? ' active' : '');
   allBtn.setAttribute('style', `--sub-colour: ${colourCssValue(modeColour(modeId))};`);
-  allBtn.textContent = 'All';
+  if (noSubCount > 0) {
+    allBtn.innerHTML = `All <span class="sub-btn-hint">${noSubCount} no ${escapeHtml(subEntityLabel(modeId))}</span>`;
+  } else {
+    allBtn.textContent = 'All';
+  }
   allBtn.onclick = () => setSubEntity(null);
   subBar.appendChild(allBtn);
 
@@ -5647,6 +5992,18 @@ function openSettingsDrawer() {
           <div class="desc">Hides everything except what you're currently doing. (Lights up in later chunks.)</div>
         </div>
         <button type="button" class="toggle ${state.settings.focusMode ? 'on' : ''}" data-setting="focusMode" role="switch" aria-checked="${state.settings.focusMode}" aria-labelledby="tgl-fm-label"></button>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <h3>Inbox &amp; triage</h3>
+
+      <div class="toggle-row">
+        <div class="info">
+          <div class="name" id="tgl-trs-label">Require Submit in triage</div>
+          <div class="desc">Off: tier click commits and moves on. On: tier, mode and sub-entity stage on the card. Submit commits and advances. For when you want to think before you commit.</div>
+        </div>
+        <button type="button" class="toggle ${state.settings.triageRequireSubmit ? 'on' : ''}" data-setting="triageRequireSubmit" role="switch" aria-checked="${state.settings.triageRequireSubmit}" aria-labelledby="tgl-trs-label"></button>
       </div>
     </div>
 
