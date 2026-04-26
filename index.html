@@ -1394,6 +1394,117 @@ body.calm-mode {
 
 .chip-filter-clear:hover { color: var(--ink); border-style: solid; }
 
+/* 4c: Mode cutoff banner. Sits above the tier bar when soft cutoff is active.
+   Voice is dry, dismissible, doesn't block work. */
+.cutoff-banner {
+  background: var(--cream);
+  border: 1.5px dashed var(--ink);
+  border-radius: var(--r-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.cutoff-banner.community {
+  background: var(--butter-soft, #fef5d8);
+  border-color: rgba(42, 26, 38, 0.5);
+}
+
+.cutoff-banner-time {
+  font-family: 'DM Mono', monospace;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+  flex-shrink: 0;
+}
+
+.cutoff-banner-body { flex: 1; }
+
+.cutoff-banner-dismiss {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.cutoff-banner-dismiss:hover {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+/* 4c: Mode content fade applied during soft cutoff. Masthead, sub-bars,
+   and the cutoff banner sit OUTSIDE this wrapper, so they stay bright. */
+.mode-content.soft-cutoff-fade {
+  opacity: 0.55;
+  filter: saturate(0.65);
+  transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+/* 4c: Cutoff settings rows in drawer */
+.cutoff-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.cutoff-row-label {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  flex: 1;
+}
+
+.cutoff-time-input {
+  width: 90px;
+  background: var(--cream);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: center;
+}
+
+.cutoff-time-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--pink);
+}
+
+.cutoff-weekend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--mute);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.cutoff-weekend-row input[type="checkbox"] {
+  accent-color: var(--pink);
+  cursor: pointer;
+}
+
 /* ==========================================================
    TASK LIST (2a)
    ========================================================== */
@@ -3485,8 +3596,19 @@ function defaultState() {
       calmMode: false,
       focusMode: false,
       triageRequireSubmit: false,
-      timeOfDayOverride: null
-    }
+      timeOfDayOverride: null,
+      // 4c: Mode cutoffs. Soft = banner + fade. Hard = mode hidden from nav until next day.
+      workCutoffSoft: '17:00',
+      workCutoffSoftWeekends: false,
+      workCutoffHard: 'off',
+      workCutoffHardWeekends: false,
+      communityCutoffSoft: '19:00',
+      communityCutoffSoftWeekends: true,
+      communityCutoffHard: 'off',
+      communityCutoffHardWeekends: true
+    },
+    // 4c: Tracks dismissal of soft-cutoff banners. Keyed by mode, value is YYYY-MM-DD.
+    cutoffBannerDismissed: {}
   };
 }
 
@@ -3630,6 +3752,119 @@ function timeOfDay() {
   if (h < 17) return 'midday';
   if (h < 21) return 'evening';
   return 'late';
+}
+
+/* ------------------------------------------------------------
+   4c: MODE CUTOFFS
+   Two layers per mode (work and community):
+   - soft cutoff: a fade + dismissible banner past the time
+   - hard cutoff: mode hidden from nav until the next day
+
+   Each cutoff has a time string ('HH:MM' or 'off') and a weekend flag.
+   ------------------------------------------------------------ */
+function todayDateKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function isWeekend() {
+  const day = new Date().getDay();
+  return day === 0 || day === 6;
+}
+
+// Returns true if `now` is past the cutoff time, taking weekend setting into account.
+// timeStr: 'HH:MM' or 'off'. weekendsApply: boolean.
+function isPastCutoff(timeStr, weekendsApply) {
+  if (!timeStr || timeStr === 'off') return false;
+  if (isWeekend() && !weekendsApply) return false;
+  const m = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return false;
+  const cutoffH = parseInt(m[1], 10);
+  const cutoffMin = parseInt(m[2], 10);
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const cutoffMins = cutoffH * 60 + cutoffMin;
+  return nowMins >= cutoffMins;
+}
+
+function softCutoffActive(modeId) {
+  if (modeId !== 'work' && modeId !== 'community') return false;
+  const key = modeId === 'work' ? 'workCutoffSoft' : 'communityCutoffSoft';
+  const wkKey = modeId === 'work' ? 'workCutoffSoftWeekends' : 'communityCutoffSoftWeekends';
+  return isPastCutoff(state.settings[key], !!state.settings[wkKey]);
+}
+
+function hardCutoffActive(modeId) {
+  if (modeId !== 'work' && modeId !== 'community') return false;
+  const key = modeId === 'work' ? 'workCutoffHard' : 'communityCutoffHard';
+  const wkKey = modeId === 'work' ? 'workCutoffHardWeekends' : 'communityCutoffHardWeekends';
+  return isPastCutoff(state.settings[key], !!state.settings[wkKey]);
+}
+
+// Has the user dismissed the cutoff banner today for this mode?
+function cutoffBannerDismissedToday(modeId) {
+  if (!state.cutoffBannerDismissed) return false;
+  return state.cutoffBannerDismissed[modeId] === todayDateKey();
+}
+
+function dismissCutoffBanner(modeId) {
+  if (!state.cutoffBannerDismissed) state.cutoffBannerDismissed = {};
+  state.cutoffBannerDismissed[modeId] = todayDateKey();
+  saveState();
+}
+
+// Rotating banner copy. Picks a stable line per mode per day.
+const WORK_CUTOFF_LINES = [
+  "It's after hours. The work will keep.",
+  "Done for the day? It's allowed.",
+  "Work tomorrow. Right now, no.",
+  "The job's not waiting for you tonight."
+];
+const COMMUNITY_CUTOFF_LINES = [
+  "This is generous work. It can wait.",
+  "You've been on this. Coming back tomorrow's also fine.",
+  "Volunteer hours have an end. Let this one end.",
+  "The org has tomorrow. Take tonight."
+];
+
+function cutoffBannerCopy(modeId) {
+  const lines = modeId === 'work' ? WORK_CUTOFF_LINES : COMMUNITY_CUTOFF_LINES;
+  // Stable per day: hash the date so it's the same line all day.
+  const d = new Date();
+  const idx = (d.getFullYear() + d.getMonth() * 31 + d.getDate()) % lines.length;
+  return lines[idx];
+}
+
+// 4c: Normalise loose time input. Accepts "17:00", "17", "5pm", "5:30pm",
+// "9am" etc. Returns 'HH:MM' string or null if unparseable.
+function normaliseTimeInput(raw) {
+  if (!raw) return null;
+  const s = raw.toString().trim().toLowerCase().replace(/\s+/g, '');
+  // Match patterns
+  let h = null, mins = 0;
+  let m = s.match(/^(\d{1,2}):(\d{2})(am|pm)?$/);
+  if (m) {
+    h = parseInt(m[1], 10);
+    mins = parseInt(m[2], 10);
+    const suffix = m[3];
+    if (suffix === 'pm' && h < 12) h += 12;
+    if (suffix === 'am' && h === 12) h = 0;
+  } else {
+    m = s.match(/^(\d{1,2})(am|pm)$/);
+    if (m) {
+      h = parseInt(m[1], 10);
+      const suffix = m[2];
+      if (suffix === 'pm' && h < 12) h += 12;
+      if (suffix === 'am' && h === 12) h = 0;
+    } else {
+      m = s.match(/^(\d{1,2})$/);
+      if (m) {
+        h = parseInt(m[1], 10);
+      }
+    }
+  }
+  if (h === null || isNaN(h) || h < 0 || h > 23 || isNaN(mins) || mins < 0 || mins > 59) return null;
+  return String(h).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
 }
 
 function greetingCopy() {
@@ -4200,6 +4435,8 @@ function renderModeBar() {
   // Then the 5 taskable modes
   for (const m of DEFAULT_MODES) {
     if (m.id === 'dashboard') continue;
+    // 4c: hide modes that are past hard cutoff today
+    if (hardCutoffActive(m.id)) continue;
     const btn = document.createElement('button');
     const mC = modeColour(m.id);
     btn.className = 'mode-btn' + (state.currentMode === m.id ? ' active' : '') + (needsDarkText(mC) ? ' dark-text' : '');
@@ -4231,6 +4468,13 @@ function renderModeBar() {
 }
 
 function setMode(id) {
+  // 4c: Refuse to navigate to a hard-cutoff mode. Falls back to dashboard.
+  if (hardCutoffActive(id)) {
+    state.currentMode = 'dashboard';
+    saveState();
+    render();
+    return;
+  }
   state.currentMode = id;
   state.currentClientId = null;
   state.currentOrgId = null;
@@ -4583,14 +4827,21 @@ function buildModesOverviewCard() {
     const open = state.tasks.filter(t => t.mode === id && !t.done).length;
     const nowC = state.tasks.filter(t => t.mode === id && !t.done && t.tier === 'now').length;
     const queued = open - nowC;
+    // 4c: hide if hard cutoff active, dim if soft cutoff active
+    if (hardCutoffActive(id)) return;
+    const isResting = softCutoffActive(id);
     const row = document.createElement('div');
     row.className = 'mode-mini-row';
     row.style.setProperty('--mini-colour', colourCssValue(modeColour(id)));
+    if (isResting) row.style.opacity = '0.55';
+    const subText = isResting
+      ? 'resting'
+      : (nowC > 0 ? nowC + ' now' : 'all clear') + (queued > 0 ? ' · ' + queued + ' queued' : '');
     row.innerHTML = `
       <span class="mode-mini-dot">${m.glyph}</span>
       <div class="mode-mini-text">
         <div class="mode-mini-name">${escapeHtml(m.name)}</div>
-        <div class="mode-mini-sub">${nowC > 0 ? nowC + ' now' : 'all clear'}${queued > 0 ? ' · ' + queued + ' queued' : ''}</div>
+        <div class="mode-mini-sub">${escapeHtml(subText)}</div>
       </div>
     `;
     row.onclick = () => setMode(id);
@@ -4614,16 +4865,22 @@ function buildWeekendModesCard() {
     const open = state.tasks.filter(t => t.mode === id && !t.done).length;
     const nowC = state.tasks.filter(t => t.mode === id && !t.done && t.tier === 'now').length;
     const queued = open - nowC;
+    // 4c: hide if hard cutoff active, dim if soft cutoff active
+    if (hardCutoffActive(id)) return;
+    const isResting = softCutoffActive(id);
     const row = document.createElement('div');
     row.className = 'mode-mini-row';
     row.style.setProperty('--mini-colour', colourCssValue(modeColour(id)));
-    // Dim work on weekends
-    if (id === 'work') row.style.opacity = '0.55';
+    // Dim work on weekends OR any mode past soft cutoff
+    if (id === 'work' || isResting) row.style.opacity = '0.55';
+    const subText = isResting
+      ? 'resting'
+      : (nowC > 0 ? nowC + ' now' : 'all clear') + (queued > 0 ? ' · ' + queued + ' queued' : '');
     row.innerHTML = `
       <span class="mode-mini-dot">${m.glyph}</span>
       <div class="mode-mini-text">
         <div class="mode-mini-name">${escapeHtml(m.name)}</div>
-        <div class="mode-mini-sub">${nowC > 0 ? nowC + ' now' : 'all clear'}${queued > 0 ? ' · ' + queued + ' queued' : ''}</div>
+        <div class="mode-mini-sub">${escapeHtml(subText)}</div>
       </div>
     `;
     row.onclick = () => setMode(id);
@@ -5408,6 +5665,32 @@ function renderModeView(modeId) {
     }
   }
 
+  // 4c: Soft cutoff banner. Shows when soft cutoff is active and the user
+  // hasn't dismissed today. Sits above the tier bar, above the fade.
+  const showSoftBanner = softCutoffActive(modeId) && !cutoffBannerDismissedToday(modeId);
+  if (showSoftBanner) {
+    const banner = document.createElement('div');
+    banner.className = 'cutoff-banner' + (modeId === 'community' ? ' community' : '');
+    banner.setAttribute('role', 'note');
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+    banner.innerHTML = `
+      <span class="cutoff-banner-time">${escapeHtml(timeStr)}</span>
+      <span class="cutoff-banner-body">${escapeHtml(cutoffBannerCopy(modeId))}</span>
+      <button class="cutoff-banner-dismiss" type="button" aria-label="Dismiss banner for today">✕</button>
+    `;
+    banner.querySelector('.cutoff-banner-dismiss').onclick = () => {
+      dismissCutoffBanner(modeId);
+      render();
+    };
+    root.appendChild(banner);
+  }
+
+  // 4c: Mode content wrapper. Soft cutoff applies a fade to this element,
+  // leaving the masthead, sub-bars and banner unaffected.
+  const content = document.createElement('div');
+  content.className = 'mode-content' + (softCutoffActive(modeId) ? ' soft-cutoff-fade' : '');
+
   // Tier bar (filter respects sub-entity and member when active)
   const tierBar = document.createElement('div');
   tierBar.className = 'tier-bar';
@@ -5426,7 +5709,7 @@ function renderModeView(modeId) {
   doneBtn.innerHTML = `Done${doneCount > 0 ? `<span class="count">${doneCount}</span>` : ''}`;
   doneBtn.onclick = () => { state.currentTier = 'done'; saveState(); render(); };
   tierBar.appendChild(doneBtn);
-  root.appendChild(tierBar);
+  content.appendChild(tierBar);
 
   // 4c: Chip filter row. Show only when at least one task in scope has a chip.
   // Sticky AND filter — persists across navigation. Dim chips not present in
@@ -5470,7 +5753,7 @@ function renderModeView(modeId) {
         render();
       };
     }
-    root.appendChild(filterRow);
+    content.appendChild(filterRow);
   }
 
   // Tasks card — inset border picks up the active mode/sub/member colour
@@ -5548,11 +5831,14 @@ function renderModeView(modeId) {
     card.appendChild(addBar);
   }
 
-  root.appendChild(card);
+  content.appendChild(card);
 
   // Events + Notes cards, scoped by mode + sub + member
-  root.appendChild(renderEventsCard(modeId, activeSub, activeMember));
-  root.appendChild(renderNotesCard(modeId, activeSub, activeMember));
+  content.appendChild(renderEventsCard(modeId, activeSub, activeMember));
+  content.appendChild(renderNotesCard(modeId, activeSub, activeMember));
+
+  // 4c: append the wrapper (with potential .soft-cutoff-fade class)
+  root.appendChild(content);
 
   return root;
 }
@@ -6518,6 +6804,52 @@ function openSettingsDrawer() {
     </div>
 
     <div class="drawer-section">
+      <h3>Work cutoff</h3>
+      <div class="wizard-note" style="margin-bottom:10px;">When the soft cutoff hits, the Work page fades and shows a banner. Hard cutoff hides Work from nav until the next morning.</div>
+
+      <div class="cutoff-row">
+        <div class="cutoff-row-label">Soft cutoff</div>
+        <input type="text" class="cutoff-time-input" id="workCutoffSoft" value="${escapeHtml(state.settings.workCutoffSoft || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+      </div>
+      <label class="cutoff-weekend-row">
+        <input type="checkbox" id="workCutoffSoftWeekends"${state.settings.workCutoffSoftWeekends ? ' checked' : ''}>
+        <span>Apply soft cutoff on weekends too</span>
+      </label>
+
+      <div class="cutoff-row" style="margin-top:14px;">
+        <div class="cutoff-row-label">Hard cutoff</div>
+        <input type="text" class="cutoff-time-input" id="workCutoffHard" value="${escapeHtml(state.settings.workCutoffHard || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+      </div>
+      <label class="cutoff-weekend-row">
+        <input type="checkbox" id="workCutoffHardWeekends"${state.settings.workCutoffHardWeekends ? ' checked' : ''}>
+        <span>Apply hard cutoff on weekends too</span>
+      </label>
+    </div>
+
+    <div class="drawer-section">
+      <h3>Community cutoff</h3>
+      <div class="wizard-note" style="margin-bottom:10px;">Same idea as Work, but the voice is gentler and weekends apply by default. Volunteer work doesn't have weekday rhythm.</div>
+
+      <div class="cutoff-row">
+        <div class="cutoff-row-label">Soft cutoff</div>
+        <input type="text" class="cutoff-time-input" id="communityCutoffSoft" value="${escapeHtml(state.settings.communityCutoffSoft || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+      </div>
+      <label class="cutoff-weekend-row">
+        <input type="checkbox" id="communityCutoffSoftWeekends"${state.settings.communityCutoffSoftWeekends ? ' checked' : ''}>
+        <span>Apply soft cutoff on weekends too</span>
+      </label>
+
+      <div class="cutoff-row" style="margin-top:14px;">
+        <div class="cutoff-row-label">Hard cutoff</div>
+        <input type="text" class="cutoff-time-input" id="communityCutoffHard" value="${escapeHtml(state.settings.communityCutoffHard || 'off')}" placeholder="HH:MM or off" inputmode="numeric" pattern="^(off|\\d{1,2}:\\d{2})$">
+      </div>
+      <label class="cutoff-weekend-row">
+        <input type="checkbox" id="communityCutoffHardWeekends"${state.settings.communityCutoffHardWeekends ? ' checked' : ''}>
+        <span>Apply hard cutoff on weekends too</span>
+      </label>
+    </div>
+
+    <div class="drawer-section">
       <h3>Mode colours</h3>
       <div class="wizard-note" style="margin-bottom:10px;">Pick a palette colour for each mode. Sub-entities (clients, households, orgs) will auto-vary from their parent, unless you pick their own.</div>
       <div id="modeColourList"></div>
@@ -6602,6 +6934,44 @@ function openSettingsDrawer() {
 
   // 4c: Render the recycle bin list
   renderRecycleBinList(drawer.querySelector('#recycleBinList'));
+
+  // 4c: Wire cutoff inputs. Validate HH:MM or "off". Save on blur. Re-render
+  // so soft fade / hard hide reflects the new value immediately.
+  ['workCutoffSoft', 'workCutoffHard', 'communityCutoffSoft', 'communityCutoffHard'].forEach(key => {
+    const input = drawer.querySelector('#' + key);
+    if (!input) return;
+    input.onblur = () => {
+      const raw = input.value.trim().toLowerCase();
+      if (raw === '' || raw === 'off') {
+        state.settings[key] = 'off';
+        input.value = 'off';
+      } else {
+        // Try to normalise loose input like "5pm", "5:30", "17", "17:00"
+        const normalised = normaliseTimeInput(raw);
+        if (normalised) {
+          state.settings[key] = normalised;
+          input.value = normalised;
+        } else {
+          // Invalid - reset to previous
+          input.value = state.settings[key] || 'off';
+          toast('time format: HH:MM or off', false);
+        }
+      }
+      saveState();
+      render();
+    };
+    input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+  });
+
+  ['workCutoffSoftWeekends', 'workCutoffHardWeekends', 'communityCutoffSoftWeekends', 'communityCutoffHardWeekends'].forEach(key => {
+    const cb = drawer.querySelector('#' + key);
+    if (!cb) return;
+    cb.onchange = () => {
+      state.settings[key] = cb.checked;
+      saveState();
+      render();
+    };
+  });
 
   drawer.querySelector('#restartOnboarding').onclick = () => {
     closeDrawers();
@@ -7597,6 +7967,11 @@ function advanceWizard() {
 function render() {
   const app = document.getElementById('app');
   app.innerHTML = '';
+
+  // 4c: If the current mode is past hard cutoff, redirect to dashboard.
+  if (hardCutoffActive(state.currentMode)) {
+    state.currentMode = 'dashboard';
+  }
 
   app.appendChild(renderTopbar());
   app.appendChild(renderModeBar());
