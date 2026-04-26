@@ -918,6 +918,10 @@ body.calm-mode {
   position: relative;
   width: 48px;
   height: 26px;
+  min-width: 48px;
+  min-height: 26px;
+  max-width: 48px;
+  max-height: 26px;
   background: var(--cream-3);
   border-radius: 100px;
   cursor: pointer;
@@ -927,8 +931,10 @@ body.calm-mode {
   /* 4c: Switched from div to button for a11y - reset button defaults. */
   border: none;
   padding: 0;
+  margin: 0;
   font: inherit;
   color: inherit;
+  line-height: 0;
   box-sizing: border-box;
   display: inline-block;
   vertical-align: middle;
@@ -944,19 +950,20 @@ body.calm-mode {
 
 .toggle .thumb {
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 50%;
+  left: 4px;
   width: 18px;
   height: 18px;
   background: var(--cream);
   border-radius: 50%;
   box-shadow: 0 0 0 1.5px var(--ink);
+  transform: translateY(-50%);
   transition: left var(--dur) var(--ease);
   pointer-events: none;
 }
 
 .toggle.on { background: var(--pink); }
-.toggle.on .thumb { left: 24px; }
+.toggle.on .thumb { left: 26px; }
 
 /* ==========================================================
    TOAST
