@@ -1279,6 +1279,40 @@ body.calm-mode {
 .candy:nth-child(6) { animation-delay: 240ms; }
 
 /* ==========================================================
+   4d: TICK-COMPLETE SPARKLE BURST
+   --------------------------------------------------------
+   Confetti-style burst when a task transitions from undone
+   to done. Particles spawn from the tick origin, spray
+   outward in random directions with rotation, and fall
+   slightly via additional dy. Uses six brand palette colours
+   randomised per particle plus three voice glyphs.
+   The reduced-motion media query at the top of this file
+   collapses animation duration to ~0, so the burst is
+   suppressed at OS level without any extra handling here.
+   ========================================================== */
+#sparkleLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.sparkle-particle {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  will-change: transform, opacity;
+}
+
+@keyframes tick-burst {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.9); opacity: 0; }
+}
+
+/* ==========================================================
    TIER TABS (2a)
    ========================================================== */
 .tier-bar {
@@ -1455,6 +1489,16 @@ body.calm-mode {
   opacity: 0.55;
   filter: saturate(0.65);
   transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+/* 4c (option 1): Cap mode pages at 1140px on wide desktop. Dashboard, inbox,
+   and triage views are unaffected because they have their own root wrappers
+   that don't carry .mode-root. The cap matches the events card's effective
+   width with the calendar+upcoming two-column layout, so the page reads as a
+   coherent shape instead of stretching to the full 1400px app cap. */
+.mode-root {
+  max-width: 1140px;
+  margin: 0 auto;
 }
 
 /* 4c: Hard cutoff fade. Heavier than soft. Used both during pending grace
@@ -3439,6 +3483,125 @@ body.calm-mode {
   font-size: 16px;
 }
 
+/* 4c (option B): Two-column calendar layout on wide desktop.
+   Calendar capped at 720px on the left, upcoming events list on the right.
+   Below 1180px viewport, calendar centres at max 720px and upcoming hides
+   (the existing List view toggle covers that ground on narrower screens). */
+.cal-with-upcoming { display: block; }
+.cal-main {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.cal-upcoming { display: none; }
+
+@media (min-width: 1180px) {
+  .cal-with-upcoming {
+    display: grid;
+    grid-template-columns: 720px minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  .cal-with-upcoming .cal-main { margin: 0; }
+  .cal-with-upcoming .cal-upcoming { display: block; }
+}
+
+.cal-upcoming-label {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--sky);
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+.cal-upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cal-upcoming-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--cream-2);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  color: var(--ink);
+}
+
+.cal-upcoming-item:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: inset 0 0 0 1px var(--rule), 2px 2px 0 var(--ink);
+  background: var(--cream);
+}
+
+.cal-upcoming-item.countdown {
+  border-left: 3px solid var(--pink);
+  padding-left: 9px;
+}
+
+.cal-upcoming-item.selected {
+  background: var(--pink-cream);
+  box-shadow: inset 0 0 0 1.5px var(--ink), 2px 2px 0 var(--ink);
+}
+
+.cal-upcoming-item.past {
+  opacity: 0.6;
+}
+
+.cal-upcoming-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+  min-width: 64px;
+  font-weight: 500;
+}
+
+.cal-upcoming-item.selected .cal-upcoming-date,
+.cal-upcoming-item.selected .cal-upcoming-meta { color: var(--ink); }
+
+.cal-upcoming-title {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cal-upcoming-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--mute);
+}
+
+.cal-upcoming-empty {
+  padding: 14px 0 4px;
+  text-align: left;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.5;
+}
+
 /* ==========================================================
    ONE THING CARD (3d)
    ========================================================== */
@@ -4326,6 +4489,72 @@ function toggleDone(id) {
   t.done = !t.done;
   t.doneAt = t.done ? Date.now() : null;
   saveState();
+}
+
+/* ============================================================
+   4d: Tick-complete sparkle burst
+   ----------------------------------------------------------
+   Spawns ~7 unicode sparkle glyphs from a DOM origin in random
+   radial directions with rotation and gravity. Each particle
+   self-cleans after the animation. Reduced motion is handled
+   by the global @media (prefers-reduced-motion: reduce) rule,
+   so we don't gate spawning here. Future: settings options
+   for animation beyond reduced motion (parked).
+   ============================================================ */
+const TICK_BURST_GLYPHS = ['✦', '★', '❀'];
+const TICK_BURST_COLOURS = [
+  'var(--pal-pink)',
+  'var(--pal-butter)',
+  'var(--pal-coral)',
+  'var(--pal-lavender)',
+  'var(--pal-bubblegum)',
+  'var(--pal-lime)'
+];
+
+function spawnTickBurst(originEl) {
+  if (!originEl) return;
+  const r = originEl.getBoundingClientRect();
+  if (!r || (r.width === 0 && r.height === 0)) return;
+
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+
+  let layer = document.getElementById('sparkleLayer');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.id = 'sparkleLayer';
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(layer);
+  }
+
+  const count = 7;
+  const duration = 520;
+  const spread = 56;
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle-particle';
+    el.textContent = TICK_BURST_GLYPHS[Math.floor(Math.random() * TICK_BURST_GLYPHS.length)];
+    el.style.color = TICK_BURST_COLOURS[Math.floor(Math.random() * TICK_BURST_COLOURS.length)];
+    el.style.left = (cx - 8) + 'px';
+    el.style.top = (cy - 10) + 'px';
+
+    // Radial spray with jitter, plus a downward dy bias for slight gravity feel
+    const angle = (i / count) * Math.PI * 2 + (Math.random() * 0.6 - 0.3);
+    const dist = spread * (0.7 + Math.random() * 0.5);
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist + 18;
+    const rot = Math.random() * 540 - 270;
+
+    el.style.setProperty('--dx', dx + 'px');
+    el.style.setProperty('--dy', dy + 'px');
+    el.style.setProperty('--rot', rot + 'deg');
+    el.style.fontSize = (12 + Math.random() * 6) + 'px';
+    el.style.animation = `tick-burst ${duration}ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards`;
+
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), duration + 80);
+  }
 }
 
 function deleteTask(id) {
@@ -5391,7 +5620,9 @@ function buildOneThingCard() {
     </div>
   `;
 
-  card.querySelector('[data-act="done"]').onclick = () => {
+  card.querySelector('[data-act="done"]').onclick = (e) => {
+    // 4d: burst from the Mark done button
+    if (!pick.done) spawnTickBurst(e.currentTarget);
     toggleDone(pick.id);
     toast('done.');
     render();
@@ -5410,7 +5641,9 @@ function buildOneThingCard() {
     const newModeCrumb = newPick.mode ? (DEFAULT_MODES.find(m => m.id === newPick.mode) || {}) : null;
     const newModeLabel = newModeCrumb && newModeCrumb.glyph ? `${newModeCrumb.glyph} ${newModeCrumb.name}` : 'unassigned';
     card.querySelector('.one-thing-mode').textContent = newModeLabel;
-    card.querySelector('[data-act="done"]').onclick = () => {
+    card.querySelector('[data-act="done"]').onclick = (e) => {
+      // 4d: burst from the Mark done button
+      if (!newPick.done) spawnTickBurst(e.currentTarget);
       toggleDone(newPick.id);
       toast('done.');
       render();
@@ -5920,6 +6153,7 @@ function renderModeView(modeId) {
   if (!mode) return renderDashboard();
 
   const root = document.createElement('div');
+  root.className = 'mode-root';
 
   // Level-1 sub-entity context
   const subs = getSubEntities(modeId);
@@ -6823,7 +7057,14 @@ function renderEventsCard(modeId, activeSub, activeMember) {
 }
 
 function renderCalendarView(modeId, subId, events) {
+  // 4c (option B): outer wrapper enables a side-by-side calendar + upcoming
+  // events list at >= 1180px viewport. Below that, the .cal-main column
+  // centres at max 720px and the upcoming aside is hidden via CSS.
+  const outer = document.createElement('div');
+  outer.className = 'cal-with-upcoming';
+
   const wrap = document.createElement('div');
+  wrap.className = 'cal-main';
 
   const today = new Date();
   const viewMonth = new Date(today.getFullYear(), today.getMonth() + (state.calMonthOffset || 0), 1);
@@ -6975,7 +7216,85 @@ function renderCalendarView(modeId, subId, events) {
     wrap.appendChild(panel);
   }
 
-  return wrap;
+  outer.appendChild(wrap);
+  outer.appendChild(renderCalendarUpcoming(events));
+  return outer;
+}
+
+function renderCalendarUpcoming(events) {
+  // 4c (option B): the wide-desktop sidebar that shows the next chunk of
+  // events as a list. Filtered + sorted from the same events array the
+  // calendar receives so it always matches the current mode/sub/member scope.
+  const aside = document.createElement('aside');
+  aside.className = 'cal-upcoming';
+
+  const label = document.createElement('span');
+  label.className = 'cal-upcoming-label';
+  label.textContent = 'Upcoming';
+  aside.appendChild(label);
+
+  const future = (events || [])
+    .filter(e => daysUntil(e.date) != null && daysUntil(e.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 8);
+
+  if (future.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'cal-upcoming-empty';
+    empty.innerHTML = 'Nothing on the horizon. <span class="sparkle">✦</span> Add one below.';
+    aside.appendChild(empty);
+    return aside;
+  }
+
+  const list = document.createElement('div');
+  list.className = 'cal-upcoming-list';
+
+  future.forEach(e => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    let cls = 'cal-upcoming-item';
+    if (e.isCountdown) cls += ' countdown';
+    if (state.calSelectedDate === e.date) cls += ' selected';
+    item.className = cls;
+
+    const days = daysUntil(e.date);
+    let dateLabel;
+    if (days === 0) dateLabel = 'Today';
+    else if (days === 1) dateLabel = 'Tomorrow';
+    else dateLabel = formatEventDate(e.date);
+
+    const metaParts = [];
+    if (e.isCountdown) metaParts.push('✦');
+    if (e.mode) {
+      const m = DEFAULT_MODES.find(x => x.id === e.mode);
+      if (m) metaParts.push(m.glyph);
+    }
+
+    item.innerHTML = `
+      <span class="cal-upcoming-date">${escapeHtml(dateLabel)}</span>
+      <span class="cal-upcoming-title">${escapeHtml(e.title)}</span>
+      <span class="cal-upcoming-meta">${metaParts.join(' ')}</span>
+    `;
+
+    item.setAttribute('aria-label', `${dateLabel}, ${e.title}. Jump to date.`);
+
+    // Clicking jumps the calendar grid to that month and selects the day.
+    item.onclick = () => {
+      const today = new Date();
+      const todayMonthIdx = today.getFullYear() * 12 + today.getMonth();
+      const eventDate = new Date(e.date + 'T00:00:00');
+      const eventMonthIdx = eventDate.getFullYear() * 12 + eventDate.getMonth();
+      state.calMonthOffset = eventMonthIdx - todayMonthIdx;
+      state.calSelectedDate = e.date;
+      saveState();
+      render();
+    };
+
+    list.appendChild(item);
+  });
+
+  aside.appendChild(list);
+  return aside;
 }
 
 function renderEventRow(event, isPast) {
@@ -7062,6 +7381,8 @@ function renderTaskRow(task) {
   `;
   li.querySelector('[data-act="check"]').onclick = (e) => {
     e.stopPropagation();
+    // 4d: spark burst on transition to done only, not on un-tick
+    if (!task.done) spawnTickBurst(e.currentTarget);
     toggleDone(task.id);
     render();
   };
