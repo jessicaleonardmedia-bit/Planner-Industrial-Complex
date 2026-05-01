@@ -4168,6 +4168,228 @@ body.reduced-motion .timer-indicator-dot { animation: none; }
   margin-top: 4px;
 }
 
+/* ==========================================================
+   5b': MULTI-TIMER UI + PILL MENU + MANUAL SESSION DIALOG
+   ========================================================== */
+
+.timer-indicators-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  max-width: 540px;
+  overflow: hidden;
+}
+
+.timer-indicator-money {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 247, 229, 0.32);
+  padding: 2px 7px;
+  border-radius: 100px;
+  margin-left: 2px;
+}
+.timer-indicator.dark-text .timer-indicator-money {
+  background: rgba(26, 14, 26, 0.18);
+}
+
+.timer-indicator-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 100px;
+  padding: 6px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
+  min-height: 32px;
+}
+.timer-indicator-more:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink);
+}
+
+/* Tap-menu that opens off the topbar pill. */
+.timer-pill-menu {
+  background: var(--cream);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2.5px var(--ink), 4px 4px 0 var(--ink);
+  padding: 8px;
+  min-width: 220px;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.timer-pill-menu.wide { min-width: 340px; }
+
+.timer-pill-menu-header {
+  padding: 6px 10px 8px;
+  border-bottom: 1.5px dashed var(--rule);
+  margin-bottom: 4px;
+}
+
+.timer-pill-menu-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.timer-pill-menu-rate {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--mute);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
+.timer-pill-menu-btn {
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  min-height: 36px;
+}
+.timer-pill-menu-btn:hover { background: var(--cream-2); }
+.timer-pill-menu-btn.danger { color: var(--ink); }
+.timer-pill-menu-btn.danger:hover { background: var(--pink-cream); color: var(--pink-deep); }
+
+/* Multi-timer panel (overflow + stop-all). */
+.timer-pill-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.timer-pill-row:hover { background: var(--cream-2); }
+
+.timer-pill-row-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+.timer-pill-row-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timer-pill-row-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.timer-pill-row-money {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-pill-row-stop {
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 28px;
+}
+.timer-pill-row-stop:hover { background: var(--pink-deep); }
+
+.timer-pill-stopall {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1.5px dashed var(--rule);
+  text-align: right;
+}
+
+/* Inline timer panel: time and money on one row. */
+.timer-panel-time-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.timer-inline-money {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  background: var(--cream-2);
+  padding: 2px 12px;
+  border-radius: 100px;
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+/* "+ session" button on the sessions card label row. */
+.candy-sessions { position: relative; }
+.sessions-add-btn {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+}
+
+/* Manual session add dialog. */
+.manual-session-modal { max-width: 420px; }
+.manual-session-row { margin-bottom: 12px; }
+.manual-session-row.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.manual-session-label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-bottom: 4px;
+}
+.manual-session-error {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--pink-deep);
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--pink-cream);
+  border-radius: var(--r-sm);
+}
+
 </style>
 </head>
 <body>
@@ -4340,7 +4562,7 @@ const DEFAULT_MODES = [
 
 function defaultState() {
   return {
-    version: 4, // bumped for 5a Phase 2 timers + sessions + invoices
+    version: 5, // bumped for 5b' multi-timer + sessions across all modes
     currentMode: 'dashboard',
     currentTier: 'now',
     currentClientId: null,
@@ -4348,16 +4570,16 @@ function defaultState() {
     onboarded: false,
     tasks: [], // { id, text, mode, subId, memberId?, tier, done, waitingOn, createdAt, colour }
     events: [], // { id, title, date, mode?, subId?, memberId?, isCountdown, createdAt }
-    // 5a: Phase 2. Sessions are time-tracking records per client.
-    // durationMs is the canonical measure; display as minutes or h+m.
-    // rateAtTime captures the client's rate at session-end so historic rates
-    // don't drift if the client's rate is later changed.
-    // invoicedAt + invoiceId are null until the session is marked invoiced (5c).
-    sessions: [], // { id, clientId, startedAt, endedAt, durationMs, note, rateAtTime, invoicedAt, invoiceId }
+    // 5b': Sessions are no longer Work-only. modeId/subId/memberId scope a
+    // session to any sub-entity (client, org, category, household, member).
+    // rateAtTime captures the resolved rate at session-end so historic rates
+    // don't drift if the rate is later changed.
+    // invoicedAt + invoiceId are null until marked invoiced (5c, Work-only).
+    sessions: [], // { id, modeId, subId, memberId, startedAt, endedAt, durationMs, note, rateAtTime, invoicedAt, invoiceId }
     invoices: [], // 5c: { id, clientId, invoicedAt, sessionIds, totalMs, totalAmount, zohoText }
-    // 5a: One running timer at a time. Persists across reloads so a backgrounded
-    // tab doesn't lose time. { clientId, startedAt } when running, null when not.
-    activeTimer: null,
+    // 5b': Multi-timer. Array of { id, modeId, subId, memberId, startedAt }.
+    // Empty array when no timers running.
+    activeTimers: [],
     clients: [], // { id, name, rate, colour? }
     orgs: [],    // { id, name, colour? }
     households: [], // { id, name, colour?, members: [{ id, name, colour? }] }
@@ -4469,17 +4691,26 @@ function loadState() {
         }));
       });
       // 5a: Phase 2 migration. Ensure sessions/invoices arrays exist with full shape.
-      state.sessions = (parsed.sessions || []).map(s => ({
-        id: s.id || uid(),
-        clientId: s.clientId || null,
-        startedAt: s.startedAt || null,
-        endedAt: s.endedAt || null,
-        durationMs: typeof s.durationMs === 'number' ? s.durationMs : 0,
-        note: s.note || '',
-        rateAtTime: typeof s.rateAtTime === 'number' ? s.rateAtTime : null,
-        invoicedAt: s.invoicedAt || null,
-        invoiceId: s.invoiceId || null
-      }));
+      // 5b': Sessions now have modeId/subId/memberId. Old sessions had clientId only;
+      // those become work mode sessions with subId = the old clientId.
+      state.sessions = (parsed.sessions || []).map(s => {
+        // v4 → v5 migration: clientId became subId, modeId is implicitly 'work'.
+        const modeId = s.modeId || (s.clientId ? 'work' : null);
+        const subId = s.subId || s.clientId || null;
+        return {
+          id: s.id || uid(),
+          modeId: modeId,
+          subId: subId,
+          memberId: s.memberId || null,
+          startedAt: s.startedAt || null,
+          endedAt: s.endedAt || null,
+          durationMs: typeof s.durationMs === 'number' ? s.durationMs : 0,
+          note: s.note || '',
+          rateAtTime: typeof s.rateAtTime === 'number' ? s.rateAtTime : null,
+          invoicedAt: s.invoicedAt || null,
+          invoiceId: s.invoiceId || null
+        };
+      });
       state.invoices = (parsed.invoices || []).map(inv => ({
         id: inv.id || uid(),
         clientId: inv.clientId || null,
@@ -4489,15 +4720,50 @@ function loadState() {
         totalAmount: typeof inv.totalAmount === 'number' ? inv.totalAmount : 0,
         zohoText: inv.zohoText || ''
       }));
-      // activeTimer: only valid if it has clientId and startedAt and the client still exists
-      if (parsed.activeTimer && parsed.activeTimer.clientId && parsed.activeTimer.startedAt) {
-        const stillExists = (state.clients || []).some(c => c.id === parsed.activeTimer.clientId);
-        state.activeTimer = stillExists ? {
-          clientId: parsed.activeTimer.clientId,
-          startedAt: parsed.activeTimer.startedAt
-        } : null;
-      } else {
-        state.activeTimer = null;
+      // 5b': Multi-timer migration. Old singular activeTimer → activeTimers array.
+      state.activeTimers = [];
+      const legacy = parsed.activeTimer; // v4 singular
+      if (legacy && legacy.clientId && legacy.startedAt) {
+        const stillExists = (state.clients || []).some(c => c.id === legacy.clientId);
+        if (stillExists) {
+          state.activeTimers.push({
+            id: uid(),
+            modeId: 'work',
+            subId: legacy.clientId,
+            memberId: null,
+            startedAt: legacy.startedAt
+          });
+        }
+      }
+      // v5 array: validate each entry's sub-entity still exists.
+      if (Array.isArray(parsed.activeTimers)) {
+        parsed.activeTimers.forEach(t => {
+          if (!t || !t.modeId || !t.subId || !t.startedAt) return;
+          const subs = state[t.modeId === 'work' ? 'clients' :
+                              t.modeId === 'community' ? 'orgs' :
+                              t.modeId === 'family' ? 'households' :
+                              null];
+          let exists = false;
+          if (t.modeId === 'personal' || t.modeId === 'mortal-coil') {
+            exists = (state.categories[t.modeId] || []).some(c => c.id === t.subId);
+          } else if (subs) {
+            exists = subs.some(s => s.id === t.subId);
+          }
+          // For Family with memberId, also check member exists.
+          if (exists && t.modeId === 'family' && t.memberId) {
+            const h = (state.households || []).find(h => h.id === t.subId);
+            exists = !!(h && (h.members || []).some(m => m.id === t.memberId));
+          }
+          if (exists) {
+            state.activeTimers.push({
+              id: t.id || uid(),
+              modeId: t.modeId,
+              subId: t.subId,
+              memberId: t.memberId || null,
+              startedAt: t.startedAt
+            });
+          }
+        });
       }
     }
   } catch (e) {
@@ -5205,6 +5471,27 @@ function deleteMember(householdId, memberId, options = {}) {
       }
     });
   }
+
+  // 5b': Sessions for this member always go to bin (orphans don't make sense).
+  // Active timer on this member: bank it first, then bin the session.
+  if (state.activeTimers && state.activeTimers.length) {
+    state.activeTimers.slice().forEach(t => {
+      if (t.modeId === 'family' && t.subId === householdId && t.memberId === memberId) {
+        stopTimer(t.modeId, t.subId, t.memberId, { silent: true });
+      }
+    });
+  }
+  const sessionsToBin = (state.sessions || []).filter(s =>
+    s.modeId === 'family' && s.subId === householdId && s.memberId === memberId
+  );
+  state.sessions = (state.sessions || []).filter(s =>
+    !(s.modeId === 'family' && s.subId === householdId && s.memberId === memberId)
+  );
+  state.recycleBin = state.recycleBin || [];
+  sessionsToBin.forEach(sess => {
+    state.recycleBin.push({ kind: 'session', deletedAt: Date.now(), item: sess });
+  });
+
   saveState();
 }
 
@@ -5269,16 +5556,39 @@ function deleteSubEntity(modeId, subId, options = {}) {
     });
   }
 
-  // 5a: Sessions belong to a Work client. They can't exist without one
-  // (they're billing records). Always remove sessions for a deleted client,
-  // regardless of cascade choice. Stop the active timer if it's on this
-  // client (discard, since it'd otherwise bank to a deleted client).
-  if (modeId === 'work') {
-    state.sessions = (state.sessions || []).filter(s => s.clientId !== subId);
-    state.invoices = (state.invoices || []).filter(inv => inv.clientId !== subId);
-    if (state.activeTimer && state.activeTimer.clientId === subId) {
-      state.activeTimer = null;
-    }
+  // 5b': Sessions can belong to any sub-entity now, not just Work clients.
+  // When a sub is deleted, sessions for it go to the recycle bin (24h grace)
+  // so the user can restore if it was a mistake. If a timer is running on
+  // this sub, bank it first (don't lose the time) then bin everything.
+  // Cascade vs not doesn't change session handling: an orphaned session has
+  // no sub to belong to, so it always goes to bin.
+  // Family handles members below; here we cover the level-1 scope.
+  if (state.activeTimers && state.activeTimers.length) {
+    state.activeTimers.slice().forEach(t => {
+      if (t.modeId === modeId && t.subId === subId) {
+        stopTimer(t.modeId, t.subId, t.memberId, { silent: true });
+      }
+    });
+  }
+  // Move all sessions for this sub into the bin.
+  const sessionsToBin = (state.sessions || []).filter(s =>
+    s.modeId === modeId && s.subId === subId
+  );
+  state.sessions = (state.sessions || []).filter(s =>
+    !(s.modeId === modeId && s.subId === subId)
+  );
+  state.recycleBin = state.recycleBin || [];
+  sessionsToBin.forEach(sess => {
+    state.recycleBin.push({ kind: 'session', deletedAt: Date.now(), item: sess });
+  });
+  // Invoices are billing records; for Work clients we currently store them
+  // by clientId. Bin them alongside sessions so a restore is consistent.
+  if (modeId === 'work' && state.invoices && state.invoices.length) {
+    const invToBin = state.invoices.filter(inv => inv.clientId === subId);
+    state.invoices = state.invoices.filter(inv => inv.clientId !== subId);
+    invToBin.forEach(inv => {
+      state.recycleBin.push({ kind: 'invoice', deletedAt: Date.now(), item: inv });
+    });
   }
 
   // If the deleted sub-entity is currently active, clear it
@@ -5465,66 +5775,123 @@ function purgeOldRecycleBin() {
 }
 
 /* ============================================================
-   5a: TIMER + SESSION HELPERS (Phase 2)
+   5a/5b': TIMER + SESSION HELPERS (Phase 2)
 
-   One running timer at a time, tied to a Work client. startedAt is an
-   ISO timestamp; we compute elapsed live from now-startedAt. Persisted
-   across reloads via state.activeTimer so a backgrounded tab doesn't
-   lose time. Sessions are stored when the timer is stopped.
+   Multi-timer model: state.activeTimers is an array. A scope is a
+   { modeId, subId, memberId } triple. At most one timer per scope
+   (calling startTimer on a scope that already has a timer is a no-op).
+   Switching is optional: starting a timer on a different scope does NOT
+   stop existing timers unless the user explicitly chooses.
 
-   Stale-timer recovery (state.activeTimer running >24h on load) is
-   handled in render() via maybeOfferStaleTimerRecovery().
+   Sessions now span all modes. The same scope triple identifies them.
+   For backwards compatibility, modeId='work' + subId=oldClientId works.
    ============================================================ */
 
 const STALE_TIMER_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24h
-const TIMER_TICK_MS = 1000; // running indicator updates every second
+const TIMER_TICK_MS = 1000;
 
+// Resolve a sub-entity object across all modes from a scope triple.
+// Returns the level-1 sub or null if it doesn't exist.
+function getSubEntityFor(modeId, subId) {
+  if (!modeId || !subId) return null;
+  return (getSubEntities(modeId) || []).find(s => s.id === subId) || null;
+}
+
+// Resolve a member object for Family mode + household + memberId.
+function getMemberFor(modeId, subId, memberId) {
+  if (modeId !== 'family' || !subId || !memberId) return null;
+  return getMember(subId, memberId);
+}
+
+// Display name for a scope. Members preferred over subs.
+function scopeName(modeId, subId, memberId) {
+  const member = getMemberFor(modeId, subId, memberId);
+  if (member) return member.name;
+  const sub = getSubEntityFor(modeId, subId);
+  if (sub) return sub.name;
+  const mode = DEFAULT_MODES.find(m => m.id === modeId);
+  return mode ? mode.name : '(unknown)';
+}
+
+// Resolve the rate for a scope. Member rate > sub rate > null.
+// Used when starting/stopping a timer to capture rateAtTime.
+function rateFor(modeId, subId, memberId) {
+  const member = getMemberFor(modeId, subId, memberId);
+  if (member && typeof member.rate === 'number') return member.rate;
+  const sub = getSubEntityFor(modeId, subId);
+  if (sub && typeof sub.rate === 'number') return sub.rate;
+  return null;
+}
+
+// Resolve the colour palette id for a scope. Reuses existing helpers.
+function colourForScope(modeId, subId, memberId) {
+  if (modeId === 'family' && subId && memberId) return memberColour(subId, memberId);
+  if (subId) return subColour(modeId, subId);
+  return modeColour(modeId);
+}
+
+// Legacy compatibility for code paths that still reference clients only.
 function getClient(clientId) {
   return (state.clients || []).find(c => c.id === clientId) || null;
 }
 
-// Start a new timer for clientId. If a timer is already running on a
-// different client, caller should have already confirmed via the
-// "Stop X and start Y?" modal. Calling startTimer when one is running
-// will silently stop the old one as a session and start a new one.
-function startTimer(clientId) {
-  if (state.activeTimer) stopTimer({ silent: true });
-  state.activeTimer = {
-    clientId: clientId,
+// Find the active timer for a specific scope, if any.
+function findActiveTimer(modeId, subId, memberId) {
+  return (state.activeTimers || []).find(t =>
+    t.modeId === modeId && t.subId === subId &&
+    (t.memberId || null) === (memberId || null)
+  ) || null;
+}
+
+// Start a new timer for the given scope. No-op if one is already running on
+// this exact scope. Multiple timers on different scopes coexist; the user
+// chooses to switch via UI (which calls stopTimer first).
+function startTimer(modeId, subId, memberId) {
+  if (findActiveTimer(modeId, subId, memberId || null)) return;
+  state.activeTimers = state.activeTimers || [];
+  state.activeTimers.push({
+    id: uid(),
+    modeId: modeId,
+    subId: subId,
+    memberId: memberId || null,
     startedAt: new Date().toISOString()
-  };
+  });
   saveState();
 }
 
-// Stop the running timer and commit it as a session. opts:
-// - silent: skip the toast (used when switching timers)
-// - endedAt: ISO timestamp override (for stale-timer recovery)
-// - discard: don't save the session (used to throw away a stale timer)
-// Returns the new session id or null if discarded/no-op.
-function stopTimer(opts = {}) {
-  if (!state.activeTimer) return null;
-  const { clientId, startedAt } = state.activeTimer;
+// Stop a specific timer (by scope) and bank the session. opts:
+// - silent: skip the toast (used when switching, or when we just want the
+//   data without the celebration)
+// - endedAt: ISO override (stale-timer recovery)
+// - discard: don't save the session
+// Returns the session id, or null if discarded / no-op.
+function stopTimer(modeId, subId, memberId, opts = {}) {
+  const idx = (state.activeTimers || []).findIndex(t =>
+    t.modeId === modeId && t.subId === subId &&
+    (t.memberId || null) === (memberId || null)
+  );
+  if (idx < 0) return null;
+  const t = state.activeTimers[idx];
+  state.activeTimers.splice(idx, 1);
+
   const endedAt = opts.endedAt || new Date().toISOString();
-  state.activeTimer = null;
 
   if (opts.discard) {
     saveState();
     return null;
   }
 
-  const startMs = new Date(startedAt).getTime();
+  const startMs = new Date(t.startedAt).getTime();
   const endMs = new Date(endedAt).getTime();
   const durationMs = Math.max(0, endMs - startMs);
-
-  // 5b will populate rateAtTime from the client's current rate. For 5a we
-  // capture it anyway so historic sessions are correctly priced once 5b ships.
-  const client = getClient(clientId);
-  const rateAtTime = (client && typeof client.rate === 'number') ? client.rate : null;
+  const rateAtTime = rateFor(t.modeId, t.subId, t.memberId);
 
   const session = {
     id: uid(),
-    clientId: clientId,
-    startedAt: startedAt,
+    modeId: t.modeId,
+    subId: t.subId,
+    memberId: t.memberId || null,
+    startedAt: t.startedAt,
     endedAt: endedAt,
     durationMs: durationMs,
     note: '',
@@ -5538,17 +5905,27 @@ function stopTimer(opts = {}) {
 
   if (!opts.silent) {
     const minsBanked = Math.max(1, Math.round(durationMs / 60000));
-    const clientName = client ? client.name : 'session';
-    bankedToast(minsBanked, clientName, session.id);
+    bankedToast(minsBanked, scopeName(t.modeId, t.subId, t.memberId), session.id);
   }
   return session.id;
+}
+
+// Stop all active timers. Optionally silent. Returns array of session ids.
+function stopAllTimers(opts = {}) {
+  const ids = [];
+  // Iterate over a copy because stopTimer mutates the array.
+  ((state.activeTimers || []).slice()).forEach(t => {
+    const sid = stopTimer(t.modeId, t.subId, t.memberId, opts);
+    if (sid) ids.push(sid);
+  });
+  return ids;
 }
 
 // Banked toast with an optional "+ note" affordance. Reuses the toast
 // element but inserts a small button. Like undoToast, the action stays
 // committed if the user misses the window; they can still edit the
 // session note from the session log.
-function bankedToast(mins, clientName, sessionId) {
+function bankedToast(mins, scopeLabel, sessionId) {
   const el = document.getElementById('toast');
   if (!el) return;
   const minsLabel = mins === 1 ? '1 min' : mins + ' mins';
@@ -5565,13 +5942,13 @@ function bankedToast(mins, clientName, sessionId) {
       ev.stopPropagation();
       clearTimeout(toast._t);
       el.classList.remove('show');
-      openSessionNoteDialog(sessionId, clientName);
+      openSessionNoteDialog(sessionId, scopeLabel);
     };
   }
 }
 
 // Open a tiny modal to capture an optional one-line session note.
-function openSessionNoteDialog(sessionId, clientName) {
+function openSessionNoteDialog(sessionId, scopeLabel) {
   document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
 
   const session = (state.sessions || []).find(s => s.id === sessionId);
@@ -5587,7 +5964,7 @@ function openSessionNoteDialog(sessionId, clientName) {
   modal.className = 'confirm-modal';
   modal.innerHTML = `
     <h4>One-line note</h4>
-    <p style="margin-bottom:10px;">What did you do for ${escapeHtml(clientName)}?</p>
+    <p style="margin-bottom:10px;">What did you do for ${escapeHtml(scopeLabel)}?</p>
     <input type="text" class="text-input" id="sessNoteInput"
            placeholder="drafted OMG email"
            maxlength="120"
@@ -5618,11 +5995,11 @@ function openSessionNoteDialog(sessionId, clientName) {
   const commit = () => {
     const v = input.value.trim();
     if (v) {
-      const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
-      if (idx >= 0) {
-        state.sessions[idx].note = v;
+      const sIdx = (state.sessions || []).findIndex(s => s.id === sessionId);
+      if (sIdx >= 0) {
+        state.sessions[sIdx].note = v;
         saveState();
-        if (state.currentMode === 'work') render();
+        render();
       }
     }
     backdrop.remove();
@@ -5638,7 +6015,6 @@ function openSessionNoteDialog(sessionId, clientName) {
   setTimeout(() => input.focus(), 30);
 }
 
-// Update an existing session's note (called from the session log).
 function updateSessionNote(sessionId, note) {
   const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
   if (idx < 0) return;
@@ -5646,24 +6022,86 @@ function updateSessionNote(sessionId, note) {
   saveState();
 }
 
+// 5b': Session delete now sends to the recycle bin (the existing 24h pattern).
 function deleteSession(sessionId) {
-  state.sessions = (state.sessions || []).filter(s => s.id !== sessionId);
+  const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
+  if (idx < 0) return;
+  const session = state.sessions[idx];
+  state.sessions.splice(idx, 1);
+  state.recycleBin = state.recycleBin || [];
+  state.recycleBin.push({
+    kind: 'session',
+    deletedAt: Date.now(),
+    item: session
+  });
   saveState();
 }
 
-function sessionsForClient(clientId, opts = {}) {
-  const all = (state.sessions || []).filter(s => s.clientId === clientId);
+function restoreSession(sessionOrId) {
+  let session;
+  if (typeof sessionOrId === 'string') {
+    const entry = (state.recycleBin || []).find(e =>
+      e.kind === 'session' && e.item && e.item.id === sessionOrId
+    );
+    if (!entry) return;
+    session = entry.item;
+    state.recycleBin = state.recycleBin.filter(e => e !== entry);
+  } else {
+    session = sessionOrId;
+    state.recycleBin = (state.recycleBin || []).filter(e =>
+      !(e.kind === 'session' && e.item && e.item.id === session.id)
+    );
+  }
+  state.sessions = state.sessions || [];
+  state.sessions.push(session);
+  saveState();
+}
+
+// 5b': Sessions filtered by scope. Drops sub/member if not given.
+function sessionsForScope(modeId, subId, memberId, opts = {}) {
+  const all = (state.sessions || []).filter(s => {
+    if (s.modeId !== modeId) return false;
+    if (subId !== undefined && s.subId !== subId) return false;
+    if (memberId !== undefined && (s.memberId || null) !== (memberId || null)) return false;
+    return true;
+  });
   if (opts.unbilledOnly) return all.filter(s => !s.invoicedAt);
   return all;
 }
 
-function activeTimerElapsedMs() {
-  if (!state.activeTimer || !state.activeTimer.startedAt) return 0;
-  return Math.max(0, Date.now() - new Date(state.activeTimer.startedAt).getTime());
+// 5b': Manual session add. Used for backfills.
+function addManualSession(scope, payload) {
+  const startedAt = payload.startedAt;
+  const endedAt = payload.endedAt;
+  const durationMs = Math.max(0,
+    new Date(endedAt).getTime() - new Date(startedAt).getTime()
+  );
+  const session = {
+    id: uid(),
+    modeId: scope.modeId,
+    subId: scope.subId,
+    memberId: scope.memberId || null,
+    startedAt: startedAt,
+    endedAt: endedAt,
+    durationMs: durationMs,
+    note: payload.note || '',
+    rateAtTime: typeof payload.rateAtTime === 'number' ? payload.rateAtTime
+      : rateFor(scope.modeId, scope.subId, scope.memberId),
+    invoicedAt: null,
+    invoiceId: null
+  };
+  state.sessions = state.sessions || [];
+  state.sessions.push(session);
+  saveState();
+  return session.id;
 }
 
-// "1h 23m", "23m", "<1m". For very short bursts (< 60s) we still show 1m
-// in toasts, but in lists we show <1m so it's clear.
+function activeTimerElapsedMs(timer) {
+  if (!timer || !timer.startedAt) return 0;
+  return Math.max(0, Date.now() - new Date(timer.startedAt).getTime());
+}
+
+// "1h 23m", "23m", "<1m"
 function formatDurationCompact(ms) {
   if (!ms || ms < 0) return '<1m';
   const totalSec = Math.floor(ms / 1000);
@@ -5683,19 +6121,24 @@ function formatMoney(amount) {
 }
 
 // 5b: Compute the dollar amount for a session given its rateAtTime.
-// Returns null if rate is missing (so we can hide $ display rather than
-// showing $0.00 which would be misleading).
+// Returns null if rate is missing.
 function sessionAmount(session) {
   if (!session || typeof session.rateAtTime !== 'number') return null;
   const hours = (session.durationMs || 0) / 3600000;
   return Math.round(hours * session.rateAtTime * 100) / 100;
 }
 
-// 5b: Update a session's rateAtTime (per-session override).
+// Live $ for a running timer (uses the scope's current rate, not historic).
+function activeTimerAmount(timer) {
+  const rate = rateFor(timer.modeId, timer.subId, timer.memberId);
+  if (typeof rate !== 'number') return null;
+  const hours = activeTimerElapsedMs(timer) / 3600000;
+  return Math.round(hours * rate * 100) / 100;
+}
+
 function updateSessionRate(sessionId, rate) {
   const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
   if (idx < 0) return;
-  // Allow null to clear (session becomes unrated).
   state.sessions[idx].rateAtTime = (typeof rate === 'number' && !isNaN(rate)) ? rate : null;
   saveState();
 }
@@ -5713,30 +6156,30 @@ function formatDurationClock(ms) {
 }
 
 // Stale-timer recovery: invoked once on app load (after render).
-// If the active timer has been running longer than the threshold,
-// offer to commit (rounded down to a sensible end time the user picks),
-// keep going, or discard. Skipped if no active timer.
 let _staleTimerHandled = false;
 function maybeOfferStaleTimerRecovery() {
   if (_staleTimerHandled) return;
-  if (!state.activeTimer) return;
-  const elapsed = activeTimerElapsedMs();
-  if (elapsed < STALE_TIMER_THRESHOLD_MS) return;
+  const stale = (state.activeTimers || []).filter(t =>
+    activeTimerElapsedMs(t) > STALE_TIMER_THRESHOLD_MS
+  );
+  if (!stale.length) return;
   _staleTimerHandled = true;
 
-  const client = getClient(state.activeTimer.clientId);
-  const clientName = client ? client.name : 'a client';
-  const hours = Math.round(elapsed / 3600000);
+  // Handle the first stale one. If multiple, the next render will offer the next.
+  const t = stale[0];
+  const label = scopeName(t.modeId, t.subId, t.memberId);
+  const hours = Math.round(activeTimerElapsedMs(t) / 3600000);
 
   openConfirmModal({
     title: 'Timer was still running',
-    body: `The timer for ${clientName} has been running for about ${hours}h. Probably forgot to stop it. What do you want to do?`,
+    body: `The timer for ${label} has been running for about ${hours}h. Probably forgot to stop it. What do you want to do?`,
     actions: [
       {
         label: 'Stop now',
         kind: 'primary',
         onClick: () => {
-          stopTimer();
+          stopTimer(t.modeId, t.subId, t.memberId);
+          _staleTimerHandled = false; // allow next stale to surface
           render();
         }
       },
@@ -5748,7 +6191,8 @@ function maybeOfferStaleTimerRecovery() {
         label: 'Discard',
         kind: 'danger',
         onClick: () => {
-          stopTimer({ discard: true });
+          stopTimer(t.modeId, t.subId, t.memberId, { discard: true });
+          _staleTimerHandled = false;
           render();
         }
       }
@@ -5874,29 +6318,38 @@ function renderTopbar() {
   const bar = document.createElement('header');
   bar.className = 'topbar';
 
-  // 5a: Running timer indicator. Visible from anywhere when a timer is on.
-  // Tapping jumps to that client. Updates every second via tickTimerIndicator.
-  let timerIndicator = '';
-  if (state.activeTimer && state.activeTimer.clientId) {
-    const client = getClient(state.activeTimer.clientId);
-    if (client) {
-      const elapsed = activeTimerElapsedMs();
-      const colourId = subColour('work', client.id);
+  // 5b': Multiple timers can run at once. Stack pills until they don't
+  // visually fit, then collapse the rest into a "+N" badge that opens a
+  // listing. Maximum 3 inline pills before collapsing.
+  const TIMERS_INLINE_MAX = 3;
+  const timers = state.activeTimers || [];
+  let timersHtml = '';
+  if (timers.length > 0) {
+    const inlinePills = timers.slice(0, TIMERS_INLINE_MAX).map(t => {
+      const colourId = colourForScope(t.modeId, t.subId, t.memberId);
       const darkClass = needsDarkText(colourId) ? ' dark-text' : '';
-      timerIndicator = `
-        <button class="timer-indicator${darkClass}" id="timerIndicator" type="button"
-                aria-label="Open running timer for ${escapeHtml(client.name)}"
+      const elapsed = activeTimerElapsedMs(t);
+      const amount = activeTimerAmount(t);
+      const moneyHtml = amount != null
+        ? `<span class="timer-indicator-money" data-tid="${t.id}">${escapeHtml(formatMoney(amount))}</span>`
+        : '';
+      const label = scopeName(t.modeId, t.subId, t.memberId);
+      return `
+        <button class="timer-indicator${darkClass}" data-tid="${t.id}" type="button"
+                aria-label="Timer for ${escapeHtml(label)}: ${escapeHtml(formatDurationClock(elapsed))}"
                 style="--sub-colour: ${colourCssValue(colourId)};">
           <span class="timer-indicator-dot"></span>
-          <span class="timer-indicator-name">${escapeHtml(client.name)}</span>
-          <span class="timer-indicator-time" id="timerIndicatorTime">${formatDurationClock(elapsed)}</span>
+          <span class="timer-indicator-name">${escapeHtml(label)}</span>
+          <span class="timer-indicator-time" data-tid-time="${t.id}">${formatDurationClock(elapsed)}</span>
+          ${moneyHtml}
         </button>
       `;
-    } else {
-      // Active timer references a deleted client. Clean up silently.
-      state.activeTimer = null;
-      saveState();
-    }
+    }).join('');
+    const overflow = timers.length - TIMERS_INLINE_MAX;
+    const overflowPill = overflow > 0
+      ? `<button class="timer-indicator-more" id="timerIndicatorMore" type="button" aria-label="${overflow} more timers running">+${overflow}</button>`
+      : '';
+    timersHtml = `<div class="timer-indicators-row">${inlinePills}${overflowPill}</div>`;
   }
 
   bar.innerHTML = `
@@ -5908,7 +6361,7 @@ function renderTopbar() {
       </div>
     </div>
     <div class="top-actions">
-      ${timerIndicator}
+      ${timersHtml}
       <button class="pill-btn" id="settingsBtn" title="Settings">⚙ Settings</button>
     </div>
   `;
@@ -7155,10 +7608,17 @@ function renderModeView(modeId) {
   tierBar.appendChild(doneBtn);
   content.appendChild(tierBar);
 
-  // 5a: Timer panel + Session log for Work mode when a client is selected.
-  if (modeId === 'work' && activeSub) {
-    content.appendChild(renderTimerPanel(activeSub));
-    content.appendChild(renderSessionsCard(activeSub));
+  // 5a/5b': Timer panel + Session log for any mode with a sub-entity selected.
+  // Sessions span all modes now, not just Work. For Family, the scope can
+  // narrow to a member when one is selected.
+  if (MODES_WITH_SUBS.includes(modeId) && activeSub) {
+    const scope = {
+      modeId: modeId,
+      subId: activeSub.id,
+      memberId: activeMember ? activeMember.id : null
+    };
+    content.appendChild(renderTimerPanel(scope));
+    content.appendChild(renderSessionsCard(scope));
   }
 
   // 4c: Chip filter row. Show only when at least one task in scope has a chip.
@@ -7339,7 +7799,11 @@ function buildSubBar(modeId, subs, subId) {
     const openSubMenu = (anchor) => {
       const currentColour = s.colour || null;
       const label = subEntityLabel(modeId);
-      const isWorkClient = modeId === 'work';
+      // 5b': Rate is now available on all sub-entity types, not just Work.
+      // For Community/Personal/Mortal-Coil/Family-household, the rate is
+      // theoretical (used for time-and-money totals). For Work, it's the
+      // actual billable rate that drives invoicing.
+      const showRate = MODES_WITH_SUBS.includes(modeId);
       openColourPopover(anchor, {
         title: 'Edit ' + label,
         renameValue: s.name,
@@ -7349,9 +7813,12 @@ function buildSubBar(modeId, subs, subId) {
           render();
           toast('renamed.');
         },
-        // 5b: Rate field for Work clients only.
-        rateValue: isWorkClient ? (typeof s.rate === 'number' ? s.rate : null) : undefined,
-        onRate: isWorkClient ? (newRate) => {
+        rateValue: showRate ? (typeof s.rate === 'number' ? s.rate : null) : undefined,
+        rateLabel: modeId === 'work' ? 'Hourly rate (AUD)' : 'Theoretical hourly rate (AUD)',
+        rateHint: modeId === 'work'
+          ? 'Used for invoicing and totals.'
+          : 'Used for time-and-money totals. Not invoiced.',
+        onRate: showRate ? (newRate) => {
           s.rate = newRate;
           saveState();
           render();
@@ -7565,6 +8032,16 @@ function buildMemberBar(household, memberId) {
           render();
           toast('renamed.');
         },
+        // 5b': Members can have their own rate (overrides household).
+        rateValue: typeof m.rate === 'number' ? m.rate : null,
+        rateLabel: 'Theoretical hourly rate (AUD)',
+        rateHint: 'Used for time-and-money totals on this member.',
+        onRate: (newRate) => {
+          m.rate = newRate;
+          saveState();
+          render();
+          toast(newRate == null ? 'rate cleared.' : 'rate set.');
+        },
         currentColour: currentColour,
         allowInherit: true,
         inheritLabel: 'Auto-vary from ' + household.name,
@@ -7759,84 +8236,68 @@ function subEntityDescription(modeId) {
    Both render only on Work mode with a client selected.
    ============================================================ */
 
-function renderTimerPanel(client) {
+function renderTimerPanel(scope) {
+  const { modeId, subId, memberId } = scope;
   const card = document.createElement('div');
   card.className = 'timer-panel';
-  const colourId = subColour('work', client.id);
+  const colourId = colourForScope(modeId, subId, memberId);
   card.style.setProperty('--timer-colour', colourCssValue(colourId));
   card.style.setProperty('--timer-colour-soft', colourCssSoft(colourId));
 
-  const timer = state.activeTimer;
-  const runningHere = timer && timer.clientId === client.id;
-  const runningElsewhere = timer && timer.clientId !== client.id;
+  const here = findActiveTimer(modeId, subId, memberId);
+  const otherTimers = (state.activeTimers || []).filter(t => t !== here);
+  const label = scopeName(modeId, subId, memberId);
 
   // 5b: Rate readout. Visible whether running or not so user knows what's
-  // being captured. "Set rate" is a quick path into the popover (still on
-  // long-press / right-click of the client pill, but the link is a hint).
-  const hasRate = typeof client.rate === 'number';
+  // being captured. Resolved via rateFor (member > sub > null).
+  const rate = rateFor(modeId, subId, memberId);
+  const hasRate = typeof rate === 'number';
   const rateBadge = hasRate
-    ? `<span class="timer-rate-badge">${escapeHtml(formatMoney(client.rate))}/hr</span>`
+    ? `<span class="timer-rate-badge">${escapeHtml(formatMoney(rate))}/hr</span>`
     : `<span class="timer-rate-badge no-rate">No rate set</span>`;
 
-  if (runningHere) {
-    const elapsed = activeTimerElapsedMs();
-    const startedDate = new Date(timer.startedAt);
+  if (here) {
+    const elapsed = activeTimerElapsedMs(here);
+    const startedDate = new Date(here.startedAt);
     const startedDisplay = formatTimeDisplay(startedDate);
+    const amount = activeTimerAmount(here);
+    const moneyHtml = amount != null
+      ? `<span class="timer-inline-money" id="timerInlineMoney" data-tid="${here.id}">${escapeHtml(formatMoney(amount))}</span>`
+      : '';
     card.classList.add('running');
     card.innerHTML = `
       <div class="timer-panel-row">
         <div class="timer-panel-left">
           <div class="timer-panel-label">Running ✦ since ${escapeHtml(startedDisplay)} ${rateBadge}</div>
-          <div class="timer-panel-time" id="timerInlineTime">${formatDurationClock(elapsed)}</div>
+          <div class="timer-panel-time-row">
+            <span class="timer-panel-time" id="timerInlineTime" data-tid="${here.id}">${formatDurationClock(elapsed)}</span>
+            ${moneyHtml}
+          </div>
         </div>
         <button class="timer-panel-btn stop" type="button" id="timerStopBtn">Stop</button>
       </div>
     `;
     card.querySelector('#timerStopBtn').onclick = () => {
-      stopTimer();
+      stopTimer(modeId, subId, memberId);
       render();
     };
-  } else if (runningElsewhere) {
-    const otherClient = getClient(timer.clientId);
-    const otherName = otherClient ? otherClient.name : 'another client';
-    card.innerHTML = `
-      <div class="timer-panel-row">
-        <div class="timer-panel-left">
-          <div class="timer-panel-label">Timer running on ${escapeHtml(otherName)} ${rateBadge}</div>
-          <div class="timer-panel-sub">Switching will bank that session.</div>
-        </div>
-        <button class="timer-panel-btn switch" type="button" id="timerSwitchBtn">Stop &amp; start here</button>
-      </div>
-    `;
-    card.querySelector('#timerSwitchBtn').onclick = () => {
-      openConfirmModal({
-        title: 'Switch timers?',
-        body: `Stop the timer on ${otherName} and start one for ${client.name}?`,
-        actions: [
-          { label: 'Cancel' },
-          {
-            label: 'Switch',
-            kind: 'primary',
-            onClick: () => {
-              startTimer(client.id);
-              render();
-            }
-          }
-        ]
-      });
-    };
   } else {
+    // No timer running on THIS scope. Multi-timer means we don't ask
+    // "switch?" - just start. Other timers keep running.
+    const otherInfo = otherTimers.length
+      ? `<div class="timer-panel-sub">${otherTimers.length} other timer${otherTimers.length === 1 ? '' : 's'} running. Tap the topbar pill to manage.</div>`
+      : `<div class="timer-panel-sub">Tap to start tracking time on ${escapeHtml(label)}.</div>`;
     card.innerHTML = `
       <div class="timer-panel-row">
         <div class="timer-panel-left">
-          <div class="timer-panel-label">No timer running ${rateBadge}</div>
-          <div class="timer-panel-sub">Tap to start tracking time on ${escapeHtml(client.name)}.</div>
+          <div class="timer-panel-label">No timer here ${rateBadge}</div>
+          ${otherInfo}
         </div>
         <button class="timer-panel-btn start" type="button" id="timerStartBtn">Start ✦</button>
       </div>
     `;
     card.querySelector('#timerStartBtn').onclick = () => {
-      startTimer(client.id);
+      startTimer(modeId, subId, memberId);
       render();
     };
   }
@@ -7844,21 +8305,19 @@ function renderTimerPanel(client) {
   return card;
 }
 
-function renderSessionsCard(client) {
+function renderSessionsCard(scope) {
+  const { modeId, subId, memberId } = scope;
   const card = document.createElement('div');
   card.className = 'candy candy-sessions';
-  const colourId = subColour('work', client.id);
+  const colourId = colourForScope(modeId, subId, memberId);
   card.style.setProperty('--tasks-inset', colourCssSoft(colourId));
 
-  const sessions = sessionsForClient(client.id).sort((a, b) => {
+  const sessions = sessionsForScope(modeId, subId, memberId).sort((a, b) => {
     const ae = new Date(a.endedAt || a.startedAt).getTime();
     const be = new Date(b.endedAt || b.startedAt).getTime();
     return be - ae;
   });
 
-  // Quick totals so the user has a feel for time logged on this client.
-  // 5b: Sum dollar amounts where rateAtTime exists. Sessions without a rate
-  // contribute to time totals but not money totals.
   const totalMs = sessions.reduce((acc, s) => acc + (s.durationMs || 0), 0);
   const unbilled = sessions.filter(s => !s.invoicedAt);
   const unbilledMs = unbilled.reduce((acc, s) => acc + (s.durationMs || 0), 0);
@@ -7877,19 +8336,27 @@ function renderSessionsCard(client) {
   const totalLabel = sessions.length
     ? `${sessions.length} session${sessions.length === 1 ? '' : 's'} · ${formatDurationCompact(totalMs)}${anyRated ? ' · ' + formatMoney(totalAmount) : ''}`
     : '';
-  const unbilledLabel = unbilledMs > 0
+  // 5c will treat "unbilled" as Work-only. For other modes the same data shows
+  // as just "of which N is uninvoiced" but conceptually it's the same thing.
+  const unbilledLabel = unbilledMs > 0 && modeId === 'work'
     ? ` · <span class="sessions-unbilled-label">${formatDurationCompact(unbilledMs)}${anyUnbilledRated ? ' / ' + formatMoney(unbilledAmount) : ''} unbilled</span>`
     : '';
 
-  card.innerHTML = `<span class="card-label">Sessions ✦ ${escapeHtml(client.name)}${totalLabel ? ' · ' + totalLabel : ''}${unbilledLabel}</span>`;
+  const label = scopeName(modeId, subId, memberId);
+  card.innerHTML = `
+    <span class="card-label">Sessions ✦ ${escapeHtml(label)}${totalLabel ? ' · ' + totalLabel : ''}${unbilledLabel}</span>
+    <button class="pill-btn small sessions-add-btn" type="button" id="sessionsAddBtn">+ session</button>
+  `;
+  card.querySelector('#sessionsAddBtn').onclick = () => openManualSessionDialog(scope);
 
   if (!sessions.length) {
-    card.innerHTML += `<div class="empty">No sessions yet <span class="sparkle">✦</span> Start a timer when you begin.</div>`;
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = `No sessions yet <span class="sparkle">✦</span> Start a timer when you begin, or add one manually.`;
+    card.appendChild(empty);
     return card;
   }
 
-  // Show the 12 most recent. Older ones live in the data but the UI keeps
-  // it scannable. (5c will add an "all sessions" view per client.)
   const visible = sessions.slice(0, 12);
   const list = document.createElement('ul');
   list.className = 'session-list';
@@ -7924,8 +8391,6 @@ function renderSessionRow(session) {
     ? `<span class="session-tag">invoiced</span>`
     : '';
 
-  // 5b: Money pill. Shows amount if rateAtTime is set; otherwise a tappable
-  // "+ rate" affordance so the user can backfill a missing rate.
   const amount = sessionAmount(session);
   const moneyHtml = amount != null
     ? `<button class="session-money" type="button" data-act="edit-rate" title="Edit rate (currently ${escapeHtml(formatMoney(session.rateAtTime))}/hr)">${escapeHtml(formatMoney(amount))}</button>`
@@ -7970,14 +8435,10 @@ function renderSessionRow(session) {
         ]
       });
     } else {
-      const snap = { ...session };
+      // 5b': Sessions go to the recycle bin (24h grace) so the undo toast
+      // becomes "go to bin to restore" rather than the only chance.
       deleteSession(session.id);
-      undoToast('Session deleted.', () => {
-        state.sessions = state.sessions || [];
-        state.sessions.push(snap);
-        saveState();
-        render();
-      });
+      undoToast('Session sent to bin.', () => restoreSession(session.id));
       render();
     }
   };
@@ -7990,8 +8451,7 @@ function renderSessionRow(session) {
 function promptSessionNote(sessionId) {
   const session = (state.sessions || []).find(s => s.id === sessionId);
   if (!session) return;
-  const client = getClient(session.clientId);
-  const clientName = client ? client.name : 'this session';
+  const label = scopeName(session.modeId, session.subId, session.memberId);
 
   document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
 
@@ -8005,7 +8465,7 @@ function promptSessionNote(sessionId) {
   modal.className = 'confirm-modal';
   modal.innerHTML = `
     <h4>Session note</h4>
-    <p style="margin-bottom:10px;">One line for ${escapeHtml(clientName)}.</p>
+    <p style="margin-bottom:10px;">One line for ${escapeHtml(label)}.</p>
     <input type="text" class="text-input" id="sessNoteInput"
            value="${escapeHtml(session.note || '')}"
            placeholder="drafted OMG email"
@@ -8049,16 +8509,15 @@ function promptSessionNote(sessionId) {
 }
 
 // 5b: Per-session rate override. Pre-populated with rateAtTime, or with
-// the client's current rate if the session was unrated. Empty = clear (unrated).
+// the scope's current rate if the session was unrated. Empty = clear (unrated).
 function promptSessionRate(sessionId) {
   const session = (state.sessions || []).find(s => s.id === sessionId);
   if (!session) return;
-  const client = getClient(session.clientId);
-  const clientName = client ? client.name : 'this session';
+  const label = scopeName(session.modeId, session.subId, session.memberId);
+  const currentScopeRate = rateFor(session.modeId, session.subId, session.memberId);
   const fallback = (typeof session.rateAtTime === 'number')
     ? session.rateAtTime
-    : (client && typeof client.rate === 'number' ? client.rate : '');
-  const clientCurrent = (client && typeof client.rate === 'number') ? client.rate : null;
+    : (typeof currentScopeRate === 'number' ? currentScopeRate : '');
 
   document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
 
@@ -8070,9 +8529,9 @@ function promptSessionRate(sessionId) {
 
   const modal = document.createElement('div');
   modal.className = 'confirm-modal';
-  const hintLine = clientCurrent != null
-    ? `${escapeHtml(clientName)}'s current rate: ${escapeHtml(formatMoney(clientCurrent))}/hr.`
-    : `${escapeHtml(clientName)} has no rate set.`;
+  const hintLine = currentScopeRate != null
+    ? `${escapeHtml(label)}'s current rate: ${escapeHtml(formatMoney(currentScopeRate))}/hr.`
+    : `${escapeHtml(label)} has no rate set.`;
   modal.innerHTML = `
     <h4>Session rate</h4>
     <p style="margin-bottom:6px;">${hintLine}</p>
@@ -8130,6 +8589,317 @@ function promptSessionRate(sessionId) {
     if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
   });
   setTimeout(() => { input.focus(); input.select(); }, 30);
+}
+
+// 5b': Manual session add. Date + start + end, plus optional note and rate.
+// Used to backfill sessions that weren't tracked in real time.
+function openManualSessionDialog(scope) {
+  document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
+  const label = scopeName(scope.modeId, scope.subId, scope.memberId);
+  const scopeRate = rateFor(scope.modeId, scope.subId, scope.memberId);
+
+  // Default to today, current hour rounded down for end, and one hour earlier for start.
+  const now = new Date();
+  const todayIso = now.toISOString().slice(0, 10);
+  const endHour = now.getHours();
+  const endMin = 0;
+  const startHour = Math.max(0, endHour - 1);
+  const pad = n => String(n).padStart(2, '0');
+  const defaultEnd = `${pad(endHour)}:${pad(endMin)}`;
+  const defaultStart = `${pad(startHour)}:${pad(endMin)}`;
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'confirm-backdrop';
+  backdrop.setAttribute('role', 'dialog');
+  backdrop.setAttribute('aria-modal', 'true');
+  backdrop.setAttribute('aria-label', 'Add session manually');
+
+  const modal = document.createElement('div');
+  modal.className = 'confirm-modal manual-session-modal';
+  modal.innerHTML = `
+    <h4>Add a session</h4>
+    <p style="margin-bottom:14px;">Backfill a session for ${escapeHtml(label)}.</p>
+    <div class="manual-session-row">
+      <label class="manual-session-label">Date</label>
+      <input type="date" class="text-input" id="msDate" value="${todayIso}" />
+    </div>
+    <div class="manual-session-row two-col">
+      <div>
+        <label class="manual-session-label">Start</label>
+        <input type="time" class="text-input" id="msStart" value="${defaultStart}" />
+      </div>
+      <div>
+        <label class="manual-session-label">End</label>
+        <input type="time" class="text-input" id="msEnd" value="${defaultEnd}" />
+      </div>
+    </div>
+    <div class="manual-session-row">
+      <label class="manual-session-label">Note (optional)</label>
+      <input type="text" class="text-input" id="msNote" maxlength="120" placeholder="drafted OMG email" />
+    </div>
+    <div class="manual-session-row">
+      <label class="manual-session-label">Rate (AUD, optional)</label>
+      <input type="number" class="text-input" id="msRate" min="0" step="any" inputmode="decimal"
+             value="${typeof scopeRate === 'number' ? scopeRate : ''}"
+             placeholder="${typeof scopeRate === 'number' ? '' : 'no rate'}" />
+    </div>
+    <div class="confirm-actions">
+      <button class="pill-btn" type="button" id="msCancel">Cancel</button>
+      <button class="pill-btn primary" type="button" id="msSave">Add session</button>
+    </div>
+    <div class="manual-session-error" id="msError" style="display:none;"></div>
+  `;
+  backdrop.appendChild(modal);
+
+  backdrop.addEventListener('click', (ev) => {
+    if (ev.target === backdrop) backdrop.remove();
+  });
+  const onKey = (ev) => {
+    if (ev.key === 'Escape') {
+      backdrop.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+  };
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(backdrop);
+
+  const errEl = modal.querySelector('#msError');
+  const showErr = (msg) => {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  };
+
+  modal.querySelector('#msCancel').onclick = () => {
+    backdrop.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  modal.querySelector('#msSave').onclick = () => {
+    const dateVal = modal.querySelector('#msDate').value;
+    const startVal = modal.querySelector('#msStart').value;
+    const endVal = modal.querySelector('#msEnd').value;
+    const noteVal = modal.querySelector('#msNote').value.trim();
+    const rateRaw = modal.querySelector('#msRate').value.trim();
+    if (!dateVal || !startVal || !endVal) {
+      showErr('Fill in date, start and end.');
+      return;
+    }
+    const startedAt = new Date(`${dateVal}T${startVal}`).toISOString();
+    const endedAt = new Date(`${dateVal}T${endVal}`).toISOString();
+    if (new Date(endedAt).getTime() <= new Date(startedAt).getTime()) {
+      showErr('End must be after start.');
+      return;
+    }
+    const rateAtTime = rateRaw === '' ? null : parseFloat(rateRaw);
+    addManualSession(scope, {
+      startedAt, endedAt, note: noteVal,
+      rateAtTime: (rateAtTime != null && !isNaN(rateAtTime)) ? rateAtTime : null
+    });
+    backdrop.remove();
+    document.removeEventListener('keydown', onKey);
+    toast('Session added.');
+    render();
+  };
+
+  setTimeout(() => modal.querySelector('#msStart').focus(), 30);
+}
+
+// 5b': Topbar pill mini-menu. Open / Edit rate / Stop.
+function openTimerPillMenu(anchorEl, timerId) {
+  document.querySelectorAll('.timer-pill-menu').forEach(el => el.remove());
+  const t = (state.activeTimers || []).find(x => x.id === timerId);
+  if (!t) return;
+  const label = scopeName(t.modeId, t.subId, t.memberId);
+  const rate = rateFor(t.modeId, t.subId, t.memberId);
+  const rateLine = rate != null ? `${formatMoney(rate)}/hr` : 'No rate set';
+
+  const menu = document.createElement('div');
+  menu.className = 'timer-pill-menu';
+  menu.innerHTML = `
+    <div class="timer-pill-menu-header">
+      <div class="timer-pill-menu-name">${escapeHtml(label)}</div>
+      <div class="timer-pill-menu-rate">${escapeHtml(rateLine)}</div>
+    </div>
+    <button class="timer-pill-menu-btn" data-act="open" type="button">Open ${escapeHtml(label)}</button>
+    <button class="timer-pill-menu-btn" data-act="rate" type="button">Edit rate</button>
+    <button class="timer-pill-menu-btn danger" data-act="stop" type="button">Stop ✦ bank session</button>
+  `;
+  // Position below the anchor.
+  const rect = anchorEl.getBoundingClientRect();
+  menu.style.position = 'absolute';
+  menu.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  menu.style.left = (rect.left + window.scrollX) + 'px';
+
+  document.body.appendChild(menu);
+  // Outside-click closes
+  setTimeout(() => {
+    document.addEventListener('click', function once(ev) {
+      if (menu.contains(ev.target)) return;
+      menu.remove();
+      document.removeEventListener('click', once);
+    });
+  }, 0);
+
+  menu.querySelector('[data-act="open"]').onclick = () => {
+    menu.remove();
+    state.currentMode = t.modeId;
+    state.currentSubId = t.subId;
+    state.currentMemberId = t.memberId || null;
+    state.currentTier = 'now';
+    saveState();
+    render();
+    window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
+  };
+  menu.querySelector('[data-act="rate"]').onclick = () => {
+    menu.remove();
+    promptScopeRate(t.modeId, t.subId, t.memberId);
+  };
+  menu.querySelector('[data-act="stop"]').onclick = () => {
+    menu.remove();
+    stopTimer(t.modeId, t.subId, t.memberId);
+    render();
+  };
+}
+
+// 5b': Edit a sub-entity / member's rate from any context (topbar pill menu, etc).
+function promptScopeRate(modeId, subId, memberId) {
+  const isMember = !!memberId;
+  const sub = getSubEntityFor(modeId, subId);
+  const member = getMemberFor(modeId, subId, memberId);
+  const target = isMember ? member : sub;
+  if (!target) return;
+  const label = scopeName(modeId, subId, memberId);
+  const current = (typeof target.rate === 'number') ? target.rate : '';
+
+  document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
+  const backdrop = document.createElement('div');
+  backdrop.className = 'confirm-backdrop';
+  backdrop.setAttribute('role', 'dialog');
+  backdrop.setAttribute('aria-modal', 'true');
+
+  const modal = document.createElement('div');
+  modal.className = 'confirm-modal';
+  modal.innerHTML = `
+    <h4>${escapeHtml(label)}'s rate</h4>
+    <p style="margin-bottom:10px;font-size:13px;color:var(--mute);">Hourly rate (AUD). Empty means no rate.</p>
+    <input type="number" class="text-input" id="scopeRateInput"
+           min="0" step="any" inputmode="decimal"
+           value="${current}" placeholder="e.g. 80"
+           style="width:100%;margin-bottom:14px;" />
+    <div class="confirm-actions">
+      <button class="pill-btn" type="button" id="scopeRateCancel">Cancel</button>
+      <button class="pill-btn primary" type="button" id="scopeRateSave">Save</button>
+    </div>
+  `;
+  backdrop.appendChild(modal);
+
+  backdrop.addEventListener('click', (ev) => {
+    if (ev.target === backdrop) backdrop.remove();
+  });
+  const onKey = (ev) => {
+    if (ev.key === 'Escape') {
+      backdrop.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+  };
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(backdrop);
+  const input = modal.querySelector('#scopeRateInput');
+  modal.querySelector('#scopeRateCancel').onclick = () => {
+    backdrop.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const commit = () => {
+    const raw = input.value.trim();
+    if (raw === '') {
+      target.rate = null;
+    } else {
+      const n = parseFloat(raw);
+      if (!isNaN(n) && n >= 0) target.rate = n;
+    }
+    saveState();
+    backdrop.remove();
+    document.removeEventListener('keydown', onKey);
+    render();
+    toast('rate saved.');
+  };
+  modal.querySelector('#scopeRateSave').onclick = commit;
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+  });
+  setTimeout(() => { input.focus(); input.select(); }, 30);
+}
+
+// 5b': "+N" overflow pill opens a panel listing every running timer.
+function openAllTimersPanel(anchorEl) {
+  document.querySelectorAll('.timer-pill-menu').forEach(el => el.remove());
+  const timers = (state.activeTimers || []).slice();
+  if (!timers.length) return;
+
+  const menu = document.createElement('div');
+  menu.className = 'timer-pill-menu wide';
+  menu.innerHTML = `
+    <div class="timer-pill-menu-header">
+      <div class="timer-pill-menu-name">${timers.length} timers running</div>
+    </div>
+  `;
+  timers.forEach(t => {
+    const elapsed = activeTimerElapsedMs(t);
+    const amount = activeTimerAmount(t);
+    const label = scopeName(t.modeId, t.subId, t.memberId);
+    const colourId = colourForScope(t.modeId, t.subId, t.memberId);
+    const row = document.createElement('div');
+    row.className = 'timer-pill-row';
+    row.innerHTML = `
+      <span class="timer-pill-row-dot" style="background: ${colourCssValue(colourId)};"></span>
+      <span class="timer-pill-row-name">${escapeHtml(label)}</span>
+      <span class="timer-pill-row-time">${escapeHtml(formatDurationClock(elapsed))}</span>
+      <span class="timer-pill-row-money">${amount != null ? escapeHtml(formatMoney(amount)) : ''}</span>
+      <button class="timer-pill-row-stop" type="button">Stop</button>
+    `;
+    row.querySelector('.timer-pill-row-stop').onclick = () => {
+      stopTimer(t.modeId, t.subId, t.memberId);
+      menu.remove();
+      render();
+    };
+    row.addEventListener('click', (ev) => {
+      if (ev.target.closest('.timer-pill-row-stop')) return;
+      menu.remove();
+      state.currentMode = t.modeId;
+      state.currentSubId = t.subId;
+      state.currentMemberId = t.memberId || null;
+      state.currentTier = 'now';
+      saveState();
+      render();
+    });
+    menu.appendChild(row);
+  });
+
+  // Stop-all action
+  const stopAllRow = document.createElement('div');
+  stopAllRow.className = 'timer-pill-stopall';
+  stopAllRow.innerHTML = `<button class="pill-btn small" type="button">Stop all and bank</button>`;
+  stopAllRow.querySelector('button').onclick = () => {
+    stopAllTimers();
+    menu.remove();
+    render();
+  };
+  menu.appendChild(stopAllRow);
+
+  const rect = anchorEl.getBoundingClientRect();
+  menu.style.position = 'absolute';
+  menu.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  menu.style.right = (window.innerWidth - rect.right - window.scrollX) + 'px';
+
+  document.body.appendChild(menu);
+  setTimeout(() => {
+    document.addEventListener('click', function once(ev) {
+      if (menu.contains(ev.target)) return;
+      menu.remove();
+      document.removeEventListener('click', once);
+    });
+  }, 0);
 }
 
 /* ============================================================
@@ -9056,14 +9826,34 @@ function renderRecycleBinList(host) {
     const row = document.createElement('div');
     row.className = 'bin-row';
     const isExpanded = state._binExpanded === entry.item.id;
-    const itemLabel = entry.kind === 'task'
-      ? (entry.item.text || '(untitled task)')
-      : (entry.item.title || '(untitled event)');
-    const kindLabel = entry.kind === 'task' ? 'Task' : 'Event';
+    let itemLabel = '';
+    let kindLabel = '';
+    if (entry.kind === 'task') {
+      itemLabel = entry.item.text || '(untitled task)';
+      kindLabel = 'Task';
+    } else if (entry.kind === 'event') {
+      itemLabel = entry.item.title || '(untitled event)';
+      kindLabel = 'Event';
+    } else if (entry.kind === 'session') {
+      // 5b': Show scope name + duration so it's identifiable.
+      const sess = entry.item;
+      const sLabel = scopeName(sess.modeId, sess.subId, sess.memberId);
+      const dur = formatDurationCompact(sess.durationMs);
+      const noteBit = sess.note ? ' · ' + sess.note : '';
+      itemLabel = `${sLabel} · ${dur}${noteBit}`;
+      kindLabel = 'Session';
+    } else if (entry.kind === 'invoice') {
+      const inv = entry.item;
+      itemLabel = `Invoice ${formatMoney(inv.totalAmount || 0)}`;
+      kindLabel = 'Invoice';
+    } else {
+      itemLabel = '(unknown)';
+      kindLabel = entry.kind;
+    }
 
     row.innerHTML = `
       <button class="bin-row-summary" type="button" data-idx="${idx}">
-        <span class="bin-row-kind">${kindLabel}</span>
+        <span class="bin-row-kind">${escapeHtml(kindLabel)}</span>
         <span class="bin-row-text">${escapeHtml(itemLabel)}</span>
         <span class="bin-row-age">${escapeHtml(formatBinAge(entry.deletedAt))}</span>
       </button>
@@ -9092,8 +9882,18 @@ function renderRecycleBinList(host) {
       row.querySelector('.bin-restore').onclick = () => {
         if (entry.kind === 'task') {
           restoreTask(entry.item.id);
-        } else {
+        } else if (entry.kind === 'event') {
           restoreEvent(entry.item.id);
+        } else if (entry.kind === 'session') {
+          restoreSession(entry.item.id);
+        } else if (entry.kind === 'invoice') {
+          // Restore invoice: put back into state.invoices.
+          state.invoices = state.invoices || [];
+          state.invoices.push(entry.item);
+          state.recycleBin = state.recycleBin.filter(e =>
+            !(e.kind === 'invoice' && e.item && e.item.id === entry.item.id)
+          );
+          saveState();
         }
         state._binExpanded = null;
         toast('restored.');
@@ -9136,12 +9936,12 @@ function openColourPopover(anchorEl, opts) {
   // 5b: Optional rate section (Work clients)
   const rateHtml = opts.onRate ? `
     <div class="popover-section">
-      <div class="popover-section-label">Hourly rate (AUD)</div>
+      <div class="popover-section-label">${escapeHtml(opts.rateLabel || 'Hourly rate (AUD)')}</div>
       <input type="number" class="popover-rename-input" id="popRate"
              min="0" step="any" inputmode="decimal"
              value="${opts.rateValue != null ? opts.rateValue : ''}"
              placeholder="e.g. 80" />
-      <div class="popover-section-hint">Blank means no rate. Sessions without a rate show no dollar amount.</div>
+      <div class="popover-section-hint">${escapeHtml(opts.rateHint || 'Blank means no rate.')}</div>
     </div>
   ` : '';
 
@@ -10169,19 +10969,22 @@ function render() {
   // Wire top-bar buttons
   document.getElementById('brandBtn').onclick = () => setMode('dashboard');
   document.getElementById('settingsBtn').onclick = openSettingsDrawer;
-  // 5a: Timer indicator (only present when a timer is running)
-  const timerInd = document.getElementById('timerIndicator');
-  if (timerInd && state.activeTimer) {
-    timerInd.onclick = () => {
-      // Jump to that client's Work view. Set state directly because setMode()
-      // would clear currentSubId.
-      state.currentMode = 'work';
-      state.currentSubId = state.activeTimer.clientId;
-      state.currentMemberId = null;
-      state.currentTier = 'now';
-      saveState();
-      render();
-      window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
+
+  // 5b': Wire each timer indicator pill. Tap opens the mini-menu (Open /
+  // Edit rate / Stop). The "+N" overflow pill opens the running timers
+  // drawer so the user can see all of them.
+  document.querySelectorAll('.timer-indicator[data-tid]').forEach(btn => {
+    const tid = btn.dataset.tid;
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      openTimerPillMenu(btn, tid);
+    };
+  });
+  const moreBtn = document.getElementById('timerIndicatorMore');
+  if (moreBtn) {
+    moreBtn.onclick = (ev) => {
+      ev.stopPropagation();
+      openAllTimersPanel(moreBtn);
     };
   }
 
@@ -10234,16 +11037,45 @@ setInterval(() => {
   }
 }, 30000);
 
-// 5a: Update the running timer indicator text every second. Cheap DOM update,
-// no re-render. The indicator is only present when a timer is running, so
-// most of the time this loop does nothing.
+// 5b': Update every running timer indicator. Cheap DOM updates, no re-render.
+// Each pill has its own data-tid-time / data-tid-money element that we can
+// update in place. The inline timer panel on the active client uses
+// timerInlineTime/timerInlineMoney for the same purpose.
 setInterval(() => {
-  if (!state.activeTimer) return;
-  const el = document.getElementById('timerIndicatorTime');
-  if (el) el.textContent = formatDurationClock(activeTimerElapsedMs());
-  // Also update the inline live timer on the Work mode page if it's there.
-  const inline = document.getElementById('timerInlineTime');
-  if (inline) inline.textContent = formatDurationClock(activeTimerElapsedMs());
+  const timers = state.activeTimers || [];
+  if (!timers.length) return;
+  timers.forEach(t => {
+    const elapsed = activeTimerElapsedMs(t);
+    const timeEl = document.querySelector(`[data-tid-time="${t.id}"]`);
+    if (timeEl) timeEl.textContent = formatDurationClock(elapsed);
+    const moneyEl = document.querySelector(`[data-tid-money="${t.id}"]`);
+    if (moneyEl) {
+      const amt = activeTimerAmount(t);
+      moneyEl.textContent = amt != null ? formatMoney(amt) : '';
+    }
+    // The pill itself shows money in a span without data-tid-money, so update by tid:
+    const pillMoney = document.querySelector(`.timer-indicator[data-tid="${t.id}"] .timer-indicator-money`);
+    if (pillMoney) {
+      const amt = activeTimerAmount(t);
+      pillMoney.textContent = amt != null ? formatMoney(amt) : '';
+    }
+  });
+  // Inline panel (Work mode active client view) also has its own ids.
+  const inlineTime = document.getElementById('timerInlineTime');
+  if (inlineTime) {
+    const tid = inlineTime.dataset.tid;
+    const t = timers.find(x => x.id === tid);
+    if (t) inlineTime.textContent = formatDurationClock(activeTimerElapsedMs(t));
+  }
+  const inlineMoney = document.getElementById('timerInlineMoney');
+  if (inlineMoney) {
+    const tid = inlineMoney.dataset.tid;
+    const t = timers.find(x => x.id === tid);
+    if (t) {
+      const amt = activeTimerAmount(t);
+      inlineMoney.textContent = amt != null ? formatMoney(amt) : '';
+    }
+  }
 }, TIMER_TICK_MS);
 
 /* ============================================================
