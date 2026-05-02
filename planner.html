@@ -3743,429 +3743,344 @@ body.calm-mode {
   display: block;
   margin-bottom: 4px;
 }
-
 /* ==========================================================
-   5a: TIMER INDICATOR (topbar) + TIMER PANEL + SESSIONS (Phase 2)
+   LISTS LANDING + BOARD GAMES VIEW
    ========================================================== */
 
-/* Topbar running-timer pill. Sits next to Settings button. Inherits the
-   client's colour via --sub-colour. Tappable, jumps to that client's view. */
-.timer-indicator {
-  --sub-colour: var(--pink);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--sub-colour);
-  color: var(--cream);
-  border: none;
-  border-radius: 100px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  max-width: 240px;
+/* --- Lists landing grid --- */
+.lists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 4px;
 }
-.timer-indicator.dark-text { color: var(--ink); }
-.timer-indicator:hover { transform: translate(-1px, -1px); box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink); }
-.timer-indicator:active { transform: translate(1px, 1px); box-shadow: 0 0 0 2px var(--ink); }
 
-.timer-indicator-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.list-card {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 22px 20px;
   background: var(--cream);
-  box-shadow: 0 0 0 1.5px var(--ink);
-  flex-shrink: 0;
-  animation: timer-dot-pulse 1.6s ease-in-out infinite;
+  border: none;
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 2.5px var(--ink), 5px 5px 0 var(--pink);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
-.timer-indicator.dark-text .timer-indicator-dot { background: var(--ink); }
 
-@keyframes timer-dot-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.85); }
+.list-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 0 0 0 2.5px var(--ink), 7px 7px 0 var(--pink);
 }
 
-body.reduced-motion .timer-indicator-dot { animation: none; }
+.list-card:focus-visible {
+  outline: 3px solid var(--pink);
+  outline-offset: 4px;
+}
 
-.timer-indicator-name {
+.list-card-glyph {
+  font-family: 'DM Mono', monospace;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--pink);
+  flex: 0 0 auto;
+}
+
+.list-card-body { flex: 1; min-width: 0; }
+
+.list-card-name {
   font-family: 'Fraunces', serif;
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 110px;
+  font-size: 22px;
+  color: var(--ink);
+  margin-bottom: 6px;
 }
 
-.timer-indicator-time {
+.list-card-blurb {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--mute);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.list-card-count {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  background: rgba(255, 247, 229, 0.32);
-  padding: 2px 8px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--pink-cream);
+  padding: 3px 8px;
   border-radius: 100px;
-}
-.timer-indicator.dark-text .timer-indicator-time {
-  background: rgba(26, 14, 26, 0.18);
+  display: inline-block;
 }
 
-/* Inline timer panel on a Work client's mode page. */
-.timer-panel {
-  --timer-colour: var(--pink);
-  --timer-colour-soft: var(--pink-cream);
-  background: var(--cream);
-  border-radius: var(--r-md);
-  padding: 14px 18px;
-  margin-bottom: 18px;
-  box-shadow:
-    inset 0 0 0 2px var(--timer-colour-soft),
-    0 0 0 2.5px var(--ink),
-    3px 3px 0 var(--ink);
+/* --- Board Games: back row --- */
+.bg-back-row {
+  margin: 12px 0 16px;
 }
 
-.timer-panel.running {
-  background: var(--timer-colour-soft);
-  box-shadow:
-    inset 0 0 0 2px var(--timer-colour),
-    0 0 0 2.5px var(--ink),
-    3px 3px 0 var(--timer-colour);
+.bg-back-btn {
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease);
 }
 
-.timer-panel-row {
+.bg-back-btn:hover {
+  transform: translate(-1px, -1px);
+  background: var(--cream-2);
+}
+
+/* --- Filter card --- */
+.bg-filter-card {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.bg-filter-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 12px;
   flex-wrap: wrap;
+  padding: 10px 0;
+  border-top: 1px dashed rgba(26, 14, 26, 0.18);
 }
 
-.timer-panel-left {
+.bg-filter-row:first-of-type { border-top: none; padding-top: 4px; }
+
+.bg-filter-label {
+  flex: 0 0 70px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding-top: 7px;
+}
+
+.bg-search {
   flex: 1;
-  min-width: 160px;
+  min-width: 180px;
+  background: var(--cream);
+  border: 1.5px solid var(--ink);
+  border-radius: 100px;
+  padding: 8px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
 }
 
-.timer-panel-label {
+.bg-search:focus {
+  outline: 3px solid var(--pink);
+  outline-offset: 2px;
+}
+
+.bg-stepper {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  background: var(--cream);
+  border: 1.5px solid var(--ink);
+  border-radius: 100px;
+  padding: 3px;
+}
+
+.bg-stepper-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 38px;
+  min-height: 30px;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.bg-stepper-btn:hover {
+  background: var(--pink-cream);
+}
+
+.bg-stepper-btn.active {
+  background: var(--pink);
+  color: var(--cream);
+}
+
+.bg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bg-tag-chip {
+  background: var(--cream);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  border-radius: 100px;
+  padding: 5px 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.bg-tag-chip:hover { transform: translate(-1px, -1px); background: var(--pink-cream); }
+
+.bg-tag-chip.active {
+  background: var(--pink);
+  color: var(--cream);
+  border-color: var(--ink);
+}
+
+.bg-chip-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  background: rgba(26, 14, 26, 0.12);
+  padding: 1px 6px;
+  border-radius: 100px;
+  color: var(--ink);
+}
+
+.bg-tag-chip.active .bg-chip-count {
+  background: rgba(255, 243, 232, 0.25);
+  color: var(--cream);
+}
+
+.bg-duration-chip {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 12px;
+  line-height: 1.2;
+}
+
+.bg-chip-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--mute);
+  text-transform: uppercase;
+}
+
+.bg-tag-chip.active .bg-chip-sub { color: var(--pink-cream); }
+
+.bg-filter-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(26, 14, 26, 0.18);
+}
+
+/* --- Results --- */
+.bg-results-summary {
+  margin: 6px 4px 14px;
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--mute);
 }
-.timer-panel.running .timer-panel-label { color: var(--ink); }
 
-.timer-panel-sub {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  color: var(--mute);
-  margin-top: 2px;
+.bg-results-count { color: var(--ink); }
+
+.bg-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
 }
 
-.timer-panel-time {
-  font-family: 'DM Mono', monospace;
-  font-size: 32px;
+@media (min-width: 760px) {
+  .bg-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.bg-game-card {
+  padding: 20px 22px;
+}
+
+.bg-game-name {
+  font-family: 'Fraunces', serif;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  line-height: 1.2;
   color: var(--ink);
-  margin-top: 4px;
-  letter-spacing: -0.01em;
+  margin: 0 0 4px;
 }
 
-.timer-panel-btn {
-  padding: 12px 22px;
-  border: none;
-  border-radius: 100px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  min-height: 44px;
-  letter-spacing: 0.02em;
-}
-.timer-panel-btn:hover { transform: translate(-1px, -1px); box-shadow: 0 0 0 2px var(--ink), 4px 4px 0 var(--ink); }
-.timer-panel-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 2px var(--ink); }
-
-.timer-panel-btn.start {
-  background: var(--timer-colour);
-  color: var(--cream);
-}
-.timer-panel-btn.stop {
-  background: var(--ink);
-  color: var(--cream);
-}
-.timer-panel-btn.switch {
-  background: var(--cream);
-  color: var(--ink);
-}
-
-/* Sessions card. Same shape as the tasks card so they sit next to each
-   other coherently. Uses --tasks-inset so it picks up the client colour. */
-.candy-sessions {
-  box-shadow:
-    inset 0 0 0 2px var(--tasks-inset, var(--pink-cream)),
-    0 0 0 2.5px var(--ink),
-    5px 5px 0 var(--ink);
-  margin-bottom: 22px;
-}
-
-.session-list {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-}
-
-.session-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 0;
-  border-bottom: 1.5px dashed var(--rule);
-}
-.session-row:last-child { border-bottom: none; }
-
-.session-row.invoiced {
-  opacity: 0.7;
-}
-
-.session-row-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.session-row-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--mute);
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
-}
-
-.session-date {
-  color: var(--ink);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.session-times { font-variant-numeric: tabular-nums; }
-
-.session-dur {
-  background: var(--ink);
-  color: var(--butter);
-  padding: 2px 8px;
-  border-radius: 100px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.session-tag {
-  background: var(--cream-2);
-  color: var(--ink);
-  padding: 2px 8px;
-  border-radius: 100px;
+.bg-game-publisher {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 600;
-}
-
-.session-row-note {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  color: var(--ink);
-  line-height: 1.4;
-}
-
-.session-note { display: inline; }
-
-.session-note-add {
-  background: transparent;
-  border: 1.5px dashed var(--rule);
-  color: var(--mute);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
   letter-spacing: 0.05em;
-  padding: 4px 10px;
-  border-radius: 100px;
-  cursor: pointer;
-  min-height: 24px;
-  position: relative;
-}
-.session-note-add::before {
-  content: '';
-  position: absolute;
-  inset: -10px;
-}
-.session-note-add:hover {
-  border-color: var(--ink);
-  color: var(--ink);
+  color: var(--mute);
+  margin-bottom: 12px;
 }
 
-.session-row-actions {
+.bg-game-stats {
   display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.session-edit-btn,
-.session-del-btn {
-  background: transparent;
-  border: none;
-  color: var(--mute);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 6px;
-  position: relative;
-  min-width: 28px;
-  min-height: 28px;
-}
-.session-edit-btn::before,
-.session-del-btn::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-}
-.session-edit-btn:hover { color: var(--ink); background: var(--cream-2); }
-.session-del-btn:hover { color: var(--pink-deep); background: var(--cream-2); }
-
-.session-more {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--mute);
-  letter-spacing: 0.05em;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1.5px dashed var(--rule);
-  text-align: center;
-}
-
-/* Generic single-line text input used by session-note dialog. */
-.text-input {
-  background: var(--cream);
-  border: none;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--pink-cream);
   border-radius: var(--r-sm);
-  padding: 12px 14px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  color: var(--ink);
-  box-shadow: 0 0 0 2px var(--ink);
-  outline: none;
-  min-height: 44px;
-}
-.text-input:focus { box-shadow: 0 0 0 2px var(--ink), 3px 3px 0 var(--pink); }
-.text-input::placeholder { color: var(--mute); }
-
-/* "+ note" action button injected into the banked toast. */
-.toast-action {
-  display: inline-block;
-  background: var(--cream);
-  color: var(--ink);
-  border: none;
-  border-radius: 100px;
-  padding: 4px 12px;
-  margin-left: 12px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.05em;
+  font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 0 0 1.5px var(--ink);
-}
-.toast-action:hover {
-  background: var(--butter);
-}
-
-/* ==========================================================
-   5b: RATE + MONEY DISPLAY (Phase 2)
-   ========================================================== */
-
-/* Rate readout in the timer panel. Sits inline with the panel label. */
-.timer-rate-badge {
-  display: inline-block;
-  background: var(--ink);
-  color: var(--butter);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 2px 9px;
-  border-radius: 100px;
-  margin-left: 8px;
-  font-variant-numeric: tabular-nums;
-}
-.timer-rate-badge.no-rate {
-  background: transparent;
-  color: var(--mute);
-  border: 1.5px dashed var(--rule);
-  padding: 1px 8px;
-}
-
-/* $ amount pill on each session row. Tappable, opens the rate dialog.
-   "+ rate" variant when no rate is set yet. */
-.session-money {
-  background: var(--cream-2);
   color: var(--ink);
-  border: none;
+}
+
+.bg-stat { white-space: nowrap; }
+
+.bg-stat-label {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  padding: 2px 9px;
-  border-radius: 100px;
-  cursor: pointer;
-  box-shadow: 0 0 0 1.5px var(--ink);
-  font-variant-numeric: tabular-nums;
-  position: relative;
-  min-height: 22px;
-}
-.session-money::before {
-  content: '';
-  position: absolute;
-  inset: -10px;
-}
-.session-money:hover {
-  background: var(--butter);
-}
-.session-money.no-rate {
-  background: transparent;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--mute);
-  box-shadow: none;
-  border: 1.5px dashed var(--rule);
-  padding: 1px 8px;
+  margin-right: 4px;
   font-weight: 500;
 }
-.session-money.no-rate:hover {
-  border-color: var(--ink);
-  color: var(--ink);
-  background: transparent;
+
+.bg-game-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-bottom: 12px;
 }
 
-/* Unbilled label in the sessions card header. Slightly stronger so it
-   stands out as the actionable bit. */
-.sessions-unbilled-label {
-  color: var(--ink);
-  font-weight: 700;
-}
-
-/* Hint text under the rate input in the popover. */
-.popover-section-hint {
+.bg-game-tag {
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;
-  color: var(--mute);
-  line-height: 1.4;
-  margin-top: 4px;
+  background: var(--cream-2);
+  color: var(--ink);
+  border-radius: 100px;
+  padding: 2px 9px;
+  border: 1px solid rgba(26, 14, 26, 0.15);
+}
+
+.bg-game-description {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0;
 }
 
 </style>
@@ -4338,9 +4253,539 @@ const DEFAULT_MODES = [
   { id: 'community',   name: 'Community',       glyph: '☆', order: 5, colour: 'butter'     }
 ];
 
+/* ============================================================
+   LISTS: BOARD GAMES CATALOGUE
+   Reference data for the Lists feature. Filterable by player
+   count, youngest age, duration bucket, tags, and free-text
+   search. Filters persist via state.boardGameFilters.
+   ============================================================ */
+
+const BOARD_GAMES = [
+  {
+    id: "psycho-killer-the-card-game",
+    name: "Psycho Killer: The Card Game",
+    publisher: "Goliath / Escape Tabletop, 3rd ed.",
+    tags: ["party", "card", "take-that", "retro horror parody"],
+    players: { min: 2, max: 6 },
+    age: { min: 16 },
+    duration: { min: 15, max: 30, bucket: "quick", label: "15-30 min" },
+    description: "Slasher-movie-themed card game in a VHS-style box. Use weapons, traps, and predicament cards to dodge the Psycho Killer when he appears, or hand the damage off to your friends. Lowest damage after he turns up five times wins."
+  },
+  {
+    id: "telestrations-the-original-8-player",
+    name: "Telestrations: The Original 8-Player",
+    publisher: "USAopoly / The Op",
+    tags: ["party", "drawing", "sketch-and-pass"],
+    players: { min: 4, max: 8 },
+    age: { min: 12 },
+    duration: { min: 15, max: 30, bucket: "quick", label: "15-30 min" },
+    description: "The \"telephone game sketched out\". Everyone gets an erasable sketchbook, sketches a word, passes, the next person guesses what they see, and so on around the table until the books come home. The reveal is the whole game."
+  },
+  {
+    id: "hard-quiz-the-game",
+    name: "Hard Quiz: The Game",
+    publisher: "University Games, 2020",
+    tags: ["trivia", "party", "aussie tv tie-in"],
+    players: { min: 3, max: 6 },
+    age: { min: 13 },
+    duration: { min: 30, max: 45, bucket: "medium", label: "~30-45 min" },
+    description: "Home version of Tom Gleeson's ABC quiz show. 1300+ real show questions across the Expert Round, Tom's Round, People's Round, and a final Hard-off. Comes with a buzzer disk and five Hard Quiz mugs."
+  },
+  {
+    id: "blockbuster",
+    name: "Blockbuster",
+    publisher: "Big Potato",
+    tags: ["party", "movie", "charades", "buzzer"],
+    players: { min: 4, max: null },
+    age: { min: 12 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "~30 min" },
+    description: "Movie party game in a VHS-shaped box. Two-part rounds: a head-to-head buzzer battle naming films to a category prompt, then triple-charades-jeopardy where you describe, quote, or act out three films for your team. First team to collect a card from each genre wins."
+  },
+  {
+    id: "blockbuster-returns",
+    name: "Blockbuster Returns",
+    publisher: "Big Potato, 2020",
+    tags: ["party", "movie", "charades", "buzzer"],
+    players: { min: 4, max: 10 },
+    age: { min: 12 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "30 min" },
+    description: "Sequel filled with movies from the last 10 years and four new categories (Heart Warmers, From Another World, Not For Kids, Remakes & Reboots). Plays standalone or combines with the original Blockbuster as one mega-game."
+  },
+  {
+    id: "blockbuster-and-chill-two-player-edition",
+    name: "Blockbuster and Chill, Two-Player Edition",
+    publisher: "Big Potato",
+    tags: ["party", "movie", "two-player", "charades"],
+    players: { min: 2, max: 2 },
+    age: { min: 12 },
+    duration: { min: null, max: null, bucket: "quick", label: "Quick rounds" },
+    description: "Two-player version of the Blockbuster series. Describe movie categories to your partner against the clock to earn Popcorn Cards, then crack the secret movie they chose at the start before the late fees catch up. Plays alone or as an extra round added to Blockbuster."
+  },
+  {
+    id: "secret-hitler",
+    name: "Secret Hitler",
+    publisher: "Goat, Wolf & Cabbage",
+    tags: ["social deduction", "hidden role", "party", "bluffing"],
+    players: { min: 5, max: 10 },
+    age: { min: 13 },
+    duration: { min: 45, max: 45, bucket: "medium", label: "~45 min" },
+    description: "Set in 1930s Germany. Liberals and Fascists secretly compete to enact policies, with one Fascist player as Hitler. Liberals win by passing five Liberal policies or executing Hitler; Fascists win by passing six Fascist policies or electing Hitler as Chancellor after three Fascist policies pass. Heavy on bluffing, voting, and table talk."
+  },
+  {
+    id: "scattergories",
+    name: "Scattergories",
+    publisher: "Hasbro / Winning Moves",
+    tags: ["word", "party", "list-making", "timed"],
+    players: { min: 2, max: 6 },
+    age: { min: 12 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "~30 min" },
+    description: "Roll the 20-sided letter die, then race the timer to fill out a list of categories with answers all starting with that letter. Unique answers score; matches with other players cancel out."
+  },
+  {
+    id: "jumanji",
+    name: "Jumanji",
+    publisher: "Cardinal / Spin Master, film tie-in",
+    tags: ["family", "adventure", "push-your-luck", "film tie-in"],
+    players: { min: 2, max: 4 },
+    age: { min: 6 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "~30 min" },
+    description: "Roll, move, and draw peril cards (riddles or animal challenges) as you race to the centre of the board to call out \"Jumanji!\" The family-weight version of the film property."
+  },
+  {
+    id: "batman-the-game",
+    name: "Batman: The Game",
+    publisher: "Milton Bradley, 1989",
+    tags: ["family", "film tie-in", "light strategy", "vintage"],
+    players: { min: 2, max: 4 },
+    age: { min: 7 },
+    duration: { min: 30, max: 60, bucket: "medium", label: "30-60 min" },
+    description: "Tim Burton-era Batman tie-in. Move around Gotham collecting clue tiles, dodge the Joker, and try to be the first to identify his crime. Vintage MB roll-and-move with a small tactical layer."
+  },
+  {
+    id: "trivial-pursuit-genus-master-edition",
+    name: "Trivial Pursuit Genus / Master Edition",
+    publisher: "Horn Abbot / Hasbro / Parker",
+    tags: ["trivia", "classic", "wedge-collecting"],
+    players: { min: 2, max: 6 },
+    age: { min: 16 },
+    duration: { min: 60, max: 90, bucket: "long", label: "60-90 min" },
+    description: "The original wedge-collecting trivia game across six categories (Geography, Entertainment, History, Arts & Literature, Science & Nature, Sport & Leisure). The blue-box edition is the long-running Genus / Master line."
+  },
+  {
+    id: "trivial-pursuit",
+    name: "Trivial Pursuit",
+    publisher: "cat-cover edition, likely Hasbro mid-2010s",
+    tags: ["trivia", "pop culture"],
+    players: { min: 2, max: 6 },
+    age: { min: 16 },
+    duration: { min: 30, max: 60, bucket: "medium", label: "30-60 min" },
+    description: "A more recent Hasbro edition skewing toward pop culture and contemporary references. The exact subtitle (Bet You Know It, 2010s, etc.) will be on the side panel."
+  },
+  {
+    id: "trivial-pursuit-2",
+    name: "Trivial Pursuit",
+    publisher: "white minimalist box, likely Hasbro Classic Edition refresh",
+    tags: ["trivia", "classic format"],
+    players: { min: 2, max: 6 },
+    age: { min: 16 },
+    duration: { min: 60, max: 90, bucket: "long", label: "60-90 min" },
+    description: "The current Hasbro Classic Edition with refreshed Genus questions in a slimmer box and minimalist styling. Standard six-category wedge-collecting gameplay."
+  },
+  {
+    id: "trivial-pursuit-the-90s",
+    name: "Trivial Pursuit: The 90s",
+    publisher: "Parker Brothers",
+    tags: ["trivia", "themed decade"],
+    players: { min: 2, max: 36 },
+    age: { min: 15 },
+    duration: { min: 45, max: 60, bucket: "medium", label: "45-60 min" },
+    description: "3,600 questions on 90s pop culture, music, news, sport, and TV. Standard Trivial Pursuit board and wedges with a single-decade question pool."
+  },
+  {
+    id: "trivial-pursuit-1980s",
+    name: "Trivial Pursuit: 1980s",
+    publisher: "Parker / Hasbro",
+    tags: ["trivia", "themed decade"],
+    players: { min: 2, max: 6 },
+    age: { min: 18 },
+    duration: { min: 45, max: 60, bucket: "medium", label: "45-60 min" },
+    description: "1800 questions covering the 1980s. Same wedge-collecting format, all 80s nostalgia."
+  },
+  {
+    id: "cards-against-the-simpsons",
+    name: "Cards Against The Simpsons",
+    publisher: "unofficial limited edition",
+    tags: ["party", "judging", "fill-in-the-blank", "adult", "tv tie-in"],
+    players: { min: 4, max: null },
+    age: { min: 17 },
+    duration: { min: 30, max: 90, bucket: "medium", label: "30-90 min" },
+    description: "Unofficial Simpsons-themed riff on the Cards Against Humanity format, with 1000+ blue and white cards built around Simpsons characters, episodes, and lore. Rotating judge picks the funniest white-card answer to each blue-card prompt."
+  },
+  {
+    id: "the-simpsons-trivia-game-woo-hoo-25-years-fan-edition",
+    name: "The Simpsons Trivia Game: Woo Hoo 25 Years Fan Edition",
+    publisher: "Cardinal, 2013",
+    tags: ["trivia", "tv tie-in", "family"],
+    players: { min: 2, max: 8 },
+    age: { min: 12 },
+    duration: { min: 30, max: 45, bucket: "medium", label: "30-45 min" },
+    description: "25th-anniversary trivia game with 300 fan-written questions. Roll, move around Springfield, answer trivia for character cards, then trade matching symbols for donuts. First to seven donuts wins."
+  },
+  {
+    id: "operation-the-simpsons-edition",
+    name: "Operation: The Simpsons Edition",
+    publisher: "Milton Bradley",
+    tags: ["dexterity", "family", "tv tie-in"],
+    players: { min: 2, max: null },
+    age: { min: 6 },
+    duration: { min: 15, max: 30, bucket: "quick", label: "15-30 min" },
+    description: "Classic Operation reskinned as Homer on the operating table. Tweezer out themed ailments without setting off the buzzer. Same buzz-and-twitch as the original, with Simpsons art and ailment names."
+  },
+  {
+    id: "the-simpsons-board-game",
+    name: "The Simpsons Board Game",
+    publisher: "Winning Moves, \"Springfield\" edition",
+    tags: ["family", "tv tie-in", "light board game"],
+    players: { min: 2, max: 6 },
+    age: { min: 6 },
+    duration: { min: 45, max: 45, bucket: "medium", label: "~45 min" },
+    description: "Move around Springfield landmarks, complete episode-style scenarios, and collect items. Family-weight Simpsons-themed board game."
+  },
+  {
+    id: "catan-cities-knights-expansion",
+    name: "Catan: Cities & Knights expansion",
+    publisher: "Catan Studio",
+    tags: ["strategy", "expansion"],
+    players: { min: 3, max: 4 },
+    age: { min: 12 },
+    duration: { min: 90, max: 120, bucket: "long", label: "90-120 min" },
+    description: "Major Catan expansion that adds three commodities (paper, cloth, coin), city improvements, knights, and periodic barbarian invasions. Cities can be upgraded into metropolises; the game now plays to 13 victory points instead of 10."
+  },
+  {
+    id: "probe",
+    name: "Probe",
+    publisher: "Parker Brothers, 1964 word game",
+    tags: ["word", "deduction", "vintage"],
+    players: { min: 2, max: 4 },
+    age: { min: 8 },
+    duration: { min: 30, max: 60, bucket: "medium", label: "30-60 min" },
+    description: "Hangman-style word-guessing game. Each player sets a secret word with letter cards in a tray; on your turn, you guess letters in opponents' words and score points based on letter position. Activity cards add buffs and sabotage. Players make their own words, so vocabulary range is up to the table."
+  },
+  {
+    id: "sale-of-the-century-electronic-edition",
+    name: "Sale of the Century, Electronic edition",
+    publisher: "Crown & Andrews, 1980s/90s",
+    tags: ["trivia", "tv tie-in", "electronic buzzers", "vintage"],
+    players: { min: 3, max: 7 },
+    age: { min: 9 },
+    duration: { min: 30, max: 60, bucket: "medium", label: "30-60 min" },
+    description: "Aussie home version of the Tony Barber quiz show. Electronic buzzers and lights drive trivia rounds, fame games, and instant-bargain decisions. The 1990s era version comes with an Electronic Umpire and individual buzzers."
+  },
+  {
+    id: "wheel-of-fortune",
+    name: "Wheel of Fortune",
+    publisher: "electronic edition",
+    tags: ["word", "tv tie-in", "family"],
+    players: { min: 2, max: 4 },
+    age: { min: 8 },
+    duration: { min: 30, max: 60, bucket: "medium", label: "30-60 min" },
+    description: "The TV-show formula in board game form. Spin, guess letters, buy vowels, solve the puzzle. The exact manufacturer and year will be on the side panel; gameplay matches the show."
+  },
+  {
+    id: "cards-against-humanity",
+    name: "Cards Against Humanity",
+    publisher: "base game",
+    tags: ["party", "judging", "fill-in-the-blank", "adult"],
+    players: { min: 4, max: null },
+    age: { min: 17 },
+    duration: { min: 30, max: 90, bucket: "medium", label: "30-90 min" },
+    description: "The original. 500 white cards, 100 black cards. Rotating judge picks the funniest white-card answer to each fill-in-the-blank black card. Booklet includes a stack of alternate house rules."
+  },
+  {
+    id: "cards-against-humanity-nasty-bundle",
+    name: "Cards Against Humanity: Nasty Bundle",
+    publisher: "CAH LLC",
+    tags: ["expansion", "themed", "adult"],
+    players: { min: 4, max: null },
+    age: { min: 17 },
+    duration: { min: null, max: null, bucket: "variable", label: "n/a" },
+    description: "A bundle of six themed packs (Period, Weed, Ass, Saves America, plus two Picture Card Packs) and 10 new cards. The spiciest material the publisher has put out. Requires the main game."
+  },
+  {
+    id: "cards-against-humanity-expansions-1st-edition",
+    name: "Cards Against Humanity expansions, 1st edition",
+    publisher: "green / cream-back boxes",
+    tags: ["expansion", "adult"],
+    players: { min: 4, max: null },
+    age: { min: 17 },
+    duration: { min: null, max: null, bucket: "variable", label: "n/a" },
+    description: "The original numbered expansion packs (Green Box, Red Box, Blue Box, etc.). Each adds around 300 white and black cards to shuffle into the base game. The cream / green backs in your photo indicate the original 1st-edition print runs (one is the 11th printing from Nov 2015, another the 28th printing from Jan 2015)."
+  },
+  {
+    id: "happy-salmon",
+    name: "Happy Salmon",
+    publisher: "North Star Games / Exploding Kittens",
+    tags: ["party", "real-time", "action", "physical"],
+    players: { min: 3, max: 8 },
+    age: { min: 6 },
+    duration: { min: null, max: null, bucket: "quick", label: "~2 min per round" },
+    description: "Frantic 90-second real-time card game. Yell your action (high five, fist bump, switch places, happy salmon) and find another player calling the same one to pair off and ditch the card. First to empty their deck wins. Played in the cloth pouch the deck comes in."
+  },
+  {
+    id: "dungeons-dragons-rock-paper-wizard",
+    name: "Dungeons & Dragons: Rock Paper Wizard",
+    publisher: "WizKids",
+    tags: ["party", "simultaneous-action", "hand gestures", "fantasy"],
+    players: { min: 3, max: 6 },
+    age: { min: 14 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "~30 min" },
+    description: "D&D-themed Rock-Paper-Scissors riff. Each round, players simultaneously throw spell hand-gestures to claim treasure from the dragon's hoard, blast each other, or block incoming spells. Light, fast, and gleefully petty."
+  },
+  {
+    id: "imaginiff",
+    name: "Imaginiff",
+    publisher: "Buffalo Games / Mattel",
+    tags: ["party", "social", "voting"],
+    players: { min: 3, max: 8 },
+    age: { min: 10 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "~30 min" },
+    description: "\"Imaginiff Pink Ladybug were a piece of advice / a sport / a body part …\" Each round picks a player as the subject, everyone secretly chooses which of six numbered options fits them best, and matching the majority advances you on the board. Best when you swap real names for shared frames of reference."
+  },
+  {
+    id: "what-do-you-meme-aussie-edition",
+    name: "What Do You Meme? Aussie Edition",
+    publisher: "What Do You Meme LLC",
+    tags: ["party", "judging", "meme-matching", "adult"],
+    players: { min: 3, max: null },
+    age: { min: 17 },
+    duration: { min: 30, max: 90, bucket: "medium", label: "30-90 min" },
+    description: "Match a caption card to the round's photo card to make the funniest meme. Rotating judge picks the winner. The Aussie edition has 360 caption cards and 75 photo cards reworked with local language, slang, and references."
+  },
+  {
+    id: "bad-opinions",
+    name: "Bad Opinions",
+    publisher: "Dyce Games",
+    tags: ["party", "debate", "voting", "hot takes"],
+    players: { min: 3, max: 10 },
+    age: { min: 10 },
+    duration: { min: 20, max: 60, bucket: "medium", label: "20-60 min" },
+    description: "Pick a topic card (movies, music, celebrities, politics, etc.) and deliver your opinion as a few words or a full rant. Another player can challenge with the opposing view; the rest of the table secretly votes for the better take. First to seven points wins."
+  },
+  {
+    id: "pictionary",
+    name: "Pictionary",
+    publisher: "Hasbro / Mattel",
+    tags: ["drawing", "party", "team", "charades-with-pen"],
+    players: { min: 3, max: null },
+    age: { min: 8 },
+    duration: { min: 30, max: 90, bucket: "medium", label: "30-90 min" },
+    description: "The original sketch-and-guess team game. Roll, move, draw the prompt within the time limit (no letters, numbers, or speaking), and get your team to guess before the other team catches up on the board."
+  },
+  {
+    id: "poetry-for-neanderthals",
+    name: "Poetry for Neanderthals",
+    publisher: "Exploding Kittens",
+    tags: ["party", "word", "taboo-style", "physical comedy"],
+    players: { min: 2, max: 8 },
+    age: { min: 7 },
+    duration: { min: 15, max: 15, bucket: "quick", label: "~15 min" },
+    description: "Get your team to guess the word or phrase using only single-syllable words. Slip up and the other team bops you with a 2-foot inflatable \"No!\" stick and steals the card. 1-syllable easy words score 1 point, harder words score 3."
+  },
+  {
+    id: "one-night-ultimate-werewolf",
+    name: "One Night Ultimate Werewolf",
+    publisher: "Bezier Games",
+    tags: ["social deduction", "hidden role", "fast", "no elimination"],
+    players: { min: 3, max: 10 },
+    age: { min: 8 },
+    duration: { min: 10, max: 10, bucket: "quick", label: "~10 min" },
+    description: "Werewolf compressed into a single night and morning, with no moderator needed (free app reads the script). Everyone gets a role with a one-time night ability, then has 5 minutes of accusations before a single vote. No player elimination, so games run back-to-back."
+  },
+  {
+    id: "pass-out",
+    name: "Pass-Out",
+    publisher: "Brown & Bigelow / Crown Andrews, 1962",
+    tags: ["drinking", "party", "vintage"],
+    players: { min: 2, max: 4 },
+    age: { min: 18 },
+    duration: { min: null, max: null, bucket: "variable", label: "Variable" },
+    description: "Roll-and-move drinking board game from 1962. Land on spaces that prompt drinks; each lap of the board lets you draw a Pink Elephant card with a tongue twister to recite. Get it right to keep the card, get it wrong (or slurred) and drink. First to 10 Pink Elephants wins, in theory."
+  },
+  {
+    id: "are-you-dumber-than-a-box-of-rocks",
+    name: "Are You Dumber Than a Box of Rocks?",
+    publisher: "University Games",
+    tags: ["trivia", "party", "novelty", "cooperative-vs-rocks"],
+    players: { min: 2, max: null },
+    age: { min: 12 },
+    duration: { min: 5, max: 15, bucket: "quick", label: "5-15 min" },
+    description: "Every answer is 0, 1, or 2. The human team picks an answer, then shakes the box to see what the rocks \"guessed\". Whoever's right (humans or rocks) advances on the board; first to the finish wins. Plays solo, with friends, or as a party round-robin."
+  },
+  {
+    id: "munchkin-zombies-deluxe",
+    name: "Munchkin Zombies Deluxe",
+    publisher: "Steve Jackson Games",
+    tags: ["card", "fantasy parody", "take-that", "deluxe edition"],
+    players: { min: 3, max: 6 },
+    age: { min: 10 },
+    duration: { min: 60, max: 90, bucket: "long", label: "60-90 min" },
+    description: "Munchkin reskinned: you're the zombies, the \"monsters\" are humans (some helpless, some hazardous), and the loot is whatever you've blundered into during your search for brains. The deluxe edition adds a board and coloured standees so you can track levels visually."
+  },
+  {
+    id: "scott-pilgrim-s-precious-little-card-game",
+    name: "Scott Pilgrim's Precious Little Card Game",
+    publisher: "Renegade Game Studios, designed by Keith Baker",
+    tags: ["deck-builder", "ip tie-in", "video-game-styled combat"],
+    players: { min: 1, max: 4 },
+    age: { min: 13 },
+    duration: { min: 45, max: 60, bucket: "medium", label: "45-60 min" },
+    description: "Pick a Scott Pilgrim character, build a deck, and fight Evil Exes (and the other players). Cards are double-sided, so each one lets you choose between hard work / empathy and video-game violence. Plays competitively or co-operatively."
+  },
+  {
+    id: "uno-show-em-no-mercy",
+    name: "UNO Show 'Em No Mercy",
+    publisher: "Mattel, 2023",
+    tags: ["card", "family", "brutal uno variant"],
+    players: { min: 2, max: 6 },
+    age: { min: 7 },
+    duration: { min: 15, max: 30, bucket: "quick", label: "15-30 min" },
+    description: "UNO with sharper teeth. Adds Wild Draw 6, Wild Draw 10, Skip Everyone, and Discard All cards. Stacking penalties is legal, 7s force a hand swap, 0s pass hands around the table. The Mercy Rule eliminates anyone who hits 25+ cards."
+  },
+  {
+    id: "jenga-neon-pop",
+    name: "Jenga Neon Pop",
+    publisher: "Hasbro",
+    tags: ["dexterity", "stacking", "party"],
+    players: { min: 1, max: null },
+    age: { min: 6 },
+    duration: { min: 5, max: 15, bucket: "quick", label: "5-15 min" },
+    description: "Standard Jenga with neon-coloured wooden blocks. Pull a block from the tower with one hand, place it on top, don't be the one who topples it."
+  },
+  {
+    id: "scrabble",
+    name: "Scrabble",
+    publisher: "Mattel / Hasbro",
+    tags: ["word", "tile-laying", "classic"],
+    players: { min: 2, max: 4 },
+    age: { min: 8 },
+    duration: { min: 60, max: 90, bucket: "long", label: "60-90 min" },
+    description: "The classic crossword tile game. Draw seven letter tiles, score by playing words on a grid with double / triple letter and word bonus squares. The deluxe / older edition box matches the photo."
+  },
+  {
+    id: "code-breaker",
+    name: "Code Breaker",
+    publisher: "Outset Media or similar Mastermind clone",
+    tags: ["logic", "deduction", "two-player", "abstract"],
+    players: { min: 2, max: 2 },
+    age: { min: 8 },
+    duration: { min: 15, max: 15, bucket: "quick", label: "~15 min" },
+    description: "Mastermind-style code-cracking game. Codemaker hides a sequence of coloured pegs behind a shield; codebreaker has limited guesses, with feedback pegs after each attempt indicating correct colours and correct positions."
+  },
+  {
+    id: "punderdome",
+    name: "Punderdome",
+    publisher: "Random House / Clarkson Potter",
+    tags: ["party", "word", "puns"],
+    players: { min: 3, max: 6 },
+    age: { min: 12 },
+    duration: { min: 30, max: 30, bucket: "medium", label: "~30 min" },
+    description: "Based on the live Brooklyn pun show. Each round, the prompter draws two prompt cards (one green, one white) and reads them out. Players have 90 seconds to write a single pun combining both prompts, then the prompter awards the round to the best one. First to 10 pairs of prompt cards wins."
+  },
+];
+
+const BOARD_GAME_PLAYER_BUTTONS = [2, 3, 4, 5, 6, 7, 8];
+// label for max button is "8+" (treats it as "show me anything that supports 8 or more")
+const BOARD_GAME_AGE_BUTTONS = [6, 8, 10, 12, 13, 16, 18];
+const BOARD_GAME_DURATION_BUCKETS = [
+  { id: 'quick',    label: 'Quick',    sub: 'under 30 min' },
+  { id: 'medium',   label: 'Medium',   sub: '30 to 60 min' },
+  { id: 'long',     label: 'Long',     sub: '60 min plus' },
+  { id: 'variable', label: 'Variable', sub: 'no fixed length' }
+];
+
+// All distinct tags across the dataset, sorted by frequency desc then alpha.
+function boardGameTagCounts() {
+  const counter = new Map();
+  for (const g of BOARD_GAMES) {
+    for (const t of g.tags) counter.set(t, (counter.get(t) || 0) + 1);
+  }
+  const entries = Array.from(counter.entries());
+  entries.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return entries; // array of [tag, count]
+}
+
+function formatPlayers(p) {
+  if (p.min == null && p.max == null) return 'varies';
+  if (p.max == null) return `${p.min}+`;
+  if (p.min === p.max) return `${p.min}`;
+  return `${p.min}-${p.max}`;
+}
+
+function formatAge(a) {
+  if (a.min == null) return 'any';
+  return `${a.min}+`;
+}
+
+function formatDuration(d) {
+  if (d.label) return d.label;
+  if (d.min == null) return 'varies';
+  return `${d.min}-${d.max} min`;
+}
+
+function boardGameMatchesPlayers(game, n) {
+  // Variable / unknown: always show, no constraint to apply
+  if (game.players.min == null && game.players.max == null) return true;
+  if (game.players.min != null && game.players.min > n) return false;
+  if (game.players.max != null && game.players.max < n) return false;
+  return true;
+}
+
+function boardGameMatchesAge(game, youngest) {
+  // Unknown age min: don't filter out
+  if (game.age.min == null) return true;
+  return game.age.min <= youngest;
+}
+
+function filterBoardGames() {
+  const f = state.boardGameFilters || {};
+  const search = (f.search || '').toLowerCase().trim();
+  return BOARD_GAMES.filter(g => {
+    if (f.players != null && !boardGameMatchesPlayers(g, f.players)) return false;
+    if (f.ageMin != null && !boardGameMatchesAge(g, f.ageMin)) return false;
+    if (f.durations && f.durations.length && !f.durations.includes(g.duration.bucket)) return false;
+    if (f.tags && f.tags.length) {
+      const hit = g.tags.some(t => f.tags.includes(t));
+      if (!hit) return false;
+    }
+    if (search) {
+      const hay = (g.name + ' ' + g.description + ' ' + g.tags.join(' ') + ' ' + (g.publisher || '')).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+function activeBoardGameFilterCount() {
+  const f = state.boardGameFilters || {};
+  let n = 0;
+  if (f.search) n++;
+  if (f.players != null) n++;
+  if (f.ageMin != null) n++;
+  if (f.durations && f.durations.length) n++;
+  if (f.tags && f.tags.length) n++;
+  return n;
+}
+
+function clearBoardGameFilters() {
+  state.boardGameFilters = { search: '', players: null, ageMin: null, durations: [], tags: [] };
+  saveState();
+  render();
+}
+
+
 function defaultState() {
   return {
-    version: 4, // bumped for 5a Phase 2 timers + sessions + invoices
+    version: 3, // bumped for 4b sub-entities everywhere
     currentMode: 'dashboard',
     currentTier: 'now',
     currentClientId: null,
@@ -4348,16 +4793,6 @@ function defaultState() {
     onboarded: false,
     tasks: [], // { id, text, mode, subId, memberId?, tier, done, waitingOn, createdAt, colour }
     events: [], // { id, title, date, mode?, subId?, memberId?, isCountdown, createdAt }
-    // 5a: Phase 2. Sessions are time-tracking records per client.
-    // durationMs is the canonical measure; display as minutes or h+m.
-    // rateAtTime captures the client's rate at session-end so historic rates
-    // don't drift if the client's rate is later changed.
-    // invoicedAt + invoiceId are null until the session is marked invoiced (5c).
-    sessions: [], // { id, clientId, startedAt, endedAt, durationMs, note, rateAtTime, invoicedAt, invoiceId }
-    invoices: [], // 5c: { id, clientId, invoicedAt, sessionIds, totalMs, totalAmount, zohoText }
-    // 5a: One running timer at a time. Persists across reloads so a backgrounded
-    // tab doesn't lose time. { clientId, startedAt } when running, null when not.
-    activeTimer: null,
     clients: [], // { id, name, rate, colour? }
     orgs: [],    // { id, name, colour? }
     households: [], // { id, name, colour?, members: [{ id, name, colour? }] }
@@ -4400,7 +4835,16 @@ function defaultState() {
       communityCutoffHardWeekends: true
     },
     // 4c: Tracks dismissal of soft-cutoff banners. Keyed by mode, value is YYYY-MM-DD.
-    cutoffBannerDismissed: {}
+    cutoffBannerDismissed: {},
+    // Lists feature: filter state for the Board Games catalogue.
+    // Persists across navigation so filters survive a tab away.
+    boardGameFilters: {
+      search: '',
+      players: null,    // null = any, or an integer (8 means "8+")
+      ageMin: null,     // null = any, or an integer (treat as "youngest player is N")
+      durations: [],    // any of 'quick' | 'medium' | 'long' | 'variable'
+      tags: []          // OR-filter: game must have at least one of these
+    }
   };
 }
 
@@ -4416,6 +4860,12 @@ function loadState() {
       state.settings = { ...defaultState().settings, ...(parsed.settings || {}) };
       // Ensure modeColours object exists (added in 4a)
       state.modeColours = { ...(parsed.modeColours || {}) };
+      // Ensure boardGameFilters has all expected keys
+      const defaultBGF = defaultState().boardGameFilters;
+      state.boardGameFilters = { ...defaultBGF, ...(parsed.boardGameFilters || {}) };
+      // Coerce arrays in case stored shape is off
+      if (!Array.isArray(state.boardGameFilters.durations)) state.boardGameFilters.durations = [];
+      if (!Array.isArray(state.boardGameFilters.tags)) state.boardGameFilters.tags = [];
       // 4b: Ensure categories object and its slots exist
       state.categories = {
         personal: (parsed.categories && parsed.categories.personal) || [],
@@ -4468,37 +4918,6 @@ function loadState() {
           colour: c.colour || null
         }));
       });
-      // 5a: Phase 2 migration. Ensure sessions/invoices arrays exist with full shape.
-      state.sessions = (parsed.sessions || []).map(s => ({
-        id: s.id || uid(),
-        clientId: s.clientId || null,
-        startedAt: s.startedAt || null,
-        endedAt: s.endedAt || null,
-        durationMs: typeof s.durationMs === 'number' ? s.durationMs : 0,
-        note: s.note || '',
-        rateAtTime: typeof s.rateAtTime === 'number' ? s.rateAtTime : null,
-        invoicedAt: s.invoicedAt || null,
-        invoiceId: s.invoiceId || null
-      }));
-      state.invoices = (parsed.invoices || []).map(inv => ({
-        id: inv.id || uid(),
-        clientId: inv.clientId || null,
-        invoicedAt: inv.invoicedAt || null,
-        sessionIds: inv.sessionIds || [],
-        totalMs: typeof inv.totalMs === 'number' ? inv.totalMs : 0,
-        totalAmount: typeof inv.totalAmount === 'number' ? inv.totalAmount : 0,
-        zohoText: inv.zohoText || ''
-      }));
-      // activeTimer: only valid if it has clientId and startedAt and the client still exists
-      if (parsed.activeTimer && parsed.activeTimer.clientId && parsed.activeTimer.startedAt) {
-        const stillExists = (state.clients || []).some(c => c.id === parsed.activeTimer.clientId);
-        state.activeTimer = stillExists ? {
-          clientId: parsed.activeTimer.clientId,
-          startedAt: parsed.activeTimer.startedAt
-        } : null;
-      } else {
-        state.activeTimer = null;
-      }
     }
   } catch (e) {
     console.warn('Load failed, starting fresh', e);
@@ -5269,18 +5688,6 @@ function deleteSubEntity(modeId, subId, options = {}) {
     });
   }
 
-  // 5a: Sessions belong to a Work client. They can't exist without one
-  // (they're billing records). Always remove sessions for a deleted client,
-  // regardless of cascade choice. Stop the active timer if it's on this
-  // client (discard, since it'd otherwise bank to a deleted client).
-  if (modeId === 'work') {
-    state.sessions = (state.sessions || []).filter(s => s.clientId !== subId);
-    state.invoices = (state.invoices || []).filter(inv => inv.clientId !== subId);
-    if (state.activeTimer && state.activeTimer.clientId === subId) {
-      state.activeTimer = null;
-    }
-  }
-
   // If the deleted sub-entity is currently active, clear it
   if (state.currentMode === modeId && state.currentSubId === subId) {
     state.currentSubId = null;
@@ -5465,298 +5872,6 @@ function purgeOldRecycleBin() {
 }
 
 /* ============================================================
-   5a: TIMER + SESSION HELPERS (Phase 2)
-
-   One running timer at a time, tied to a Work client. startedAt is an
-   ISO timestamp; we compute elapsed live from now-startedAt. Persisted
-   across reloads via state.activeTimer so a backgrounded tab doesn't
-   lose time. Sessions are stored when the timer is stopped.
-
-   Stale-timer recovery (state.activeTimer running >24h on load) is
-   handled in render() via maybeOfferStaleTimerRecovery().
-   ============================================================ */
-
-const STALE_TIMER_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24h
-const TIMER_TICK_MS = 1000; // running indicator updates every second
-
-function getClient(clientId) {
-  return (state.clients || []).find(c => c.id === clientId) || null;
-}
-
-// Start a new timer for clientId. If a timer is already running on a
-// different client, caller should have already confirmed via the
-// "Stop X and start Y?" modal. Calling startTimer when one is running
-// will silently stop the old one as a session and start a new one.
-function startTimer(clientId) {
-  if (state.activeTimer) stopTimer({ silent: true });
-  state.activeTimer = {
-    clientId: clientId,
-    startedAt: new Date().toISOString()
-  };
-  saveState();
-}
-
-// Stop the running timer and commit it as a session. opts:
-// - silent: skip the toast (used when switching timers)
-// - endedAt: ISO timestamp override (for stale-timer recovery)
-// - discard: don't save the session (used to throw away a stale timer)
-// Returns the new session id or null if discarded/no-op.
-function stopTimer(opts = {}) {
-  if (!state.activeTimer) return null;
-  const { clientId, startedAt } = state.activeTimer;
-  const endedAt = opts.endedAt || new Date().toISOString();
-  state.activeTimer = null;
-
-  if (opts.discard) {
-    saveState();
-    return null;
-  }
-
-  const startMs = new Date(startedAt).getTime();
-  const endMs = new Date(endedAt).getTime();
-  const durationMs = Math.max(0, endMs - startMs);
-
-  // 5b will populate rateAtTime from the client's current rate. For 5a we
-  // capture it anyway so historic sessions are correctly priced once 5b ships.
-  const client = getClient(clientId);
-  const rateAtTime = (client && typeof client.rate === 'number') ? client.rate : null;
-
-  const session = {
-    id: uid(),
-    clientId: clientId,
-    startedAt: startedAt,
-    endedAt: endedAt,
-    durationMs: durationMs,
-    note: '',
-    rateAtTime: rateAtTime,
-    invoicedAt: null,
-    invoiceId: null
-  };
-  state.sessions = state.sessions || [];
-  state.sessions.push(session);
-  saveState();
-
-  if (!opts.silent) {
-    const minsBanked = Math.max(1, Math.round(durationMs / 60000));
-    const clientName = client ? client.name : 'session';
-    bankedToast(minsBanked, clientName, session.id);
-  }
-  return session.id;
-}
-
-// Banked toast with an optional "+ note" affordance. Reuses the toast
-// element but inserts a small button. Like undoToast, the action stays
-// committed if the user misses the window; they can still edit the
-// session note from the session log.
-function bankedToast(mins, clientName, sessionId) {
-  const el = document.getElementById('toast');
-  if (!el) return;
-  const minsLabel = mins === 1 ? '1 min' : mins + ' mins';
-  el.innerHTML = `
-    <span class="sparkle">✦</span>${escapeHtml(minsLabel)} banked
-    <button class="toast-action" id="bankedNoteBtn" type="button">+ note</button>
-  `;
-  el.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 4000);
-  const btn = el.querySelector('#bankedNoteBtn');
-  if (btn) {
-    btn.onclick = (ev) => {
-      ev.stopPropagation();
-      clearTimeout(toast._t);
-      el.classList.remove('show');
-      openSessionNoteDialog(sessionId, clientName);
-    };
-  }
-}
-
-// Open a tiny modal to capture an optional one-line session note.
-function openSessionNoteDialog(sessionId, clientName) {
-  document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
-
-  const session = (state.sessions || []).find(s => s.id === sessionId);
-  if (!session) return;
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'confirm-backdrop';
-  backdrop.setAttribute('role', 'dialog');
-  backdrop.setAttribute('aria-modal', 'true');
-  backdrop.setAttribute('aria-label', 'Session note');
-
-  const modal = document.createElement('div');
-  modal.className = 'confirm-modal';
-  modal.innerHTML = `
-    <h4>One-line note</h4>
-    <p style="margin-bottom:10px;">What did you do for ${escapeHtml(clientName)}?</p>
-    <input type="text" class="text-input" id="sessNoteInput"
-           placeholder="drafted OMG email"
-           maxlength="120"
-           style="width:100%;margin-bottom:14px;" />
-    <div class="confirm-actions">
-      <button class="pill-btn" type="button" id="sessNoteSkip">Skip</button>
-      <button class="pill-btn primary" type="button" id="sessNoteSave">Save</button>
-    </div>
-  `;
-  backdrop.appendChild(modal);
-
-  backdrop.addEventListener('click', (ev) => {
-    if (ev.target === backdrop) backdrop.remove();
-  });
-  const onKey = (ev) => {
-    if (ev.key === 'Escape') {
-      backdrop.remove();
-      document.removeEventListener('keydown', onKey);
-    }
-  };
-  document.addEventListener('keydown', onKey);
-
-  document.body.appendChild(backdrop);
-  const input = modal.querySelector('#sessNoteInput');
-  const skip = modal.querySelector('#sessNoteSkip');
-  const save = modal.querySelector('#sessNoteSave');
-
-  const commit = () => {
-    const v = input.value.trim();
-    if (v) {
-      const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
-      if (idx >= 0) {
-        state.sessions[idx].note = v;
-        saveState();
-        if (state.currentMode === 'work') render();
-      }
-    }
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
-  };
-
-  skip.onclick = () => { backdrop.remove(); document.removeEventListener('keydown', onKey); };
-  save.onclick = commit;
-  input.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
-  });
-
-  setTimeout(() => input.focus(), 30);
-}
-
-// Update an existing session's note (called from the session log).
-function updateSessionNote(sessionId, note) {
-  const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
-  if (idx < 0) return;
-  state.sessions[idx].note = (note || '').trim();
-  saveState();
-}
-
-function deleteSession(sessionId) {
-  state.sessions = (state.sessions || []).filter(s => s.id !== sessionId);
-  saveState();
-}
-
-function sessionsForClient(clientId, opts = {}) {
-  const all = (state.sessions || []).filter(s => s.clientId === clientId);
-  if (opts.unbilledOnly) return all.filter(s => !s.invoicedAt);
-  return all;
-}
-
-function activeTimerElapsedMs() {
-  if (!state.activeTimer || !state.activeTimer.startedAt) return 0;
-  return Math.max(0, Date.now() - new Date(state.activeTimer.startedAt).getTime());
-}
-
-// "1h 23m", "23m", "<1m". For very short bursts (< 60s) we still show 1m
-// in toasts, but in lists we show <1m so it's clear.
-function formatDurationCompact(ms) {
-  if (!ms || ms < 0) return '<1m';
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  if (h && m) return `${h}h ${m}m`;
-  if (h) return `${h}h`;
-  if (m) return `${m}m`;
-  return '<1m';
-}
-
-// 5b: Money formatting. AUD assumed for now (no currency setting in scope).
-const _moneyFmt = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
-function formatMoney(amount) {
-  if (amount == null || isNaN(amount)) return '';
-  return _moneyFmt.format(amount);
-}
-
-// 5b: Compute the dollar amount for a session given its rateAtTime.
-// Returns null if rate is missing (so we can hide $ display rather than
-// showing $0.00 which would be misleading).
-function sessionAmount(session) {
-  if (!session || typeof session.rateAtTime !== 'number') return null;
-  const hours = (session.durationMs || 0) / 3600000;
-  return Math.round(hours * session.rateAtTime * 100) / 100;
-}
-
-// 5b: Update a session's rateAtTime (per-session override).
-function updateSessionRate(sessionId, rate) {
-  const idx = (state.sessions || []).findIndex(s => s.id === sessionId);
-  if (idx < 0) return;
-  // Allow null to clear (session becomes unrated).
-  state.sessions[idx].rateAtTime = (typeof rate === 'number' && !isNaN(rate)) ? rate : null;
-  saveState();
-}
-
-// "1:23:45" or "23:45" for live running display.
-function formatDurationClock(ms) {
-  if (!ms || ms < 0) return '0:00';
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  const pad = n => String(n).padStart(2, '0');
-  if (h) return `${h}:${pad(m)}:${pad(s)}`;
-  return `${m}:${pad(s)}`;
-}
-
-// Stale-timer recovery: invoked once on app load (after render).
-// If the active timer has been running longer than the threshold,
-// offer to commit (rounded down to a sensible end time the user picks),
-// keep going, or discard. Skipped if no active timer.
-let _staleTimerHandled = false;
-function maybeOfferStaleTimerRecovery() {
-  if (_staleTimerHandled) return;
-  if (!state.activeTimer) return;
-  const elapsed = activeTimerElapsedMs();
-  if (elapsed < STALE_TIMER_THRESHOLD_MS) return;
-  _staleTimerHandled = true;
-
-  const client = getClient(state.activeTimer.clientId);
-  const clientName = client ? client.name : 'a client';
-  const hours = Math.round(elapsed / 3600000);
-
-  openConfirmModal({
-    title: 'Timer was still running',
-    body: `The timer for ${clientName} has been running for about ${hours}h. Probably forgot to stop it. What do you want to do?`,
-    actions: [
-      {
-        label: 'Stop now',
-        kind: 'primary',
-        onClick: () => {
-          stopTimer();
-          render();
-        }
-      },
-      {
-        label: 'Keep going',
-        onClick: () => { /* leave as-is */ }
-      },
-      {
-        label: 'Discard',
-        kind: 'danger',
-        onClick: () => {
-          stopTimer({ discard: true });
-          render();
-        }
-      }
-    ]
-  });
-}
-
-/* ============================================================
    APPLY SETTINGS
    ============================================================ */
 function applySettings() {
@@ -5824,6 +5939,15 @@ function renderModeBar() {
     bar.appendChild(wb);
   }
 
+  // Lists: reference catalogues (board games for now). Sits at the end so
+  // active "doing" modes lead the bar, and reference browsing is last.
+  const isOnAList = state.currentMode === 'lists' || (typeof state.currentMode === 'string' && state.currentMode.startsWith('list:'));
+  const lb = document.createElement('button');
+  lb.className = 'mode-btn' + (isOnAList ? ' active' : '');
+  lb.innerHTML = `<span class="glyph">❋</span>Lists`;
+  lb.onclick = () => setMode('lists');
+  bar.appendChild(lb);
+
   return bar;
 }
 
@@ -5873,32 +5997,6 @@ function setMember(memberId) {
 function renderTopbar() {
   const bar = document.createElement('header');
   bar.className = 'topbar';
-
-  // 5a: Running timer indicator. Visible from anywhere when a timer is on.
-  // Tapping jumps to that client. Updates every second via tickTimerIndicator.
-  let timerIndicator = '';
-  if (state.activeTimer && state.activeTimer.clientId) {
-    const client = getClient(state.activeTimer.clientId);
-    if (client) {
-      const elapsed = activeTimerElapsedMs();
-      const colourId = subColour('work', client.id);
-      const darkClass = needsDarkText(colourId) ? ' dark-text' : '';
-      timerIndicator = `
-        <button class="timer-indicator${darkClass}" id="timerIndicator" type="button"
-                aria-label="Open running timer for ${escapeHtml(client.name)}"
-                style="--sub-colour: ${colourCssValue(colourId)};">
-          <span class="timer-indicator-dot"></span>
-          <span class="timer-indicator-name">${escapeHtml(client.name)}</span>
-          <span class="timer-indicator-time" id="timerIndicatorTime">${formatDurationClock(elapsed)}</span>
-        </button>
-      `;
-    } else {
-      // Active timer references a deleted client. Clean up silently.
-      state.activeTimer = null;
-      saveState();
-    }
-  }
-
   bar.innerHTML = `
     <div class="brand" id="brandBtn">
       <div class="brand-mark">P</div>
@@ -5908,7 +6006,6 @@ function renderTopbar() {
       </div>
     </div>
     <div class="top-actions">
-      ${timerIndicator}
       <button class="pill-btn" id="settingsBtn" title="Settings">⚙ Settings</button>
     </div>
   `;
@@ -7155,12 +7252,6 @@ function renderModeView(modeId) {
   tierBar.appendChild(doneBtn);
   content.appendChild(tierBar);
 
-  // 5a: Timer panel + Session log for Work mode when a client is selected.
-  if (modeId === 'work' && activeSub) {
-    content.appendChild(renderTimerPanel(activeSub));
-    content.appendChild(renderSessionsCard(activeSub));
-  }
-
   // 4c: Chip filter row. Show only when at least one task in scope has a chip.
   // Sticky AND filter — persists across navigation. Dim chips not present in
   // current scope so the user knows what's relevant here vs everywhere.
@@ -7339,7 +7430,6 @@ function buildSubBar(modeId, subs, subId) {
     const openSubMenu = (anchor) => {
       const currentColour = s.colour || null;
       const label = subEntityLabel(modeId);
-      const isWorkClient = modeId === 'work';
       openColourPopover(anchor, {
         title: 'Edit ' + label,
         renameValue: s.name,
@@ -7349,14 +7439,6 @@ function buildSubBar(modeId, subs, subId) {
           render();
           toast('renamed.');
         },
-        // 5b: Rate field for Work clients only.
-        rateValue: isWorkClient ? (typeof s.rate === 'number' ? s.rate : null) : undefined,
-        onRate: isWorkClient ? (newRate) => {
-          s.rate = newRate;
-          saveState();
-          render();
-          toast(newRate == null ? 'rate cleared.' : 'rate set.');
-        } : null,
         currentColour: currentColour,
         allowInherit: true,
         inheritLabel: 'Auto-vary from ' + DEFAULT_MODES.find(x => x.id === modeId).name,
@@ -7752,384 +7834,6 @@ function subEntityDescription(modeId) {
   if (modeId === 'personal') return "Category-specific tasks and notes.";
   if (modeId === 'mortal-coil') return "Category-specific admin and paperwork.";
   return '';
-}
-
-/* ============================================================
-   5a: TIMER PANEL + SESSION LOG (Phase 2)
-   Both render only on Work mode with a client selected.
-   ============================================================ */
-
-function renderTimerPanel(client) {
-  const card = document.createElement('div');
-  card.className = 'timer-panel';
-  const colourId = subColour('work', client.id);
-  card.style.setProperty('--timer-colour', colourCssValue(colourId));
-  card.style.setProperty('--timer-colour-soft', colourCssSoft(colourId));
-
-  const timer = state.activeTimer;
-  const runningHere = timer && timer.clientId === client.id;
-  const runningElsewhere = timer && timer.clientId !== client.id;
-
-  // 5b: Rate readout. Visible whether running or not so user knows what's
-  // being captured. "Set rate" is a quick path into the popover (still on
-  // long-press / right-click of the client pill, but the link is a hint).
-  const hasRate = typeof client.rate === 'number';
-  const rateBadge = hasRate
-    ? `<span class="timer-rate-badge">${escapeHtml(formatMoney(client.rate))}/hr</span>`
-    : `<span class="timer-rate-badge no-rate">No rate set</span>`;
-
-  if (runningHere) {
-    const elapsed = activeTimerElapsedMs();
-    const startedDate = new Date(timer.startedAt);
-    const startedDisplay = formatTimeDisplay(startedDate);
-    card.classList.add('running');
-    card.innerHTML = `
-      <div class="timer-panel-row">
-        <div class="timer-panel-left">
-          <div class="timer-panel-label">Running ✦ since ${escapeHtml(startedDisplay)} ${rateBadge}</div>
-          <div class="timer-panel-time" id="timerInlineTime">${formatDurationClock(elapsed)}</div>
-        </div>
-        <button class="timer-panel-btn stop" type="button" id="timerStopBtn">Stop</button>
-      </div>
-    `;
-    card.querySelector('#timerStopBtn').onclick = () => {
-      stopTimer();
-      render();
-    };
-  } else if (runningElsewhere) {
-    const otherClient = getClient(timer.clientId);
-    const otherName = otherClient ? otherClient.name : 'another client';
-    card.innerHTML = `
-      <div class="timer-panel-row">
-        <div class="timer-panel-left">
-          <div class="timer-panel-label">Timer running on ${escapeHtml(otherName)} ${rateBadge}</div>
-          <div class="timer-panel-sub">Switching will bank that session.</div>
-        </div>
-        <button class="timer-panel-btn switch" type="button" id="timerSwitchBtn">Stop &amp; start here</button>
-      </div>
-    `;
-    card.querySelector('#timerSwitchBtn').onclick = () => {
-      openConfirmModal({
-        title: 'Switch timers?',
-        body: `Stop the timer on ${otherName} and start one for ${client.name}?`,
-        actions: [
-          { label: 'Cancel' },
-          {
-            label: 'Switch',
-            kind: 'primary',
-            onClick: () => {
-              startTimer(client.id);
-              render();
-            }
-          }
-        ]
-      });
-    };
-  } else {
-    card.innerHTML = `
-      <div class="timer-panel-row">
-        <div class="timer-panel-left">
-          <div class="timer-panel-label">No timer running ${rateBadge}</div>
-          <div class="timer-panel-sub">Tap to start tracking time on ${escapeHtml(client.name)}.</div>
-        </div>
-        <button class="timer-panel-btn start" type="button" id="timerStartBtn">Start ✦</button>
-      </div>
-    `;
-    card.querySelector('#timerStartBtn').onclick = () => {
-      startTimer(client.id);
-      render();
-    };
-  }
-
-  return card;
-}
-
-function renderSessionsCard(client) {
-  const card = document.createElement('div');
-  card.className = 'candy candy-sessions';
-  const colourId = subColour('work', client.id);
-  card.style.setProperty('--tasks-inset', colourCssSoft(colourId));
-
-  const sessions = sessionsForClient(client.id).sort((a, b) => {
-    const ae = new Date(a.endedAt || a.startedAt).getTime();
-    const be = new Date(b.endedAt || b.startedAt).getTime();
-    return be - ae;
-  });
-
-  // Quick totals so the user has a feel for time logged on this client.
-  // 5b: Sum dollar amounts where rateAtTime exists. Sessions without a rate
-  // contribute to time totals but not money totals.
-  const totalMs = sessions.reduce((acc, s) => acc + (s.durationMs || 0), 0);
-  const unbilled = sessions.filter(s => !s.invoicedAt);
-  const unbilledMs = unbilled.reduce((acc, s) => acc + (s.durationMs || 0), 0);
-
-  const totalAmount = sessions.reduce((acc, s) => {
-    const amt = sessionAmount(s);
-    return amt != null ? acc + amt : acc;
-  }, 0);
-  const unbilledAmount = unbilled.reduce((acc, s) => {
-    const amt = sessionAmount(s);
-    return amt != null ? acc + amt : acc;
-  }, 0);
-  const anyRated = sessions.some(s => sessionAmount(s) != null);
-  const anyUnbilledRated = unbilled.some(s => sessionAmount(s) != null);
-
-  const totalLabel = sessions.length
-    ? `${sessions.length} session${sessions.length === 1 ? '' : 's'} · ${formatDurationCompact(totalMs)}${anyRated ? ' · ' + formatMoney(totalAmount) : ''}`
-    : '';
-  const unbilledLabel = unbilledMs > 0
-    ? ` · <span class="sessions-unbilled-label">${formatDurationCompact(unbilledMs)}${anyUnbilledRated ? ' / ' + formatMoney(unbilledAmount) : ''} unbilled</span>`
-    : '';
-
-  card.innerHTML = `<span class="card-label">Sessions ✦ ${escapeHtml(client.name)}${totalLabel ? ' · ' + totalLabel : ''}${unbilledLabel}</span>`;
-
-  if (!sessions.length) {
-    card.innerHTML += `<div class="empty">No sessions yet <span class="sparkle">✦</span> Start a timer when you begin.</div>`;
-    return card;
-  }
-
-  // Show the 12 most recent. Older ones live in the data but the UI keeps
-  // it scannable. (5c will add an "all sessions" view per client.)
-  const visible = sessions.slice(0, 12);
-  const list = document.createElement('ul');
-  list.className = 'session-list';
-  visible.forEach(s => list.appendChild(renderSessionRow(s)));
-  card.appendChild(list);
-
-  if (sessions.length > visible.length) {
-    const more = document.createElement('div');
-    more.className = 'session-more';
-    more.textContent = `${sessions.length - visible.length} older session${sessions.length - visible.length === 1 ? '' : 's'} in the log.`;
-    card.appendChild(more);
-  }
-
-  return card;
-}
-
-function renderSessionRow(session) {
-  const li = document.createElement('li');
-  li.className = 'session-row' + (session.invoicedAt ? ' invoiced' : '');
-
-  const ended = new Date(session.endedAt || session.startedAt);
-  const dateStr = ended.toLocaleDateString('en-AU', {
-    weekday: 'short', day: 'numeric', month: 'short'
-  });
-  const startTime = formatTimeDisplay(new Date(session.startedAt));
-  const endTime = session.endedAt ? formatTimeDisplay(new Date(session.endedAt)) : '';
-  const dur = formatDurationCompact(session.durationMs);
-  const noteHtml = session.note
-    ? `<span class="session-note">${escapeHtml(session.note)}</span>`
-    : `<button class="session-note-add" type="button" data-act="add-note">+ note</button>`;
-  const invoicedTag = session.invoicedAt
-    ? `<span class="session-tag">invoiced</span>`
-    : '';
-
-  // 5b: Money pill. Shows amount if rateAtTime is set; otherwise a tappable
-  // "+ rate" affordance so the user can backfill a missing rate.
-  const amount = sessionAmount(session);
-  const moneyHtml = amount != null
-    ? `<button class="session-money" type="button" data-act="edit-rate" title="Edit rate (currently ${escapeHtml(formatMoney(session.rateAtTime))}/hr)">${escapeHtml(formatMoney(amount))}</button>`
-    : `<button class="session-money no-rate" type="button" data-act="edit-rate">+ rate</button>`;
-
-  li.innerHTML = `
-    <div class="session-row-main">
-      <div class="session-row-meta">
-        <span class="session-date">${escapeHtml(dateStr)}</span>
-        <span class="session-times">${escapeHtml(startTime)}${endTime ? '–' + escapeHtml(endTime) : ''}</span>
-        <span class="session-dur">${escapeHtml(dur)}</span>
-        ${moneyHtml}
-        ${invoicedTag}
-      </div>
-      <div class="session-row-note">${noteHtml}</div>
-    </div>
-    <div class="session-row-actions">
-      <button class="session-edit-btn" type="button" data-act="edit-note" aria-label="Edit note">✎</button>
-      <button class="session-del-btn" type="button" data-act="delete" aria-label="Delete session">✕</button>
-    </div>
-  `;
-
-  const addNoteBtn = li.querySelector('[data-act="add-note"]');
-  if (addNoteBtn) addNoteBtn.onclick = () => promptSessionNote(session.id);
-  li.querySelector('[data-act="edit-note"]').onclick = () => promptSessionNote(session.id);
-  li.querySelector('[data-act="edit-rate"]').onclick = () => promptSessionRate(session.id);
-  li.querySelector('[data-act="delete"]').onclick = () => {
-    if (session.invoicedAt) {
-      openConfirmModal({
-        title: 'Delete an invoiced session?',
-        body: 'This session is already marked invoiced. Deleting it does not change the invoice record.',
-        actions: [
-          { label: 'Cancel' },
-          {
-            label: 'Delete anyway',
-            kind: 'danger',
-            onClick: () => {
-              deleteSession(session.id);
-              render();
-            }
-          }
-        ]
-      });
-    } else {
-      const snap = { ...session };
-      deleteSession(session.id);
-      undoToast('Session deleted.', () => {
-        state.sessions = state.sessions || [];
-        state.sessions.push(snap);
-        saveState();
-        render();
-      });
-      render();
-    }
-  };
-
-  return li;
-}
-
-// Inline note prompt: reuses the session-note dialog. Pre-populates the
-// input with the existing note if there is one.
-function promptSessionNote(sessionId) {
-  const session = (state.sessions || []).find(s => s.id === sessionId);
-  if (!session) return;
-  const client = getClient(session.clientId);
-  const clientName = client ? client.name : 'this session';
-
-  document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'confirm-backdrop';
-  backdrop.setAttribute('role', 'dialog');
-  backdrop.setAttribute('aria-modal', 'true');
-  backdrop.setAttribute('aria-label', 'Edit session note');
-
-  const modal = document.createElement('div');
-  modal.className = 'confirm-modal';
-  modal.innerHTML = `
-    <h4>Session note</h4>
-    <p style="margin-bottom:10px;">One line for ${escapeHtml(clientName)}.</p>
-    <input type="text" class="text-input" id="sessNoteInput"
-           value="${escapeHtml(session.note || '')}"
-           placeholder="drafted OMG email"
-           maxlength="120"
-           style="width:100%;margin-bottom:14px;" />
-    <div class="confirm-actions">
-      <button class="pill-btn" type="button" id="sessNoteCancel">Cancel</button>
-      <button class="pill-btn primary" type="button" id="sessNoteSave">Save</button>
-    </div>
-  `;
-  backdrop.appendChild(modal);
-
-  backdrop.addEventListener('click', (ev) => {
-    if (ev.target === backdrop) backdrop.remove();
-  });
-  const onKey = (ev) => {
-    if (ev.key === 'Escape') {
-      backdrop.remove();
-      document.removeEventListener('keydown', onKey);
-    }
-  };
-  document.addEventListener('keydown', onKey);
-
-  document.body.appendChild(backdrop);
-  const input = modal.querySelector('#sessNoteInput');
-  modal.querySelector('#sessNoteCancel').onclick = () => {
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
-  };
-  const commit = () => {
-    updateSessionNote(sessionId, input.value);
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
-    render();
-  };
-  modal.querySelector('#sessNoteSave').onclick = commit;
-  input.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
-  });
-  setTimeout(() => { input.focus(); input.select(); }, 30);
-}
-
-// 5b: Per-session rate override. Pre-populated with rateAtTime, or with
-// the client's current rate if the session was unrated. Empty = clear (unrated).
-function promptSessionRate(sessionId) {
-  const session = (state.sessions || []).find(s => s.id === sessionId);
-  if (!session) return;
-  const client = getClient(session.clientId);
-  const clientName = client ? client.name : 'this session';
-  const fallback = (typeof session.rateAtTime === 'number')
-    ? session.rateAtTime
-    : (client && typeof client.rate === 'number' ? client.rate : '');
-  const clientCurrent = (client && typeof client.rate === 'number') ? client.rate : null;
-
-  document.querySelectorAll('.confirm-backdrop').forEach(el => el.remove());
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'confirm-backdrop';
-  backdrop.setAttribute('role', 'dialog');
-  backdrop.setAttribute('aria-modal', 'true');
-  backdrop.setAttribute('aria-label', 'Edit session rate');
-
-  const modal = document.createElement('div');
-  modal.className = 'confirm-modal';
-  const hintLine = clientCurrent != null
-    ? `${escapeHtml(clientName)}'s current rate: ${escapeHtml(formatMoney(clientCurrent))}/hr.`
-    : `${escapeHtml(clientName)} has no rate set.`;
-  modal.innerHTML = `
-    <h4>Session rate</h4>
-    <p style="margin-bottom:6px;">${hintLine}</p>
-    <p style="margin-bottom:10px;font-size:13px;color:var(--mute);">Override the rate for this session only. Empty means no rate.</p>
-    <input type="number" class="text-input" id="sessRateInput"
-           min="0" step="any" inputmode="decimal"
-           value="${fallback === '' ? '' : fallback}"
-           placeholder="e.g. 80"
-           style="width:100%;margin-bottom:14px;" />
-    <div class="confirm-actions">
-      <button class="pill-btn" type="button" id="sessRateCancel">Cancel</button>
-      <button class="pill-btn" type="button" id="sessRateClear">Clear</button>
-      <button class="pill-btn primary" type="button" id="sessRateSave">Save</button>
-    </div>
-  `;
-  backdrop.appendChild(modal);
-
-  backdrop.addEventListener('click', (ev) => {
-    if (ev.target === backdrop) backdrop.remove();
-  });
-  const onKey = (ev) => {
-    if (ev.key === 'Escape') {
-      backdrop.remove();
-      document.removeEventListener('keydown', onKey);
-    }
-  };
-  document.addEventListener('keydown', onKey);
-
-  document.body.appendChild(backdrop);
-  const input = modal.querySelector('#sessRateInput');
-  modal.querySelector('#sessRateCancel').onclick = () => {
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
-  };
-  modal.querySelector('#sessRateClear').onclick = () => {
-    updateSessionRate(sessionId, null);
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
-    render();
-  };
-  const commit = () => {
-    const raw = input.value.trim();
-    if (raw === '') {
-      updateSessionRate(sessionId, null);
-    } else {
-      const n = parseFloat(raw);
-      if (!isNaN(n) && n >= 0) updateSessionRate(sessionId, n);
-    }
-    backdrop.remove();
-    document.removeEventListener('keydown', onKey);
-    render();
-  };
-  modal.querySelector('#sessRateSave').onclick = commit;
-  input.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
-  });
-  setTimeout(() => { input.focus(); input.select(); }, 30);
 }
 
 /* ============================================================
@@ -9133,18 +8837,6 @@ function openColourPopover(anchorEl, opts) {
     </div>
   ` : '';
 
-  // 5b: Optional rate section (Work clients)
-  const rateHtml = opts.onRate ? `
-    <div class="popover-section">
-      <div class="popover-section-label">Hourly rate (AUD)</div>
-      <input type="number" class="popover-rename-input" id="popRate"
-             min="0" step="any" inputmode="decimal"
-             value="${opts.rateValue != null ? opts.rateValue : ''}"
-             placeholder="e.g. 80" />
-      <div class="popover-section-hint">Blank means no rate. Sessions without a rate show no dollar amount.</div>
-    </div>
-  ` : '';
-
   // 4c: Optional delete section
   const deleteHtml = opts.onDelete ? `
     <hr class="popover-divider" />
@@ -9154,8 +8846,7 @@ function openColourPopover(anchorEl, opts) {
   pop.innerHTML = `
     <h5>${escapeHtml(title)}</h5>
     ${renameHtml}
-    ${rateHtml}
-    ${opts.onRename || opts.onRate ? '<div class="popover-section-label">Colour</div>' : ''}
+    ${opts.onRename ? '<div class="popover-section-label">Colour</div>' : ''}
     <div class="colour-picker" id="popPicker" style="margin-bottom:10px;"></div>
     ${opts.onReset ? `<button class="pill-btn small" id="popReset" style="margin-bottom:10px;">Reset to default</button>` : ''}
     ${deleteHtml}
@@ -9217,34 +8908,6 @@ function openColourPopover(anchorEl, opts) {
       }
     });
     input.addEventListener('blur', commit);
-  }
-
-  // 5b: Wire rate input. Commits on blur or Enter. Empty string = null (no rate).
-  if (opts.onRate) {
-    const rInput = pop.querySelector('#popRate');
-    let cancelled = false;
-    const commitRate = () => {
-      if (cancelled) return;
-      const raw = rInput.value.trim();
-      if (raw === '') {
-        opts.onRate(null);
-      } else {
-        const n = parseFloat(raw);
-        if (!isNaN(n) && n >= 0) opts.onRate(n);
-      }
-    };
-    rInput.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') {
-        ev.preventDefault();
-        commitRate();
-        pop.remove();
-      } else if (ev.key === 'Escape') {
-        ev.preventDefault();
-        cancelled = true;
-        pop.remove();
-      }
-    });
-    rInput.addEventListener('blur', commitRate);
   }
 
   // 4c: Wire delete button
@@ -10117,6 +9780,311 @@ function advanceWizard() {
 /* ============================================================
    MASTER RENDER
    ============================================================ */
+
+/* ============================================================
+   RENDER: LISTS LANDING + BOARD GAMES VIEW
+   ============================================================ */
+
+// Available lists. Future-proofed: add new entries (books, movies,
+// recipes, etc.) and they'll show up on the Lists landing page.
+const AVAILABLE_LISTS = [
+  {
+    id: 'boardgames',
+    name: 'Board Games',
+    glyph: '◇',
+    blurb: 'What you own, sortable by who\'s coming over.',
+    count: () => BOARD_GAMES.length
+  }
+];
+
+function renderListsView() {
+  const root = document.createElement('div');
+  root.className = 'mode-root';
+
+  // Masthead, similar palette to the pink mode masthead but distinct copy
+  const masthead = document.createElement('div');
+  masthead.className = 'mode-masthead';
+  masthead.setAttribute('style', colourStyle('pink'));
+  masthead.innerHTML = `
+    <div class="mode-masthead-inner">
+      <div class="card-label" style="margin-bottom:14px;">❋ Lists</div>
+      <h1>Lists <em>and looks-ups</em>.</h1>
+      <p>Reference catalogues. Stuff to browse, not stuff to do.</p>
+    </div>
+  `;
+  root.appendChild(masthead);
+
+  const content = document.createElement('div');
+  content.className = 'mode-content';
+
+  const grid = document.createElement('div');
+  grid.className = 'lists-grid';
+
+  for (const L of AVAILABLE_LISTS) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'list-card';
+    const total = (typeof L.count === 'function') ? L.count() : '';
+    card.innerHTML = `
+      <div class="list-card-glyph" aria-hidden="true">${L.glyph}</div>
+      <div class="list-card-body">
+        <div class="list-card-name">${escapeHtml(L.name)}</div>
+        <div class="list-card-blurb">${escapeHtml(L.blurb)}</div>
+        ${total !== '' ? `<div class="list-card-count">${total} entries</div>` : ''}
+      </div>
+    `;
+    card.onclick = () => setMode('list:' + L.id);
+    grid.appendChild(card);
+  }
+
+  content.appendChild(grid);
+  root.appendChild(content);
+  return root;
+}
+
+function renderBoardGamesView() {
+  const root = document.createElement('div');
+  root.className = 'mode-root';
+
+  // Masthead
+  const masthead = document.createElement('div');
+  masthead.className = 'mode-masthead';
+  masthead.setAttribute('style', colourStyle('pink'));
+  masthead.innerHTML = `
+    <div class="mode-masthead-inner">
+      <div class="card-label" style="margin-bottom:14px;">❋ Lists / ◇ Board Games</div>
+      <h1>Board <em>games</em>.</h1>
+      <p>Filter by who's playing. Confirm everyone's still talking by the end.</p>
+    </div>
+  `;
+  root.appendChild(masthead);
+
+  // Back to Lists row, mirrors the sub-bar pattern at small scale
+  const backRow = document.createElement('div');
+  backRow.className = 'bg-back-row';
+  backRow.innerHTML = `<button type="button" class="bg-back-btn">← Lists</button>`;
+  backRow.querySelector('button').onclick = () => setMode('lists');
+  root.appendChild(backRow);
+
+  const content = document.createElement('div');
+  content.className = 'mode-content';
+
+  const f = state.boardGameFilters;
+  const results = filterBoardGames();
+  const tagCounts = boardGameTagCounts();
+
+  // ---- Filter card ----
+  const filterCard = document.createElement('div');
+  filterCard.className = 'candy candy-pink-cream bg-filter-card';
+
+  const activeCount = activeBoardGameFilterCount();
+  const labelHTML = `<span class="card-label">Filters${activeCount ? ' · ' + activeCount + ' active' : ''}</span>`;
+  filterCard.insertAdjacentHTML('beforeend', labelHTML);
+
+  // Search
+  const searchRow = document.createElement('div');
+  searchRow.className = 'bg-filter-row';
+  searchRow.innerHTML = `
+    <span class="bg-filter-label">Find</span>
+    <input type="search" class="bg-search" placeholder="Name, description, tag..." value="${escapeHtml(f.search || '')}" />
+  `;
+  const searchInput = searchRow.querySelector('input');
+  // Debounced live filter on input (no rerender per keystroke; just refresh
+  // results below). Save on blur/enter.
+  let searchTimer = null;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      state.boardGameFilters.search = searchInput.value;
+      saveState();
+      // Update only the results section, keep input focused
+      const rs = document.getElementById('bg-results-area');
+      const sm = document.getElementById('bg-results-summary');
+      if (rs && sm) {
+        const fresh = filterBoardGames();
+        rs.replaceWith(buildResultsArea(fresh));
+        sm.replaceWith(buildResultsSummary(fresh));
+      }
+    }, 180);
+  });
+  filterCard.appendChild(searchRow);
+
+  // Players
+  const playersRow = document.createElement('div');
+  playersRow.className = 'bg-filter-row';
+  playersRow.innerHTML = `<span class="bg-filter-label">Players</span>`;
+  const playerStepper = document.createElement('div');
+  playerStepper.className = 'bg-stepper';
+  // any button
+  const anyP = document.createElement('button');
+  anyP.type = 'button';
+  anyP.className = 'bg-stepper-btn' + (f.players == null ? ' active' : '');
+  anyP.textContent = 'any';
+  anyP.onclick = () => { state.boardGameFilters.players = null; saveState(); render(); };
+  playerStepper.appendChild(anyP);
+  for (const n of BOARD_GAME_PLAYER_BUTTONS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bg-stepper-btn' + (f.players === n ? ' active' : '');
+    btn.textContent = (n === BOARD_GAME_PLAYER_BUTTONS[BOARD_GAME_PLAYER_BUTTONS.length - 1]) ? (n + '+') : String(n);
+    btn.onclick = () => { state.boardGameFilters.players = n; saveState(); render(); };
+    playerStepper.appendChild(btn);
+  }
+  playersRow.appendChild(playerStepper);
+  filterCard.appendChild(playersRow);
+
+  // Age (youngest)
+  const ageRow = document.createElement('div');
+  ageRow.className = 'bg-filter-row';
+  ageRow.innerHTML = `<span class="bg-filter-label">Youngest</span>`;
+  const ageStepper = document.createElement('div');
+  ageStepper.className = 'bg-stepper';
+  const anyA = document.createElement('button');
+  anyA.type = 'button';
+  anyA.className = 'bg-stepper-btn' + (f.ageMin == null ? ' active' : '');
+  anyA.textContent = 'any';
+  anyA.onclick = () => { state.boardGameFilters.ageMin = null; saveState(); render(); };
+  ageStepper.appendChild(anyA);
+  for (const a of BOARD_GAME_AGE_BUTTONS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bg-stepper-btn' + (f.ageMin === a ? ' active' : '');
+    btn.textContent = a + '+';
+    btn.onclick = () => { state.boardGameFilters.ageMin = a; saveState(); render(); };
+    ageStepper.appendChild(btn);
+  }
+  ageRow.appendChild(ageStepper);
+  filterCard.appendChild(ageRow);
+
+  // Length
+  const lenRow = document.createElement('div');
+  lenRow.className = 'bg-filter-row';
+  lenRow.innerHTML = `<span class="bg-filter-label">Length</span>`;
+  const lenWrap = document.createElement('div');
+  lenWrap.className = 'bg-chips';
+  for (const b of BOARD_GAME_DURATION_BUCKETS) {
+    const isActive = (f.durations || []).includes(b.id);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bg-tag-chip bg-duration-chip' + (isActive ? ' active' : '');
+    btn.innerHTML = `${escapeHtml(b.label)}<span class="bg-chip-sub">${escapeHtml(b.sub)}</span>`;
+    btn.onclick = () => {
+      const list = (state.boardGameFilters.durations || []).slice();
+      const i = list.indexOf(b.id);
+      if (i >= 0) list.splice(i, 1); else list.push(b.id);
+      state.boardGameFilters.durations = list;
+      saveState();
+      render();
+    };
+    lenWrap.appendChild(btn);
+  }
+  lenRow.appendChild(lenWrap);
+  filterCard.appendChild(lenRow);
+
+  // Tags
+  const tagRow = document.createElement('div');
+  tagRow.className = 'bg-filter-row';
+  tagRow.innerHTML = `<span class="bg-filter-label">Vibe</span>`;
+  const tagWrap = document.createElement('div');
+  tagWrap.className = 'bg-chips';
+  for (const [t, c] of tagCounts) {
+    const isActive = (f.tags || []).includes(t);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bg-tag-chip' + (isActive ? ' active' : '');
+    btn.innerHTML = `${escapeHtml(t)}<span class="bg-chip-count">${c}</span>`;
+    btn.onclick = () => {
+      const list = (state.boardGameFilters.tags || []).slice();
+      const i = list.indexOf(t);
+      if (i >= 0) list.splice(i, 1); else list.push(t);
+      state.boardGameFilters.tags = list;
+      saveState();
+      render();
+    };
+    tagWrap.appendChild(btn);
+  }
+  tagRow.appendChild(tagWrap);
+  filterCard.appendChild(tagRow);
+
+  // Footer: clear all (only when filters active)
+  if (activeCount > 0) {
+    const footer = document.createElement('div');
+    footer.className = 'bg-filter-footer';
+    footer.innerHTML = `<button type="button" class="chip-filter-clear">clear all ✕</button>`;
+    footer.querySelector('button').onclick = () => clearBoardGameFilters();
+    filterCard.appendChild(footer);
+  }
+
+  content.appendChild(filterCard);
+
+  // ---- Results summary + grid ----
+  content.appendChild(buildResultsSummary(results));
+  content.appendChild(buildResultsArea(results));
+
+  root.appendChild(content);
+  return root;
+}
+
+function buildResultsSummary(results) {
+  const wrap = document.createElement('div');
+  wrap.id = 'bg-results-summary';
+  wrap.className = 'bg-results-summary';
+  const total = BOARD_GAMES.length;
+  const n = results.length;
+  let txt;
+  if (n === total) {
+    txt = `${total} games`;
+  } else if (n === 0) {
+    txt = `Nothing matches`;
+  } else {
+    txt = `${n} of ${total} games match`;
+  }
+  wrap.innerHTML = `<span class="bg-results-count">${escapeHtml(txt)}</span>`;
+  return wrap;
+}
+
+function buildResultsArea(results) {
+  const wrap = document.createElement('div');
+  wrap.id = 'bg-results-area';
+
+  if (results.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'candy';
+    empty.innerHTML = `<div class="empty">Filtered too far. <span class="sparkle">✦</span> Loosen something.</div>`;
+    wrap.appendChild(empty);
+    return wrap;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'bg-grid';
+
+  for (const g of results) {
+    const card = document.createElement('article');
+    card.className = 'candy bg-game-card';
+
+    const tagsHTML = g.tags.map(t => `<span class="bg-game-tag">${escapeHtml(t)}</span>`).join('');
+    const pubHTML = g.publisher ? `<div class="bg-game-publisher">${escapeHtml(g.publisher)}</div>` : '';
+
+    card.innerHTML = `
+      <h3 class="bg-game-name">${escapeHtml(g.name)}</h3>
+      ${pubHTML}
+      <div class="bg-game-stats">
+        <span class="bg-stat" title="Players"><span class="bg-stat-label">players</span> ${escapeHtml(formatPlayers(g.players))}</span>
+        <span class="bg-stat" title="Youngest age"><span class="bg-stat-label">age</span> ${escapeHtml(formatAge(g.age))}</span>
+        <span class="bg-stat" title="Duration"><span class="bg-stat-label">length</span> ${escapeHtml(formatDuration(g.duration))}</span>
+      </div>
+      <div class="bg-game-tags">${tagsHTML}</div>
+      <p class="bg-game-description">${escapeHtml(g.description)}</p>
+    `;
+
+    grid.appendChild(card);
+  }
+
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+
 function render() {
   const app = document.getElementById('app');
   app.innerHTML = '';
@@ -10151,6 +10119,10 @@ function render() {
     main.appendChild(renderInboxView());
   } else if (state.currentMode === 'waiting') {
     main.appendChild(renderWaitingView());
+  } else if (state.currentMode === 'lists') {
+    main.appendChild(renderListsView());
+  } else if (state.currentMode === 'list:boardgames') {
+    main.appendChild(renderBoardGamesView());
   } else {
     main.appendChild(renderModeView(state.currentMode));
   }
@@ -10169,26 +10141,8 @@ function render() {
   // Wire top-bar buttons
   document.getElementById('brandBtn').onclick = () => setMode('dashboard');
   document.getElementById('settingsBtn').onclick = openSettingsDrawer;
-  // 5a: Timer indicator (only present when a timer is running)
-  const timerInd = document.getElementById('timerIndicator');
-  if (timerInd && state.activeTimer) {
-    timerInd.onclick = () => {
-      // Jump to that client's Work view. Set state directly because setMode()
-      // would clear currentSubId.
-      state.currentMode = 'work';
-      state.currentSubId = state.activeTimer.clientId;
-      state.currentMemberId = null;
-      state.currentTier = 'now';
-      saveState();
-      render();
-      window.scrollTo({ top: 0, behavior: state.settings.reducedMotion ? 'auto' : 'smooth' });
-    };
-  }
 
   applySettings();
-
-  // 5a: First render after boot, check whether to offer stale-timer recovery.
-  maybeOfferStaleTimerRecovery();
 
   // 4c: After the page is rendered, decide whether to show the grace dialog.
   // Three cases:
@@ -10233,18 +10187,6 @@ setInterval(() => {
     render();
   }
 }, 30000);
-
-// 5a: Update the running timer indicator text every second. Cheap DOM update,
-// no re-render. The indicator is only present when a timer is running, so
-// most of the time this loop does nothing.
-setInterval(() => {
-  if (!state.activeTimer) return;
-  const el = document.getElementById('timerIndicatorTime');
-  if (el) el.textContent = formatDurationClock(activeTimerElapsedMs());
-  // Also update the inline live timer on the Work mode page if it's there.
-  const inline = document.getElementById('timerInlineTime');
-  if (inline) inline.textContent = formatDurationClock(activeTimerElapsedMs());
-}, TIMER_TICK_MS);
 
 /* ============================================================
    BOOT
